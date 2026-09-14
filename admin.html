@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b2342">
+<title>Bacalaos M. Bueno · Administración</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#10233d}
+header{background:#0b2342;color:#fff;padding:20px 16px;border-radius:0 0 20px 20px}
+.logo{font-weight:800;font-size:19px}.sub{font-size:12px;opacity:.75;margin-top:4px}
+nav{display:flex;gap:7px;padding:12px 12px 6px;overflow:auto}
+nav button{border:0;background:#e3ebf5;padding:10px 13px;border-radius:11px;font-weight:700;white-space:nowrap}
+nav button.active{background:#1557a6;color:#fff}
+main{padding:0 12px 80px}
+h2{font-size:21px;margin:14px 3px 10px}
+.card{background:#fff;border-radius:15px;padding:14px;margin:10px 0;box-shadow:0 3px 14px rgba(16,35,61,.08)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.muted{color:#6d7b8d;font-size:12px;margin-top:4px}
+.badge{display:inline-block;padding:5px 8px;border-radius:8px;font-size:11px;font-weight:800;background:#e5eef8;color:#1557a6}
+.badge.cancel{background:#f6e3e3;color:#a22}
+.btn{border:0;border-radius:10px;padding:9px 11px;font-weight:700;background:#e4edf7;color:#0b2342}
+.btn.primary{background:#1557a6;color:#fff}
+.btn.danger{background:#f4dddd;color:#9d2020}
+.btnbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+input,select{width:100%;padding:11px;border:1px solid #d4dce7;border-radius:10px;font-size:14px;background:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.line{border-top:1px solid #edf0f4;padding-top:10px;margin-top:10px}
+.empty{padding:25px;text-align:center;color:#6d7b8d}
+.total{font-size:18px;font-weight:800;color:#1557a6}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:5}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;border-radius:20px 20px 0 0;padding:18px;max-height:88vh;overflow:auto}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dbe3ec;padding:9px;display:flex;justify-content:space-around}
+.bottom button{border:0;background:none;color:#0b2342;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">BACALAOS M. BUENO</div>
+  <div class="sub">ADMINISTRACIÓN · PEDIDOS</div>
+</header>
+
+<nav>
+  <button class="active" onclick="tab('pedidos',this)">Pedidos</button>
+  <button onclick="tab('productos',this)">Productos</button>
+  <button onclick="tab('config',this)">Configuración</button>
+</nav>
+
+<main id="app"></main>
+
+<div class="bottom">
+  <button onclick="tab('pedidos')">📋 Pedidos</button>
+  <button onclick="nuevoPedido()">➕ Nuevo</button>
+  <button onclick="tab('config')">⚙️ Config.</button>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+const PRODUCTS=["Lingote XL","Suprema","Imperial","Lomo","Lomito","Bocaditos","Cocochas","Coyotes"];
+let orders=JSON.parse(localStorage.getItem("mb_orders")||"null")||[
+ {id:1024,client:"Restaurante Demo",date:"14/09/2026",status:"Pendiente",lines:[
+  {product:"Lingote XL",format:"Pieza",kg:12},{product:"Lomo",format:"Pieza",kg:8}
+ ]},
+ {id:1023,client:"Cliente Demo 2",date:"14/09/2026",status:"Preparado",lines:[
+  {product:"Bocaditos",format:"Bocaditos",kg:6}
+ ]}
+];
+
+function save(){localStorage.setItem("mb_orders",JSON.stringify(orders))}
+function money(x){return Number(x||0).toFixed(2).replace(".",",")+" €"}
+
+function tab(t,b){
+ if(b){document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")}
+ if(t==="pedidos")renderPedidos();
+ if(t==="productos")renderProductos();
+ if(t==="config")renderConfig();
+}
+
+function renderPedidos(){
+ app.innerHTML="<h2>Gestión de pedidos</h2>"+
+ `<div class="card"><input placeholder="Buscar cliente o nº de pedido" oninput="filterOrders(this.value)"></div>
+ <div id="orders"></div>`;
+ drawOrders(orders);
+}
+function drawOrders(list){
+ ordersDiv=document.getElementById("orders");
+ if(!list.length){ordersDiv.innerHTML='<div class="card empty">No hay pedidos.</div>';return}
+ ordersDiv.innerHTML=list.map(o=>{
+  const kg=o.lines.reduce((s,l)=>s+Number(l.kg||0),0);
+  return `<div class="card">
+   <div class="row"><div><b>Pedido #${o.id}</b><div class="muted">${o.client} · ${o.date}</div></div>
+   <span class="badge ${o.status==="Cancelado"?"cancel":""}">${o.status}</span></div>
+   <div class="muted line">${o.lines.map(l=>`${l.product} · ${l.format} · ${l.kg} kg`).join("<br>")||"Sin líneas"}</div>
+   <div class="row" style="margin-top:10px"><b>${kg} kg</b><div class="btnbar">
+    <button class="btn" onclick="editOrder(${o.id})">EDITAR</button>
+    <button class="btn danger" onclick="deleteOrder(${o.id})">BORRAR</button>
+   </div></div>
+  </div>`;
+ }).join("");
+}
+function filterOrders(q){
+ q=q.toLowerCase();
+ drawOrders(orders.filter(o=>String(o.id).includes(q)||o.client.toLowerCase().includes(q)));
+}
+function editOrder(id){
+ const o=orders.find(x=>x.id===id);
+ sheet.innerHTML=`<h2>Pedido #${o.id}</h2>
+ <div class="muted">${o.client} · ${o.date}</div>
+ <div id="editLines">${o.lines.map((l,i)=>lineEditor(l,i)).join("")}</div>
+ <div class="btnbar">
+  <button class="btn" onclick="addLine(${id})">+ AÑADIR LÍNEA</button>
+  <button class="btn primary" onclick="saveOrder(${id})">GUARDAR</button>
+  <button class="btn danger" onclick="cancelOrder(${id})">CANCELAR PEDIDO</button>
+ </div>`;
+ modal.classList.add("open");
+}
+function lineEditor(l,i){
+ return `<div class="card line" data-line="${i}">
+  <div class="grid">
+   <select class="prod"><option>${PRODUCTS.join("</option><option>")}</option></select>
+   <input class="format" value="${l.format||"Pieza"}" placeholder="Formato">
+  </div>
+  <div style="margin-top:8px"><input class="kg" type="number" min="0" step="0.01" value="${Number(l.kg||0)}" placeholder="Peso real (kg)"></div>
+  <div class="btnbar"><button class="btn danger" onclick="this.closest('[data-line]').remove()">BORRAR LÍNEA</button></div>
+ </div>`;
+}
+function addLine(id){
+ const d=document.createElement("div"); d.innerHTML=lineEditor({product:PRODUCTS[0],format:"Pieza",kg:0},Date.now());
+ editLines.appendChild(d.firstElementChild);
+}
+function saveOrder(id){
+ const o=orders.find(x=>x.id===id);
+ o.lines=[...editLines.querySelectorAll("[data-line]")].map(row=>({
+  product:row.querySelector(".prod").value,
+  format:row.querySelector(".format").value,
+  kg:Number(row.querySelector(".kg").value||0)
+ }));
+ save();closeModal();renderPedidos();
+}
+function cancelOrder(id){
+ const o=orders.find(x=>x.id===id);o.status="Cancelado";save();closeModal();renderPedidos();
+}
+function deleteOrder(id){
+ if(confirm("¿Borrar el pedido completo?")){
+  orders=orders.filter(o=>o.id!==id);save();renderPedidos();
+ }
+}
+function nuevoPedido(){
+ const id=Math.max(0,...orders.map(o=>o.id))+1;
+ orders.unshift({id,client:"Nuevo cliente",date:new Date().toLocaleDateString("es-ES"),status:"Pendiente",lines:[]});
+ save();editOrder(id);
+}
+function renderProductos(){
+ app.innerHTML="<h2>Productos</h2>"+PRODUCTS.map(p=>`<div class="card"><div class="row"><b>${p}</b><span class="badge">Activo</span></div><div class="muted">Referencia disponible para pedidos</div></div>`).join("");
+}
+function renderConfig(){
+ app.innerHTML=`<h2>Configuración</h2>
+ <div class="card"><b>Tablón de anuncios</b>
+  <div class="muted">Aquí podremos colocar una imagen con texto para horarios, festivos, ofertas o avisos.</div>
+  <div style="margin-top:10px"><input type="file" accept="image/*"></div>
+ </div>
+ <div class="card"><b>Horario de servicio</b>
+  <div class="muted">Configuración de horarios de pedidos.</div>
+  <div class="grid" style="margin-top:9px"><input value="09:00" type="time"><input value="12:00" type="time"></div>
+ </div>`;
+}
+function closeModal(){modal.classList.remove("open")}
+renderPedidos();
+</script>
+</body>
+</html>
