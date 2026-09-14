@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b2342">
+<title>Bacalaos M. Bueno · Administración</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#10233d}
+header{background:#0b2342;color:#fff;padding:18px 15px;border-radius:0 0 20px 20px}.logo{font-size:19px;font-weight:800}.sub{font-size:11px;opacity:.72;margin-top:4px}
+nav{display:flex;gap:7px;padding:12px;overflow:auto}nav button{border:0;background:#e3ebf5;padding:10px 12px;border-radius:11px;font-weight:700;white-space:nowrap}nav button.active{background:#1557a6;color:white}
+main{padding:0 12px 78px}h2{font-size:21px;margin:12px 2px}.card{background:#fff;border-radius:15px;padding:14px;margin:9px 0;box-shadow:0 3px 14px #10233d12}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.muted{font-size:12px;color:#6d7b8d;margin-top:4px}
+.badge{padding:5px 8px;border-radius:8px;background:#e5eef8;color:#1557a6;font-size:11px;font-weight:800}.cancel{background:#f5dfdf;color:#a02020}
+.btn{border:0;border-radius:10px;padding:9px 11px;font-weight:700;background:#e5edf6;color:#10233d}.primary{background:#1557a6;color:white}.danger{background:#f4dddd;color:#9d2020}.btnbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d3dce7;border-radius:10px;background:white;font-size:14px}textarea{min-height:80px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}.line{border-top:1px solid #edf0f4;padding-top:10px;margin-top:10px}.total{font-size:18px;font-weight:800;color:#1557a6}.empty{text-align:center;color:#718096;padding:22px}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;z-index:10}.modal.open{display:flex}.sheet{background:#fff;width:100%;max-height:91vh;overflow:auto;border-radius:20px 20px 0 0;padding:17px}.sheet h2{margin-top:0}
+.bottom{position:fixed;z-index:9;bottom:0;left:0;right:0;background:white;border-top:1px solid #dbe3ec;padding:8px;display:flex;justify-content:space-around}.bottom button{border:0;background:none;font-weight:700;color:#10233d}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#fff;border-radius:14px;padding:12px}.stat b{display:block;font-size:22px;margin-top:4px}
+</style>
+</head>
+<body>
+<header><div class="logo">BACALAOS M. BUENO</div><div class="sub">ADMINISTRACIÓN · PEDIDOS</div></header>
+<nav id="nav">
+<button class="active" onclick="tab('pedidos',this)">📋 Pedidos</button>
+<button onclick="tab('clientes',this)">👥 Clientes</button>
+<button onclick="tab('productos',this)">🐟 Productos</button>
+<button onclick="tab('config',this)">⚙️ Configuración</button>
+</nav>
+<main id="app"></main>
+<div class="bottom"><button onclick="tab('pedidos')">📋 Pedidos</button><button onclick="nuevoPedido()">➕ Nuevo pedido</button><button onclick="tab('clientes')">👥 Clientes</button></div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+
+<script>
+const PRODUCTS=["Lingote XL","Suprema","Imperial","Lomo","Lomito","Bocaditos","Cocochas","Coyotes"];
+const FORMATS=["Pieza","Bandeja","Caja","Bocaditos","Otro"];
+let clients=JSON.parse(localStorage.getItem("mb_clients")||"null")||[
+{id:1,name:"Restaurante Demo",cif:"B00000000",contact:"Juan",phone:"600 000 000",email:"demo@cliente.es",address:"Madrid",active:true},
+{id:2,name:"Cliente Demo 2",cif:"B11111111",contact:"Ana",phone:"611 111 111",email:"ana@cliente.es",address:"Ávila",active:true}
+];
+let products=JSON.parse(localStorage.getItem("mb_products")||"null")||PRODUCTS.map((name,i)=>({id:i+1,name,ref:"MB-"+String(i+1).padStart(3,"0"),price:0,active:true}));
+let orders=JSON.parse(localStorage.getItem("mb_orders")||"null")||[
+{id:1024,clientId:1,date:"14/09/2026",status:"Pendiente",notes:"",lines:[{product:"Lingote XL",format:"Pieza",kg:12},{product:"Lomo",format:"Pieza",kg:8}]},
+{id:1023,clientId:2,date:"14/09/2026",status:"Preparado",notes:"",lines:[{product:"Bocaditos",format:"Bocaditos",kg:6}]}
+];
+let settings=JSON.parse(localStorage.getItem("mb_settings")||"null")||{announcement:"Horario de servicio de pedidos: consulte con oficina.",announcementActive:true};
+function saveAll(){localStorage.setItem("mb_clients",JSON.stringify(clients));localStorage.setItem("mb_products",JSON.stringify(products));localStorage.setItem("mb_orders",JSON.stringify(orders));localStorage.setItem("mb_settings",JSON.stringify(settings))}
+function clientName(id){let c=clients.find(x=>x.id==id);return c?c.name:"Cliente eliminado"}
+function tab(t,b){
+ if(b){document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")}
+ ({pedidos:renderPedidos,clientes:renderClientes,productos:renderProductos,config:renderConfig}[t]||renderPedidos)();
+}
+function renderPedidos(){
+ let pending=orders.filter(o=>o.status==="Pendiente").length,kg=orders.reduce((a,o)=>a+o.lines.reduce((s,l)=>s+Number(l.kg||0),0),0);
+ app.innerHTML=`<h2>Gestión de pedidos</h2><div class="statgrid"><div class="stat"><small>Pedidos</small><b>${orders.length}</b></div><div class="stat"><small>Pendientes</small><b>${pending}</b></div></div>
+ <div class="card"><input placeholder="Buscar cliente o nº de pedido" oninput="filterOrders(this.value)"></div><div id="orders"></div>`;
+ drawOrders(orders);
+}
+function drawOrders(list){
+ ordersDiv.innerHTML=list.length?list.map(o=>{let kg=o.lines.reduce((s,l)=>s+Number(l.kg||0),0);return `<div class="card"><div class="row"><div><b>Pedido #${o.id}</b><div class="muted">${clientName(o.clientId)} · ${o.date}</div></div><span class="badge ${o.status==="Cancelado"?"cancel":""}">${o.status}</span></div><div class="muted line">${o.lines.length?o.lines.map(l=>`${l.product} · ${l.format} · ${l.kg} kg`).join("<br>"):"Sin líneas"}</div><div class="row" style="margin-top:10px"><b>${kg} kg</b><div class="btnbar"><button class="btn" onclick="editOrder(${o.id})">EDITAR</button><button class="btn danger" onclick="deleteOrder(${o.id})">BORRAR</button></div></div></div>`}).join(""):'<div class="card empty">No hay pedidos.</div>';
+}
+function filterOrders(q){q=q.toLowerCase();drawOrders(orders.filter(o=>String(o.id).includes(q)||clientName(o.clientId).toLowerCase().includes(q)))}
+function editOrder(id){
+ let o=orders.find(x=>x.id===id);
+ sheet.innerHTML=`<h2>Pedido #${o.id}</h2><div class="grid"><div class="full"><label>Cliente</label><select id="orderClient">${clients.map(c=>`<option value="${c.id}" ${c.id==o.clientId?"selected":""}>${c.name}</option>`).join("")}</select></div><div><label>Estado</label><select id="orderStatus">${["Pendiente","Preparado","Servido","Cancelado"].map(s=>`<option ${o.status===s?"selected":""}>${s}</option>`).join("")}</select></div><div><label>Fecha</label><input id="orderDate" value="${o.date}"></div></div><h3>Líneas</h3><div id="editLines">${o.lines.map((l,i)=>lineEditor(l,i)).join("")}</div><label>Observaciones</label><textarea id="orderNotes">${o.notes||""}</textarea><div class="btnbar"><button class="btn" onclick="addLine()">+ AÑADIR LÍNEA</button><button class="btn primary" onclick="saveOrder(${id})">GUARDAR</button><button class="btn danger" onclick="cancelOrder(${id})">CANCELAR PEDIDO</button></div>`;
+ modal.classList.add("open");
+}
+function lineEditor(l,i){return `<div class="card line" data-line="${i}"><div class="grid"><select class="prod">${products.filter(p=>p.active).map(p=>`<option ${p.name===l.product?"selected":""}>${p.name}</option>`).join("")}</select><select class="format">${FORMATS.map(f=>`<option ${f===l.format?"selected":""}>${f}</option>`).join("")}</select></div><div style="margin-top:8px"><input class="kg" type="number" min="0" step=".01" value="${Number(l.kg||0)}" placeholder="Peso real (kg)"></div><div class="btnbar"><button class="btn danger" onclick="this.closest('[data-line]').remove()">BORRAR LÍNEA</button></div></div>`}
+function addLine(){let d=document.createElement("div");d.innerHTML=lineEditor({product:products.find(p=>p.active)?.name||PRODUCTS[0],format:"Pieza",kg:0},Date.now());editLines.appendChild(d.firstElementChild)}
+function saveOrder(id){let o=orders.find(x=>x.id===id);o.clientId=Number(orderClient.value);o.status=orderStatus.value;o.date=orderDate.value;o.notes=orderNotes.value;o.lines=[...editLines.querySelectorAll("[data-line]")].map(r=>({product:r.querySelector(".prod").value,format:r.querySelector(".format").value,kg:Number(r.querySelector(".kg").value||0)}));saveAll();closeModal();renderPedidos()}
+function cancelOrder(id){orders.find(x=>x.id===id).status="Cancelado";saveAll();closeModal();renderPedidos()}
+function deleteOrder(id){if(confirm("¿Borrar el pedido completo?")){orders=orders.filter(o=>o.id!==id);saveAll();renderPedidos()}}
+function nuevoPedido(){let id=Math.max(0,...orders.map(o=>o.id))+1;orders.unshift({id,clientId:clients[0]?.id||0,date:new Date().toLocaleDateString("es-ES"),status:"Pendiente",notes:"",lines:[]});saveAll();editOrder(id)}
+
+function renderClientes(){
+ app.innerHTML=`<h2>Clientes</h2><div class="card"><button class="btn primary" onclick="newClient()">+ NUEVO CLIENTE</button></div><div id="clientList"></div>`;
+ clientList.innerHTML=clients.map(c=>`<div class="card"><div class="row"><div><b>${c.name}</b><div class="muted">${c.cif||"Sin CIF"} · ${c.phone||"Sin teléfono"}</div></div><span class="badge ${!c.active?"cancel":""}">${c.active?"Activo":"Inactivo"}</span></div><div class="muted">${c.email||""}<br>${c.address||""}</div><div class="btnbar"><button class="btn" onclick="editClient(${c.id})">EDITAR</button><button class="btn" onclick="clientOrders(${c.id})">PEDIDOS</button></div></div>`).join("")}
+function newClient(){let id=Math.max(0,...clients.map(c=>c.id))+1;clients.push({id,name:"Nuevo cliente",cif:"",contact:"",phone:"",email:"",address:"",active:true});saveAll();editClient(id)}
+function editClient(id){let c=clients.find(x=>x.id===id);sheet.innerHTML=`<h2>Ficha de cliente</h2><div class="grid"><div class="full"><label>Nombre / Razón social</label><input id="cn" value="${c.name}"></div><div><label>CIF</label><input id="ccif" value="${c.cif||""}"></div><div><label>Contacto</label><input id="ccontact" value="${c.contact||""}"></div><div><label>Teléfono</label><input id="cphone" value="${c.phone||""}"></div><div><label>Email / usuario portal</label><input id="cemail" value="${c.email||""}"></div><div class="full"><label>Dirección de entrega</label><input id="caddress" value="${c.address||""}"></div><div class="full"><label><input id="cactive" type="checkbox" ${c.active?"checked":""} style="width:auto"> Cliente activo</label></div></div><div class="btnbar"><button class="btn primary" onclick="saveClient(${id})">GUARDAR CLIENTE</button><button class="btn danger" onclick="removeClient(${id})">BORRAR CLIENTE</button></div>`;modal.classList.add("open")}
+function saveClient(id){let c=clients.find(x=>x.id===id);c.name=cn.value;c.cif=ccif.value;c.contact=ccontact.value;c.phone=cphone.value;c.email=cemail.value;c.address=caddress.value;c.active=cactive.checked;saveAll();closeModal();renderClientes()}
+function removeClient(id){if(orders.some(o=>o.clientId===id)){alert("No se puede borrar: el cliente tiene pedidos. Puedes desactivarlo.");return}if(confirm("¿Borrar cliente?")){clients=clients.filter(c=>c.id!==id);saveAll();closeModal();renderClientes()}}
+function clientOrders(id){tab("pedidos");setTimeout(()=>{document.querySelector("input[placeholder]").value=clientName(id);filterOrders(clientName(id))},0)}
+
+function renderProductos(){app.innerHTML=`<h2>Productos</h2><div class="card"><button class="btn primary" onclick="newProduct()">+ NUEVO PRODUCTO</button></div><div id="productList"></div>`;productList.innerHTML=products.map(p=>`<div class="card"><div class="row"><div><b>${p.name}</b><div class="muted">Ref. ${p.ref} · ${p.price?Number(p.price).toFixed(2)+" €/kg":"Precio no definido"}</div></div><span class="badge ${!p.active?"cancel":""}">${p.active?"Activo":"Inactivo"}</span></div><div class="btnbar"><button class="btn" onclick="editProduct(${p.id})">EDITAR</button></div></div>`).join("")}
+function newProduct(){let id=Math.max(0,...products.map(p=>p.id))+1;products.push({id,name:"Nuevo producto",ref:"MB-"+id,price:0,active:true});saveAll();editProduct(id)}
+function editProduct(id){let p=products.find(x=>x.id===id);sheet.innerHTML=`<h2>Producto</h2><div class="grid"><div class="full"><label>Nombre</label><input id="pn" value="${p.name}"></div><div><label>Referencia</label><input id="pref" value="${p.ref}"></div><div><label>Precio €/kg</label><input id="pprice" type="number" min="0" step=".01" value="${p.price||0}"></div><div class="full"><label><input id="pactive" type="checkbox" ${p.active?"checked":""} style="width:auto"> Producto activo</label></div></div><div class="btnbar"><button class="btn primary" onclick="saveProduct(${id})">GUARDAR</button></div>`;modal.classList.add("open")}
+function saveProduct(id){let p=products.find(x=>x.id===id);p.name=pn.value;p.ref=pref.value;p.price=Number(pprice.value||0);p.active=pactive.checked;saveAll();closeModal();renderProductos()}
+
+function renderConfig(){app.innerHTML=`<h2>Configuración</h2><div class="card"><b>📢 Tablón de anuncios</b><div class="muted">Mensaje que podrá aparecer en la portada de pedidos.</div><textarea id="announcement" style="margin-top:10px">${settings.announcement}</textarea><label style="display:block;margin-top:9px"><input id="annactive" type="checkbox" ${settings.announcementActive?"checked":""} style="width:auto"> Mostrar anuncio</label><div class="btnbar"><button class="btn primary" onclick="saveConfig()">GUARDAR ANUNCIO</button></div></div><div class="card"><b>🕘 Horario de servicio</b><div class="grid" style="margin-top:10px"><input type="time" value="09:00"><input type="time" value="12:00"></div><div class="muted">Esta sección queda preparada para conectar los horarios reales del portal.</div></div><div class="card"><b>ℹ️ Datos del sistema</b><div class="muted">Los datos de esta prueba se guardan localmente en este navegador. En la siguiente fase los conectaremos a una base de datos para que clientes y pedidos sean compartidos entre dispositivos.</div></div>`}
+function saveConfig(){settings.announcement=announcement.value;settings.announcementActive=annactive.checked;saveAll();alert("Configuración guardada");}
+function closeModal(){modal.classList.remove("open")}
+renderPedidos();
+</script>
+</body>
+</html>
