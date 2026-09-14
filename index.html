@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b2342">
+<title>Bacalaos M. Bueno · Pedidos</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#10233d}
+header{background:#0b2342;color:#fff;padding:22px 18px;border-radius:0 0 22px 22px}.logo{font-weight:800;font-size:20px}.sub{font-size:12px;opacity:.75;margin-top:4px}
+.banner{margin:16px;padding:20px;border-radius:18px;background:linear-gradient(135deg,#0b2342,#1557a6);color:white}.banner b{font-size:25px}.banner p{margin:8px 0 0;line-height:1.35}
+nav{display:flex;gap:8px;padding:0 16px 10px;overflow:auto}nav button{border:0;background:#e3ebf5;padding:11px 15px;border-radius:12px;font-weight:700;white-space:nowrap}nav button.active{background:#1557a6;color:#fff}
+main{padding:0 16px 90px}.search{width:100%;padding:13px;border:1px solid #d4dce7;border-radius:12px;margin:6px 0 14px;font-size:15px}
+.card{background:#fff;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 3px 14px rgba(16,35,61,.08)}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.muted{color:#6d7b8d;font-size:13px;margin-top:5px}.price{font-weight:800;color:#1557a6}
+.qty{display:flex;align-items:center;gap:8px}.qty button{width:35px;height:35px;border:0;border-radius:10px;background:#dce9f7;font-size:21px}.send{width:100%;border:0;background:#1557a6;color:#fff;padding:15px;border-radius:13px;font-size:16px;font-weight:800}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dbe3ec;padding:10px 8px;display:flex;justify-content:space-around}.bottom button{border:0;background:none;color:#0b2342;font-weight:700}
+.smallbtn{border:0;background:#e4edf7;color:#0b2342;padding:9px 11px;border-radius:10px;font-weight:700}
+</style></head>
+<body>
+<header><div class="logo">BACALAOS M. BUENO</div><div class="sub">PORTAL PROFESIONAL · PEDIDOS</div></header>
+<div class="banner"><b>Agiliza tus pedidos</b><p>Elige tu corte ideal y repite tus pedidos en pocos pasos.</p></div>
+<nav>
+<button class="active" onclick="tab('catalogo',this)">Catálogo</button>
+<button onclick="tab('pedido',this)">Mi pedido <span id="badge"></span></button>
+<button onclick="tab('historial',this)">Mis pedidos</button>
+</nav>
+<main id="app"></main>
+<div class="bottom"><button onclick="tab('catalogo')">🏠 Catálogo</button><button onclick="tab('pedido')">🛒 Pedido</button><button onclick="tab('historial')">↻ Repetir</button></div>
+<script>
+const products=[
+["Lingote XL",18.20],["Suprema",17.90],["Imperial",17.50],["Lomo",16.90],
+["Lomito",15.90],["Bocaditos",12.25],["Cocochas",19.90],["Coyotes",14.90]];
+let cart={};
+const money=x=>x.toFixed(2).replace(".",",")+" €";
+function tab(t,b){if(b){document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")}if(t=="catalogo")catalog();if(t=="pedido")pedido();if(t=="historial")historial()}
+function catalog(){app.innerHTML='<input class="search" placeholder="Buscar productos..." oninput="filter(this.value)"><div id="list"></div>';render(products)}
+function render(a){list.innerHTML=a.map(p=>`<div class="card"><div class="row"><div><b>${p[0]}</b><div class="muted">Kilos · precio por kg</div></div><div class="price">${money(p[1])}/kg</div></div><div class="row" style="margin-top:12px"><span class="muted">Cantidad</span><div class="qty"><button onclick="add('${p[0]}',-1)">−</button><b>${cart[p[0]]||0}</b><button onclick="add('${p[0]}',1)">+</button></div></div></div>`).join("")}
+function filter(q){render(products.filter(p=>p[0].toLowerCase().includes(q.toLowerCase())))}
+function add(n,d){cart[n]=Math.max(0,(cart[n]||0)+d);if(!cart[n])delete cart[n];badge.textContent=Object.values(cart).reduce((a,b)=>a+b,0)||"";catalog()}
+function pedido(){let a=products.filter(p=>cart[p[0]]),total=a.reduce((s,p)=>s+p[1]*cart[p[0]],0);app.innerHTML="<h2>Mi pedido</h2>"+(a.length?a.map(p=>`<div class="card"><div class="row"><b>${p[0]}</b><b>${cart[p[0]]} kg</b></div><div class="muted">${money(p[1]*cart[p[0]])}</div></div>`).join(""):'<div class="card">No has añadido productos.</div>')+(a.length?`<div class="card"><div class="row"><b>Total estimado</b><b class="price">${money(total)}</b></div></div><button class="send" onclick="alert('Prueba: pedido preparado para enviar')">ENVIAR PEDIDO</button>`:"")}
+function historial(){app.innerHTML="<h2>Mis pedidos</h2>"+["#1024 · 18/05/2026","#1023 · 11/05/2026","#1022 · 04/05/2026"].map(x=>`<div class="card"><div class="row"><div><b>Pedido ${x}</b><div class="muted">Lingote XL · Lomo · Bocaditos</div></div><button class="smallbtn" onclick="alert('Prueba: pedido cargado')">REPETIR</button></div></div>`).join("")}
+catalog();
+</script></body></html>
