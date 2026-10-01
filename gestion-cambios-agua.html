@@ -119,6 +119,17 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 #cubaList>.card.process.detail-open,#prodCubaList>.card.process.detail-open{height:auto!important;min-height:340px;overflow:visible!important}
 #cubaList>.card.process.detail-open .detail,#prodCubaList>.card.process.detail-open .detail{display:block}
 
+
+/* Responsive móvil v183 */
+@media (max-width:900px){
+header{height:60px;padding:0 12px}header h1{font-size:16px}.clock{font-size:11px}
+.layout{display:block;min-height:calc(100vh - 60px)}
+nav{width:100%;display:flex;overflow-x:auto;padding:6px;border-right:0;border-bottom:1px solid #dfe6ea;gap:4px;position:sticky;top:0;z-index:20;-webkit-overflow-scrolling:touch}
+nav button{width:auto;min-width:max-content;padding:9px 11px;margin:0;font-size:12px}
+main{padding:12px;max-width:none}.kpis{grid-template-columns:repeat(2,1fr);gap:8px}.grid2,.grid3{grid-template-columns:1fr;gap:12px}.formgrid{grid-template-columns:1fr 1fr;gap:8px}.formgrid .wide{grid-column:1/-1}.card{padding:12px;margin-bottom:12px}
+table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}.processHead{display:block}.actions{flex-wrap:wrap}.detail .cubaManage{grid-template-columns:1fr}.detail .cubaChangeBox{grid-column:1!important}.summarybar{gap:6px}.summarybar span{padding:6px 8px;font-size:11px}.row{grid-template-columns:minmax(0,1fr) 76px 76px 38px;gap:5px}.row input,.row select{padding:8px 6px;font-size:12px}button{padding:9px 11px;font-size:12px}input,select{padding:9px;font-size:14px}
+}
+@media (max-width:560px){header h1{font-size:14px;max-width:65vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.clock{display:none}main{padding:8px}.kpis{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.processHead h3{font-size:16px}.actions button{width:100%;flex-basis:100%}.cubaChangeBox select{min-height:42px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
