@@ -4685,8 +4685,7 @@ window.mbSaveListStatusV110=save;
     const n=/* sincronización local de pedidos de prueba desactivada */
     alert(n ? ('Se han incorporado '+n+' pedido(s) del portal.') : 'No hay pedidos nuevos del portal para incorporar.');
   });
-  // Sincronización automática al abrir Administración.
-  setTimeout(syncPortalOrders,100);
+  // v190: no importar automáticamente pedidos desde localStorage. Supabase es la única fuente de verdad.
 })();</script>
 
 <script id="fix-products-online-v25">
