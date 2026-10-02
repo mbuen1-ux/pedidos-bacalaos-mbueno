@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bacalaos M. Bueno · Recogida de Pesos</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#eef1f5;color:#23313d}
+.header{background:#164b78;color:#fff;padding:18px 28px 16px}
+.headerMain{display:flex;justify-content:space-between;align-items:center;gap:25px}
+.headerStats{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;justify-content:flex-end}
+.headerStat{min-width:125px;padding:9px 13px;background:#fff;color:#173b56;border-radius:7px;text-align:center;box-shadow:0 1px 3px #0002}
+.headerStatLabel{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.72}
+.headerStatValue{font-size:21px;font-weight:800;line-height:1.15;margin-top:2px}
+.headerStatUnit{font-size:11px;font-weight:700;margin-left:3px}
+
+.brand{font-size:22px;font-weight:700;letter-spacing:.3px} .subtitle{font-size:12px;opacity:.8;margin-top:3px}
+.toolbar{display:flex;gap:10px;align-items:center;padding:14px 20px;background:#eef1f5;flex-wrap:wrap}
+button{border:0;border-radius:7px;padding:10px 15px;font-weight:600;cursor:pointer;background:#fff;color:#244054;box-shadow:0 1px 3px #0001}
+button.primary{background:#164b78;color:#fff} button:hover{filter:brightness(.97)}
+.search{padding:10px 12px;border:1px solid #cbd4dc;border-radius:7px;min-width:270px;font-size:14px}
+.layout{display:grid;grid-template-columns:390px 1fr;gap:14px;padding:0 20px 20px;min-height:calc(100vh - 140px)}
+.panel{background:#fff;border-radius:9px;box-shadow:0 1px 4px #0001;overflow:hidden}
+.panel-title{font-weight:700;padding:15px 16px;border-bottom:1px solid #e4e8ec;color:#173b56}
+.orders{max-height:calc(100vh - 210px);overflow:auto}
+.order{padding:13px 15px;border-bottom:1px solid #edf0f2;cursor:pointer}
+.order:hover,.order.active{background:#f0f5f9}
+.order.complete{background:#dff2df;border-left:5px solid #2f7d32;padding-left:10px}.order.complete:hover,.order.complete.active{background:#cfe9d1}.order.complete .client,.order.complete .orderref{color:#23652a}.order.complete .meta{color:#397044}.completebadge{display:inline-block;margin-left:7px;font-size:10px;font-weight:800;color:#23652a;background:#c9e8cb;border-radius:10px;padding:2px 6px;vertical-align:1px} .order .num{font-weight:700;color:#164b78}
+.order .client{margin-top:2px;font-size:15px;font-weight:700;color:#173b56}.clientleft{line-height:1.25} .order .meta{font-size:11px;color:#77838c;margin-top:5px}
+.detailpanel{padding:0}.detailworkspace{display:grid;grid-template-columns:minmax(0,1fr);min-height:100%;align-items:start}.detail{padding:14px;min-width:0}.keypadpanel{display:none;border-left:1px solid #e0e6eb;background:#f7f9fb;padding:18px;position:fixed;right:20px;top:154px;width:285px;z-index:20;align-self:start;box-shadow:0 1px 5px #0002;border-radius:0 9px 9px 0}.keypadtitle{font-size:13px;font-weight:800;color:#173b56;margin-bottom:6px}.keypadtarget{font-size:11px;color:#687681;background:#fff;border:1px solid #d7e0e6;border-radius:5px;padding:7px 8px;margin-bottom:10px;min-height:31px}.clientname{font-size:25px;font-weight:700;color:#173b56}
+.metahead{font-size:11px;color:#71808a;margin-top:3px;margin-bottom:10px}
+.card{background:#f7f9fb;border:1px solid #dce3e9;border-radius:7px;padding:10px;margin-bottom:7px}.card.pendingLine{background:#fff4f4;border-color:#f0caca}.card.detailComplete{background:#dff2df;border-color:#9ac59d;border-left:5px solid #2f7d32;padding-left:10px}.card.detailComplete .lineclient,.card.detailComplete .measure,.card.detailComplete .label{color:#23652a}.card.detailComplete .requested{background:#e8f5e8;border-left-color:#2f7d32;color:#23652a}
+.cardtop{display:block}
+.label{font-size:10px;color:#6d7982;font-weight:700;letter-spacing:.4px}
+.measure{font-size:15px;font-weight:700;color:#163d5b;margin-top:2px}
+.requested{font-weight:800;font-size:14px;white-space:nowrap;color:#164b78;background:#eef3f7;border-left:3px solid #164b78;padding:5px 9px;margin-top:7px;border-radius:3px}
+.obs{display:block;width:100%;box-sizing:border-box;margin:5px 0;padding:6px 10px;background:#164b78;color:#fff;border-radius:5px;font-size:13px;line-height:1.25;font-weight:800;letter-spacing:.2px}
+.lotelabel{font-size:11px;font-weight:800;color:#425563;margin-left:16px}.lote{width:105px;height:46px;border:1px solid #b7c5d0;border-radius:5px;padding:0 8px;font-size:16px;font-weight:700;background:#fff}.lote:focus{outline:2px solid #164b78;outline-offset:1px}
+.weightrow{display:flex;align-items:center;gap:7px;margin-top:7px}
+.weightrow label{font-size:12px;font-weight:700;color:#164b78}
+.weight{width:145px;height:46px;box-sizing:border-box;padding:7px 9px;border:1px solid #bfcbd5;border-radius:6px;text-align:right;font-size:16px;font-weight:700}.weight.locked,.lote.locked{background:#eef2f5;color:#7a8790;cursor:not-allowed;opacity:.82}.lineLockSlot{display:inline-flex;align-items:center}.linePrintBtn{display:inline-flex;margin-left:8px;width:46px;height:46px;padding:0;border:1px solid #c8d3dc;border-radius:9px;background:#fff;color:#164b78;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 7px rgba(18,48,70,.08);transition:.15s}.linePrintBtn:hover{border-color:#164b78;background:#f5f9fc;transform:translateY(-1px)}.linePrintBtn:active{transform:translateY(1px)}.linePrintBtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.lineLockBtn{margin-left:0;min-width:150px;height:46px;padding:0 16px;border:2px solid #164b78;border-radius:7px;background:#fff;color:#164b78;font-size:15px;font-weight:900;letter-spacing:.2px;cursor:pointer;white-space:nowrap}.lineLockBtn.locked{background:#8b2f2f;border-color:#8b2f2f;color:#fff}.lineLockBtn:active{transform:translateY(1px)}
+.unit{color:#687681}
+.empty{padding:40px;color:#71808a;text-align:center}
+.badge{font-size:11px;padding:3px 7px;border-radius:20px;background:#e6edf3;color:#496174}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.orders{max-height:260px}}
+
+.modal{display:none;position:fixed;inset:0;background:rgba(12,29,43,.48);z-index:20;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}.modalbox{background:#fff;width:min(1050px,96vw);max-height:90vh;border-radius:10px;box-shadow:0 12px 45px #0004;display:flex;flex-direction:column;overflow:hidden}
+.modalhead{background:#164b78;color:#fff;padding:16px 20px}.modalhead h2{margin:0;font-size:18px}.modalhead p{margin:4px 0 0;font-size:12px;opacity:.82}
+.modalbody{padding:18px;overflow:auto}.preview-note{background:#eef3f7;border-left:3px solid #164b78;padding:10px 12px;margin-bottom:14px;font-size:13px}
+.preview-title{font-size:12px;font-weight:700;color:#5b6b77;margin:12px 0 7px}
+.tablewrap{overflow:auto;border:1px solid #dce3e9;border-radius:6px}
+.previewtable{border-collapse:collapse;width:100%;font-size:12px;background:#fff}.previewtable th,.previewtable td{padding:8px 9px;border-bottom:1px solid #e7ebee;border-right:1px solid #edf0f2;white-space:nowrap;text-align:left}.previewtable th{background:#f1f4f7;color:#30495b;position:sticky;top:0}.previewtable td:first-child,.previewtable th:first-child{color:#6d7880;font-weight:600}
+.modalfoot{display:flex;justify-content:flex-end;gap:9px;padding:13px 18px;border-top:1px solid #e5e9ec;background:#fafbfc}
+.modalbox{max-width:1100px;width:94vw;max-height:88vh;display:flex;flex-direction:column}.modalbody{overflow:auto}.preview-note{line-height:1.55}.previewtable{font-size:12px}.previewtable th{position:sticky;top:0;z-index:1}.orderref{font-size:15px;font-weight:800;color:#164b78;margin-top:4px;letter-spacing:.3px}.mainref{font-size:20px;margin-top:5px;margin-bottom:3px}.order .meta{margin-top:5px}
+.lineStatus{font-size:13px;font-weight:800;}
+.lineStatus .completebadge,.lineStatus .pendingstatus{font-size:13px;font-weight:800;}
+.pendingstatus{color:#9a4d00;}
+.articlecode{font-size:12px;font-weight:700;color:#164b78;margin-top:4px}.articlemeasure{font-size:12px;color:#687681;margin-top:2px}.measurehighlight{display:block;width:250px;box-sizing:border-box;background:#164b78;color:#fff;padding:5px 10px;border-radius:5px;font-size:14px;font-weight:900;letter-spacing:.3px;text-transform:uppercase;text-align:center}.measureNormal{font-size:13px;font-weight:600;color:#4c6475}.specialcut{display:block;width:250px;box-sizing:border-box;margin-top:4px;background:#fff0d6;color:#8a4b00;border:2px solid #d99000;padding:4px 8px;border-radius:5px;font-size:11px;font-weight:900;letter-spacing:.35px;text-transform:uppercase;text-align:center}.articlemainref{font-size:17px}.articlelinehead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.lineclient{font-size:15px;font-weight:700;color:#173b56;margin-top:2px}.lineorder{min-width:100px;text-align:left;font-size:13px;font-weight:800;color:#164b78}.articleitem .meta{margin-top:4px}
+/* Teclado numérico permanente */
+.touch-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%;padding:0;background:transparent;border:0;box-shadow:none}
+.touch-keypad button{height:54px;border:1px solid #cbd6df;border-radius:8px;background:#ffffff;color:#173b56;font-size:21px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.touch-keypad button:active{background:#dfeaf2}.touch-keypad button:disabled{opacity:.4;cursor:not-allowed}.touch-keypad .opkey{font-size:24px;font-weight:900;background:#eef3f7;color:#164b78}.touch-keypad .wide{grid-column:span 2}.touch-keypad .ok{background:#164b78;color:#fff;border-color:#164b78}.touch-keypad .danger{color:#a13b3b}
+@media(max-width:1100px){.detailworkspace{grid-template-columns:minmax(0,1fr)}.keypadpanel{right:20px;width:245px;padding:14px}}
+@media(max-width:850px){.detailworkspace{grid-template-columns:1fr}.keypadpanel{position:fixed;right:10px;left:10px;width:auto;top:auto;bottom:10px;sition:static;border-left:0;border-top:1px solid #e0e6eb}.touch-keypad{max-width:360px;margin:0 auto}}
+.articleTotal{margin:12px 0 10px;padding:8px 10px;background:#e8f0f5;border:2px solid #164b78;border-radius:7px;color:#164b78;font-size:17px;letter-spacing:.2px}.articleStats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.articleStats>div{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;background:#164b78;color:#fff;border-radius:6px;padding:8px 6px;box-sizing:border-box;min-height:68px;box-shadow:inset 0 0 0 1px #ffffff22}.articleStats span{font-size:10px;font-weight:800;letter-spacing:.5px;opacity:.95}.articleStats strong{font-size:20px;margin:3px 0 0;color:#fff}.articleStats small{font-size:9px;font-weight:700;opacity:.8;color:#fff}@media(max-width:700px){.articleStats{grid-template-columns:1fr 1fr 1fr;gap:5px}.articleStats>div{min-height:62px;padding:6px 4px}.articleStats strong{font-size:17px}.articleStats span{font-size:9px}}
+@media (max-width:900px){
+.headerMain{align-items:flex-start;flex-direction:column}
+.headerStats{width:100%;justify-content:flex-start}
+.headerStat{flex:1;min-width:105px}
+}
+
+/* Pantalla de introducción táctil */
+.dataEntryModal{position:fixed;inset:0;background:rgba(18,34,48,.72);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px}
+.dataEntryModal.show{display:flex}.dataEntryModal.show ~ *{}
+.dataEntryBox{width:min(720px,96vw);background:#fff;border-radius:14px;box-shadow:0 12px 40px #0006;overflow:hidden}
+.dataEntryHead{background:#164b78;color:#fff;padding:18px 22px}
+.dataEntryHead .title{font-size:13px;font-weight:800;letter-spacing:.5px}
+.dataEntryHead .article{font-size:24px;font-weight:800;margin-top:5px}
+.dataEntryHead .meta{font-size:14px;margin-top:5px;opacity:.9}
+.dataEntryBody{padding:24px}
+.dataEntryLabel{font-size:13px;font-weight:800;color:#526473;margin-bottom:8px}
+.dataEntryInput{width:100%;height:92px;border:3px solid #164b78;border-radius:12px;background:#f8fafc;text-align:center;font-size:48px;font-weight:800;color:#173b56;outline:none}
+.dataEntryInput:focus{box-shadow:0 0 0 4px #164b7830}
+.dataEntryUnit{font-size:18px;font-weight:800;color:#687681;text-align:center;margin-top:7px}
+.dataEntryHint{font-size:13px;color:#687681;text-align:center;margin:10px 0 16px;min-height:18px}
+.dataEntryKeys{margin-top:6px}
+.dataEntryKeys .touch-keypad{display:grid}
+.dataEntryClose{margin-top:14px;width:100%;height:48px;font-size:15px;font-weight:800;border:1px solid #c7d2db;border-radius:8px;background:#eef2f5;color:#294052}
+@media(max-width:600px){.dataEntryModal{padding:8px}.dataEntryBox{width:100%;max-height:100%;overflow:auto}.dataEntryBody{padding:16px}.dataEntryInput{height:82px;font-size:40px}.dataEntryHead .article{font-size:20px}.dataEntryHead .description{font-size:16px}.dataEntryHead .requested{font-size:17px}}
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+
+<style id="visual-refresh-v77">
+/* v77 · Renovación visual exclusivamente CSS. No modifica la operativa. */
+:root{--brand:#164b78;--brand-dark:#103b60;--ink:#20313f;--muted:#687783;--line:#d9e1e7;--surface:#fff;--soft:#f4f7f9;--green:#2f7d32;--green-soft:#e8f5e8;--red:#a13b3b;--shadow:0 2px 10px rgba(25,48,66,.08)}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#f2f5f7;color:var(--ink);letter-spacing:.05px}
+.header{background:linear-gradient(135deg,var(--brand-dark),var(--brand));padding:18px 28px 17px;box-shadow:0 2px 10px rgba(16,59,96,.18)}
+.brand{font-size:23px;letter-spacing:.5px}.subtitle{font-size:11px;letter-spacing:.7px}
+.headerStats{gap:9px}.headerStat{min-width:128px;padding:10px 14px;border:1px solid rgba(22,75,120,.08);border-radius:9px;box-shadow:0 2px 7px rgba(0,0,0,.10)}
+.headerStatLabel{font-size:9px;letter-spacing:.8px}.headerStatValue{font-size:22px}
+.toolbar{padding:13px 20px;background:#f2f5f7;border-bottom:1px solid #e2e8ed;gap:8px}
+button{border:1px solid #d4dee5;border-radius:8px;padding:10px 15px;background:#fff;color:#294355;box-shadow:0 1px 3px rgba(20,45,65,.07);transition:background .12s,box-shadow .12s,transform .08s}
+button:hover{filter:none;background:#f7fafc;box-shadow:0 2px 7px rgba(20,45,65,.11)}button:active{transform:translateY(1px)}button.primary{background:var(--brand);border-color:var(--brand);box-shadow:0 2px 6px rgba(22,75,120,.20)}
+.search{background:#fff;border:1px solid #cbd7df;border-radius:8px;padding:10px 12px;box-shadow:0 1px 2px rgba(20,45,65,.04)}
+.layout{gap:16px;padding:0 20px 20px}.panel{border:1px solid #e0e7ec;border-radius:11px;box-shadow:var(--shadow)}.panel-title{padding:14px 16px;background:#fbfcfd;border-bottom:1px solid #e5ebef;letter-spacing:.1px}
+.order{padding:12px 15px;border-bottom:1px solid #edf1f4}.order:hover{background:#f6f9fb}.order.active{background:#edf4f8;box-shadow:inset 3px 0 0 var(--brand)}
+.order.complete{background:#edf8ee;border-left:5px solid var(--green);padding-left:10px}.order.complete:hover,.order.complete.active{background:#e4f4e5}.completebadge{background:#d9efdb}
+.detail{padding:16px}.clientname{font-size:24px;letter-spacing:-.2px}.metahead{color:#7a8790}
+.card{background:#fff;border:1px solid #dfe7ec;border-radius:9px;padding:11px;margin-bottom:8px;box-shadow:0 1px 4px rgba(25,48,66,.045)}
+.card.pendingLine{background:#fffafa;border-color:#edcece}.card.detailComplete{background:#edf8ee;border-color:#a8cbaa;box-shadow:0 1px 5px rgba(47,125,50,.07)}
+.label{color:#71808b;letter-spacing:.55px}.measure{color:#193f5b}.requested{background:#f0f5f8;border-left-color:var(--brand);border-radius:5px}
+.obs{background:var(--brand);border-radius:6px;box-shadow:0 1px 3px rgba(22,75,120,.15)}
+.lote,.weight{border:1px solid #bccbd5;border-radius:7px;background:#fff;transition:border-color .12s,box-shadow .12s}.lote:focus,.weight:focus{outline:none;box-shadow:0 0 0 3px rgba(22,75,120,.12);border-color:var(--brand)}
+.lineLockBtn{border:1px solid var(--brand);border-radius:7px;box-shadow:0 1px 3px rgba(22,75,120,.10)}.lineLockBtn.locked{background:#7e3434;border-color:#7e3434}
+.articleTotal{background:#edf4f8;border-color:#b8cad7;border-width:1px;box-shadow:0 1px 4px rgba(25,48,66,.05)}.articleStats>div{background:var(--brand);border-radius:8px;box-shadow:0 2px 5px rgba(22,75,120,.12)}
+.measurehighlight{background:var(--brand);border-radius:6px}.specialcut{border-radius:6px}
+.modal{background:rgba(15,34,48,.56)}.modalbox{border:1px solid #dfe6eb;border-radius:12px;box-shadow:0 18px 55px rgba(15,34,48,.20)}.modalhead{background:linear-gradient(135deg,var(--brand-dark),var(--brand));padding:17px 20px}.modalbody{padding:20px}.modalfoot{background:#fbfcfd;border-top:1px solid #e3e9ed}
+.tablewrap{border:1px solid #dfe7ec;border-radius:8px;box-shadow:0 1px 4px rgba(25,48,66,.04)}.previewtable th{background:#f2f6f8;color:#30495b}.previewtable td,.previewtable th{border-bottom-color:#e7edf1}
+.keypadpanel{background:#f8fafb;border-left-color:#dce5ea;box-shadow:0 3px 12px rgba(25,48,66,.10)}.keypadtarget{border-color:#d5e0e6;border-radius:7px;background:#fff}.touch-keypad{gap:8px}.touch-keypad button{border-color:#d2dde4;border-radius:9px;box-shadow:0 1px 2px rgba(25,48,66,.05)}.touch-keypad .opkey{background:#eef4f7}.touch-keypad .ok{background:var(--brand);border-color:var(--brand)}
+.dataEntryModal{background:rgba(13,31,44,.68)}.dataEntryBox{border:1px solid #dce5ea;border-radius:15px;box-shadow:0 20px 65px rgba(0,0,0,.24)}.dataEntryHead{background:linear-gradient(135deg,var(--brand-dark),var(--brand));padding:19px 22px}.dataEntryBody{padding:25px}.dataEntryInput{border:2px solid var(--brand);border-radius:12px;background:#f7fafc;box-shadow:inset 0 1px 3px rgba(25,48,66,.04)}.dataEntryInput:focus{box-shadow:0 0 0 4px rgba(22,75,120,.12)}.dataEntryClose{border-color:#d5dfe5;border-radius:8px;background:#f2f5f7}
+.empty{padding:48px 30px;color:#7a8790}
+@media(max-width:850px){.layout{padding-left:12px;padding-right:12px}.toolbar{padding-left:12px;padding-right:12px}}
+</style>
+<style>
+/* v78 · Rediseño visual limpio, elegante y moderno — solo CSS */
+:root{--navy:#123b5d;--blue:#1769aa;--blue2:#eaf3fa;--ink:#203443;--muted:#70808d;--line:#e4ebf0;--bg:#f4f7f9;--green:#2e7d55;--greenbg:#edf8f1;--red:#b84a4a;--redbg:#fff3f3;--shadow:0 4px 18px rgba(20,48,70,.07)}
+body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);letter-spacing:.05px}
+.header{background:linear-gradient(135deg,#123b5d 0%,#185b88 100%);padding:20px 28px 18px;box-shadow:0 2px 12px rgba(12,39,58,.14)}
+.brand{font-size:23px;font-weight:750;letter-spacing:.1px}.subtitle{font-size:12px;opacity:.78}
+.headerStats{gap:9px}.headerStat{min-width:132px;padding:10px 14px;background:rgba(255,255,255,.97);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.09)}.headerStatValue{font-size:22px}
+.toolbar{padding:13px 20px;background:transparent;gap:9px}.toolbar button{border:1px solid #dbe4ea;box-shadow:0 2px 7px rgba(20,48,70,.05);border-radius:9px;transition:.15s}.toolbar button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(20,48,70,.09)}button.primary{background:var(--navy);border-color:var(--navy)}
+#completeFilterBtn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.search{background:#fff;border:1px solid #d5e0e7;border-radius:9px;box-shadow:0 1px 5px rgba(20,48,70,.03);height:40px}
+.layout{gap:16px;padding:0 20px 20px}.panel{border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}.panel-title{padding:16px 17px;border-bottom:1px solid var(--line);font-size:14px}
+.order{padding:14px 16px;border-bottom:1px solid #edf1f4;transition:background .15s,box-shadow .15s}.order:hover{background:#f7fafc}.order.active{background:#eef6fb;box-shadow:inset 3px 0 0 var(--blue)}.order.complete{background:var(--greenbg);border-left:4px solid var(--green);padding-left:12px}.order.complete:hover,.order.complete.active{background:#e5f4eb}.order .client{font-size:14px}.orderref{font-size:14px;color:var(--blue)}
+.detail{padding:17px}.clientname{font-size:24px;letter-spacing:-.2px}.metahead{color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px;box-shadow:0 2px 8px rgba(20,48,70,.035)}.card.pendingLine{background:var(--redbg);border-color:#f1d2d2}.card.detailComplete{background:var(--greenbg);border-color:#b8dfc5;border-left:4px solid var(--green);padding-left:9px}.card.detailComplete .requested{background:#f2faf5;border-left-color:var(--green)}
+.label{font-size:10px;color:#82909b;letter-spacing:.55px}.measure{font-size:15px;color:#244b66}.requested{background:#f0f6fa;border-left-color:var(--blue);border-radius:6px;padding:6px 10px}.obs{background:var(--navy);border-radius:7px}
+.lote{height:44px;border:1px solid #cfdbe3;border-radius:8px;background:#fff;transition:.15s}.lote:focus{outline:3px solid rgba(23,105,170,.13);border-color:var(--blue)}.weight{height:44px;border:1px solid #cfdbe3;border-radius:8px;transition:.15s}.weight:focus{outline:3px solid rgba(23,105,170,.13);border-color:var(--blue)}
+.lineLockBtn{height:44px;min-width:140px;border:1px solid #cbd9e2;border-radius:8px;background:#f8fafb;color:var(--navy);font-size:13px;box-shadow:0 1px 4px rgba(20,48,70,.04)}.lineLockBtn:hover{background:#eef5f9;transform:translateY(-1px)}.lineLockBtn.locked{background:#eef1f3;color:#5e6d77;border-color:#cfd7dc}.lineLockBtn:active{transform:translateY(0)}
+.measurehighlight{width:250px;background:var(--navy);border-radius:7px}.specialcut{border-radius:7px}
+.articleTotal{background:#eef5f9;border:1px solid #d5e4ed;border-radius:9px;color:var(--navy);padding:9px 11px}.articleStats{gap:9px}.articleStats>div{background:linear-gradient(135deg,#123b5d,#1769aa);border-radius:9px;box-shadow:0 3px 10px rgba(18,59,93,.10)}
+.keypadpanel{background:rgba(248,250,252,.98);border:1px solid var(--line);border-left:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(20,48,70,.10)}.keypadtitle{font-size:12px;letter-spacing:.3px}.keypadtarget{border-radius:8px;border-color:#dbe5eb}
+.touch-keypad{gap:8px}.touch-keypad button{height:54px;border:1px solid #d8e2e8;border-radius:9px;box-shadow:0 2px 5px rgba(20,48,70,.035);transition:.1s}.touch-keypad button:active{transform:scale(.98);background:#eaf3fa}.touch-keypad .opkey{background:#f0f5f8}.touch-keypad .ok{background:var(--navy);border-color:var(--navy)}
+.modal{background:rgba(15,32,46,.58);backdrop-filter:blur(2px)}.modalbox{border:1px solid #e5ebef;border-radius:14px;box-shadow:0 20px 55px rgba(8,31,47,.22)}.modalhead{background:linear-gradient(135deg,#123b5d,#185b88);padding:18px 21px}.modalbody{padding:20px}.preview-note{background:#f1f6f9;border-left-color:var(--blue);border-radius:7px}.tablewrap{border-radius:9px;border-color:#dce6ec}.previewtable th{background:#f2f6f8;color:#294557}.previewtable td{border-color:#edf1f4}.modalfoot{background:#fafcfd;border-top-color:var(--line)}
+.dataEntryModal{background:rgba(12,31,45,.68);backdrop-filter:blur(3px)}.entryDualGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:12px}.entryField{position:relative;min-width:0}.entryField .dataEntryInput{width:100%;}.entryField .dataEntryUnit{right:14px;bottom:10px}.entryField .dataEntryLabel{margin-bottom:8px}.entryField .dataEntryInput{height:72px;font-size:34px;font-weight:900}.entryField .dataEntryInput:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(23,105,170,.10)}
+@media(max-width:600px){.entryDualGrid{grid-template-columns:1fr;gap:12px}.entryField .dataEntryInput{height:68px;font-size:32px}}
+.dataEntryBox{border:1px solid #e3eaef;border-radius:16px;box-shadow:0 22px 60px rgba(5,28,45,.25)}.dataEntryHead{background:linear-gradient(135deg,#123b5d,#1769aa);padding:19px 22px}.dataEntryBody{padding:25px}.dataEntryInput{border:2px solid #cbdce7;border-radius:12px;background:#f8fbfd;color:var(--navy);box-shadow:inset 0 1px 2px rgba(20,48,70,.03)}.dataEntryInput:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(23,105,170,.10)}.dataEntryClose{border:1px solid #d5dfe6;border-radius:9px;background:#f3f6f8}
+.empty{color:#8a98a3;padding:48px 30px}.badge{background:#edf3f7;color:#526c7e;border:1px solid #dfe8ee}
+@media(max-width:850px){.layout{padding:0 12px 12px}.toolbar{padding:11px 12px}.header{padding:16px}.detail{padding:13px}}
+</style>
+
+<style id="lock-icon-refinement">
+.lineLockBtn{min-width:44px !important;width:44px !important;height:44px !important;padding:0 !important;display:inline-flex !important;align-items:center;justify-content:center;border-radius:12px !important;background:#fff !important;color:#164b78 !important;border:1px solid #d6e0e7 !important;box-shadow:0 2px 7px rgba(20,48,70,.08) !important;transition:transform .15s ease,box-shadow .15s ease,background .15s ease !important;}
+.lineLockBtn:hover{background:#f3f7fa !important;box-shadow:0 4px 10px rgba(20,48,70,.12) !important;transform:translateY(-1px) !important;}
+.lineLockBtn.locked{background:#eef2f5 !important;color:#53636e !important;border-color:#cfd9df !important;}
+.lineLockBtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.lineLockBtn svg circle{fill:currentColor;stroke:none;}
+.lineLockBtn:focus-visible{outline:3px solid rgba(22,75,120,.18);outline-offset:2px;}
+</style>
+
+<style id="erp-order-export">
+.orderref{position:relative;padding-right:54px;}
+.orderExportBtn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:42px;height:42px;padding:0;border:1px solid #c8d3dc;border-radius:9px;background:#fff;color:#164b78;display:inline-flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;line-height:1;box-shadow:0 2px 7px rgba(18,48,70,.08);cursor:pointer;}
+.orderExportBtn:hover{background:#f3f7fa;transform:translateY(-50%) scale(1.03);}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="headerMain">
+    <div>
+      <div class="brand">BACALAOS M. BUENO</div>
+      <div class="subtitle">RECOGIDA DE PESOS · APLICACIÓN ONLINE</div>
+    </div>
+    <div class="headerStats" aria-label="Resumen de la recogida">
+      <div class="headerStat"><div class="headerStatLabel">Total pedidos</div><div class="headerStatValue" id="statPedidos">0</div></div>
+      <div class="headerStat"><div class="headerStatLabel">Total líneas</div><div class="headerStatValue" id="statLineas">0</div></div>
+      <div class="headerStat"><div class="headerStatLabel">Total peso pedido</div><div class="headerStatValue"><span id="statPeso">0,000</span><span class="headerStatUnit">kg</span></div></div>
+    </div>
+  </div>
+</header>
+<div class="toolbar">
+  <button class="primary" onclick="document.getElementById('file').click()">IMPORTAR EXCEL ERP</button>
+  <input id="file" type="file" accept=".xls,.xlsx,.xlsm" style="display:none" onchange="importExcel(event)">
+  <button onclick="exportCSV()">EXPORTAR CSV</button>
+  <button id="modeBtn" onclick="toggleWorkMode()">TRABAJAR POR ARTÍCULO</button>
+  <button class="primary" onclick="exportPDF()">GENERAR PDF</button>
+  <input id="search" class="search" placeholder="Buscar cliente o pedido…" oninput="renderOrders()">
+  <span class="badge" id="status">Importar Excel sustituye los datos anteriores</span>
+</div>
+<main class="layout">
+  <section class="panel">
+    <div class="panel-title list-panel-title"><div class="list-filter-buttons"><button id="allFilterBtn" onclick="setListFilter('all')" title="Mostrar todo">TODO</button><button id="pendingFilterBtn" onclick="setListFilter('pending')" title="Mostrar solo pendientes">PENDIENTES</button><button id="completeFilterBtn" onclick="setListFilter('complete')" title="Mostrar solo completos">COMPLETOS</button></div><span id="listTitle">PEDIDOS</span></div>
+    <div class="orders" id="orders"></div>
+  </section>
+  <section class="panel detailpanel">
+    <div class="detailworkspace">
+      <div class="detail" id="detail"><div class="empty">Selecciona un pedido.</div></div>
+      <aside class="keypadpanel" aria-label="Teclado numérico">
+        <div class="keypadtitle">TECLADO NUMÉRICO</div>
+        <div class="keypadtarget" id="keypadTarget">Selecciona PESO REAL o LOTE</div>
+        <div id="touchKeypad" class="touch-keypad show">
+          <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+          <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+          <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+          <button type="button" data-key="clear" class="danger">BORRAR</button><button type="button" data-key="0">0</button><button type="button" data-key="back">⌫</button>
+          <button type="button" data-key="decimal" class="decimalkey">,</button><button type="button" data-key="plus" class="opkey">+</button><button type="button" data-key="minus" class="opkey">−</button><button type="button" data-key="ok" class="ok wide">ACEPTAR</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+
+
+<div class="dataEntryModal" id="dataEntryModal" aria-hidden="true">
+  <div class="dataEntryBox">
+    <div class="dataEntryHead">
+      <div class="title" id="entryTypeTitle">INTRODUCCIÓN DE DATOS</div>
+      <div class="article" id="entryArticle">Artículo</div>
+      <div class="description" id="entryDescription">Descripción del artículo</div>
+      <div class="requested" id="entryRequested">PESO PEDIDO: 0,000 kg</div>
+      <div class="meta" id="entryMeta">Cliente · Pedido</div>
+    </div>
+    <div class="dataEntryBody">
+      <div class="entryDualGrid">
+        <div class="entryField">
+          <div class="dataEntryLabel">PESO REAL</div>
+          <input id="entryWeightInput" class="dataEntryInput" type="text" inputmode="none" autocomplete="off" readonly>
+          <div class="dataEntryUnit">kg</div>
+        </div>
+        <div class="entryField">
+          <div class="dataEntryLabel">LOTE</div>
+          <input id="entryLotInput" class="dataEntryInput" type="text" inputmode="none" autocomplete="off" readonly>
+          <div class="dataEntryUnit">Nº de lote</div>
+        </div>
+      </div>
+      <div class="dataEntryHint" id="entryHint"></div>
+      <div class="dataEntryKeys" id="entryKeys"></div>
+      <button type="button" class="dataEntryClose" onclick="closeDataEntry(false)">CANCELAR</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="importModal">
+  <div class="modalbox">
+    <div class="modalhead">
+      <h2>Vista previa de importación</h2>
+      <p id="previewFile"></p>
+    </div>
+    <div class="modalbody">
+      <div class="preview-note" id="previewNote"></div>
+      <div class="preview-title">Celdas / columnas que interpreta el programa</div>
+      <div class="tablewrap"><table class="previewtable" id="previewTable"></table></div>
+      <div class="preview-title">Primeras líneas interpretadas</div>
+      <div class="tablewrap"><table class="previewRows previewtable" id="previewRows"></table></div>
+    </div>
+    <div class="modalfoot">
+      <button onclick="closeImportPreview()">Cancelar</button>
+      <button class="primary" onclick="confirmImport()">CONFIRMAR IMPORTACIÓN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://ffgmpwxyzizbfiechlye.supabase.co';
+const SUPABASE_KEY='sb_publishable_nWNT82zrvQ8WTOQ8b6LxRg_HP1D-BtJ';
+const ONLINE_TABLE='recogida_pesos';
+const LATEST_LOTS_TABLE='recogida_pesos_ultimos_lotes';
+let latestLots={};
+function normalizeArticleCode(v){return String(v??'').trim();}
+function numericLot(v){const s=String(v??'').trim(); return /^\d+$/.test(s)?Number(s):null;}
+async function loadLatestLots(){
+  const rows=await supa(LATEST_LOTS_TABLE+'?select=codigo_articulo,lote_mas_alto');
+  const map={};
+  (rows||[]).forEach(x=>{const a=normalizeArticleCode(x.codigo_articulo);const n=numericLot(x.lote_mas_alto);if(a&&n!==null)map[a]=n;});
+  latestLots=map;
+  return map;
+}
+async function saveLatestLotsFromGroups(gs){
+  const maxByArticle={};
+  (gs||[]).forEach(g=>(g.lineas||[]).forEach(r=>{
+    const a=normalizeArticleCode(r.articulo), n=numericLot(r.lote);
+    if(!a||n===null)return;
+    if(maxByArticle[a]===undefined || n>maxByArticle[a]) maxByArticle[a]=n;
+  }));
+  const pending=[];
+  Object.entries(maxByArticle).forEach(([a,n])=>{
+    const current=numericLot(latestLots[a]);
+    if(current===null || n>current){ latestLots[a]=n; pending.push({codigo_articulo:a,lote_mas_alto:n,updated_at:new Date().toISOString()}); }
+  });
+  if(pending.length){
+    await supa(LATEST_LOTS_TABLE+'?on_conflict=codigo_articulo',{method:'POST',headers:apiHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(pending)});
+  }
+}
+async function rememberLatestLot(r){
+  const a=normalizeArticleCode(r?.articulo), n=numericLot(r?.lote);
+  if(!a||n===null)return;
+  const current=numericLot(latestLots[a]);
+  if(current!==null && n<=current)return;
+  latestLots[a]=n;
+  await supa(LATEST_LOTS_TABLE+'?on_conflict=codigo_articulo',{method:'POST',headers:apiHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify({codigo_articulo:a,lote_mas_alto:n,updated_at:new Date().toISOString()})});
+}
+// v69: codigo_cliente se guarda también en Supabase. Requiere una sola vez la columna public.recogida_pesos.codigo_cliente.
+const MEDIDAS={"01":"UD.","02":"CJ.","03":"PALÉ","04":"BASE PALET","05":"BOX","06":"C-6","10":"1X 150-200 GR.","11":"1X 200-250 GR.","12":"1X 250-300 GR.","13":"1X 300-350 GR.","20":"4X 250-300 GR.","21":"6X 200-240 GR.","22":"2X 250-300 GR.","23":"8X +/-150 GR.","31":"1X 500-600 GR.","32":"1X 600-750 GR.","33":"2X +/-220 GR."};
+const MEDIDA_CODIGO={}; Object.keys(MEDIDAS).forEach(k=>MEDIDA_CODIGO[String(MEDIDAS[k]).trim().toUpperCase()]=k);
+function getClientCodeMap(){try{return JSON.parse(localStorage.getItem('recogida_client_codes')||'{}')}catch(e){return {}}}
+function saveClientCode(name,code){try{const m=getClientCodeMap();if(name&&code)m[String(name).trim()]=String(code).trim();localStorage.setItem('recogida_client_codes',JSON.stringify(m))}catch(e){}}
+function clientLabel(name,code){
+  const n=String(name??'').trim();
+  const c=String(code??getClientCodeMap()[n]??'').trim();
+  const digits=c.replace(/\D/g,'');
+  const shortCode=digits.length>=5?digits.slice(-5):digits;
+  return shortCode?n+' ('+shortCode+')':n;
+}
+function clientOrderLabel(name,code,ref){
+  const c=String(code??getClientCodeMap()[String(name??'').trim()]??'').trim().replace(/\D/g,'');
+  const shortCode=c.length>=5?c.slice(-5):c;
+  const order=String(ref??'').trim();
+  if(shortCode && order) return 'Cliente: '+shortCode+'    Pedido: '+order;
+  if(shortCode) return 'Cliente: '+shortCode;
+  return order ? 'Pedido: '+order : '';
+}
+
+let onlineReady=false, onlineTimer=null;
+function apiUrl(path=''){return SUPABASE_URL+'/rest/v1/'+path}
+function apiHeaders(extra={}){return Object.assign({'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},extra)}
+async function supa(path,opts={}){
+  const res=await fetch(apiUrl(path),Object.assign({headers:apiHeaders()},opts));
+  const txt=await res.text(); let data=null; try{data=txt?JSON.parse(txt):null}catch{}
+  if(!res.ok) throw new Error((data&&data.message)||data?.hint||txt||('HTTP '+res.status));
+  return data;
+}
+function setStatus(t){const el=document.getElementById('status');if(el)el.textContent=t}
+function showOnlineError(err){setStatus('Error de sincronización: '+(err.message||err));console.error(err)}
+function rowKey(r){return [r.pedidoRef,r.cliente,r.articulo,r.fecha,r.pesoPedido].join('|')}
+function flatGroups(gs){return gs.flatMap(g=>g.lineas.map((r,i)=>Object.assign({},r,{_key:rowKey(r),_line_index:i})));}
+function groupOnline(rows){
+  const map=new Map(), codes=getClientCodeMap();
+  rows.forEach(r=>{
+    const k=r.pedido_ref+'|'+r.cliente;
+    if(!map.has(k))map.set(k,{cliente:r.cliente,codigoCliente:r.codigo_cliente||codes[String(r.cliente||'').trim()]||'',pedidoRef:r.pedido_ref,serie:r.serie||'',pedido:r.numero||'',fecha:r.fecha||'',lineas:[]});
+    map.get(k).lineas.push({cliente:r.cliente,codigoCliente:r.codigo_cliente||codes[String(r.cliente||'').trim()]||'',serie:r.serie||'',pedido:r.numero||'',pedidoRef:r.pedido_ref,fecha:r.fecha||'',descripcion:r.descripcion||'',medida:r.medida||'',pesoPedido:Number(r.peso_pedido)||0,pesoReal:(r.peso_real==null||Number(r.peso_real)===0)?'':String(r.peso_real),lote:r.lote==null?'':String(r.lote),observaciones:r.observaciones||'',articulo:r.articulo||'',_id:r.id});
+  });
+  return Array.from(map.values());
+}
+async function loadOnlineData(){
+  const rows=await supa(ONLINE_TABLE+'?select=*&order=pedido_ref.asc,id.asc');
+  onlineReady=true; return groupOnline(rows||[]);
+}
+function toOnlineRow(r){return {id:r._id||crypto.randomUUID(),cliente:r.cliente,codigo_cliente:String(r.codigoCliente||'').trim()||null,pedido_ref:r.pedidoRef,serie:r.serie||'',numero:String(r.pedido||''),fecha:r.fecha||null,articulo:r.articulo||'',descripcion:r.descripcion||'',medida:r.medida||'',peso_pedido:Number(r.pesoPedido)||0,peso_real:(r.pesoReal===''||r.pesoReal==null)?null:Number(String(r.pesoReal).replace(',','.')),lote:(r.lote===''||r.lote==null)?null:String(r.lote),observaciones:r.observaciones||null};}
+async function replaceOnlineData(gs){
+  // Al importar, conservar las líneas que ya existen en Supabase y tienen
+  // peso real > 0, siempre que la línea correspondiente también venga en el ERP.
+  const actuales=await supa(ONLINE_TABLE+'?select=*&order=id.asc');
+  const incoming=flatGroups(gs).map(toOnlineRow);
+
+  const claveLinea = r => [
+    String(r.cliente??'').trim(),
+    String(r.pedido_ref ?? r.pedidoRef ?? '').trim(),
+    String(r.articulo??'').trim(),
+    String(r.medida??'').trim(),
+    String(r.observaciones??'').trim()
+  ].join('\u001f');
+
+  const clavesImportadas=new Set(incoming.map(claveLinea));
+  const protegidas=(actuales||[]).filter(r=>{
+    const pesoReal=Number(r.peso_real);
+    return pesoReal>0 && clavesImportadas.has(claveLinea(r));
+  });
+
+  // Una línea protegida NO se vuelve a importar: se elimina del conjunto
+  // entrante por su clave, y después se conserva la existente de Supabase.
+  await supa(ONLINE_TABLE+'?id=not.is.null',{method:'DELETE'});
+  const clavesProtegidas=new Set(protegidas.map(claveLinea));
+  const rows=incoming.filter(r=>!clavesProtegidas.has(claveLinea(r)));
+  const finalRows=[
+    ...rows,
+    ...protegidas.map(r=>({
+      id:r.id,
+      cliente:r.cliente,
+      codigo_cliente:String(r.codigo_cliente||'').trim()||null,
+      pedido_ref:r.pedido_ref,
+      serie:r.serie||'',
+      numero:String(r.numero||''),
+      fecha:r.fecha||null,
+      articulo:r.articulo||'',
+      descripcion:r.descripcion||'',
+      medida:r.medida||'',
+      peso_pedido:Number(r.peso_pedido)||0,
+      peso_real:Number(r.peso_real)||0,
+      lote:r.lote==null?null:String(r.lote),
+      observaciones:r.observaciones||null
+    }))
+  ];
+
+  for(let i=0;i<finalRows.length;i+=500){
+    await supa(ONLINE_TABLE,{method:'POST',headers:apiHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(finalRows.slice(i,i+500))});
+  }
+  onlineReady=true;
+  return {protegidas:protegidas.length};
+}
+async function onlineSaveLine(r){
+  const body={peso_real:(r.pesoReal===''||r.pesoReal==null)?null:Number(String(r.pesoReal).replace(',','.')),lote:(r.lote===''||r.lote==null)?null:String(r.lote)};
+  if(!r._id){
+    const found=await supa(ONLINE_TABLE+'?select=id&pedido_ref=eq.'+encodeURIComponent(r.pedidoRef)+'&articulo=eq.'+encodeURIComponent(r.articulo)+'&fecha=eq.'+encodeURIComponent(r.fecha)+'&peso_pedido=eq.'+encodeURIComponent(Number(r.pesoPedido))+'&limit=1');
+    r._id=found?.[0]?.id||null;
+  }
+  if(r._id){
+    const saved=await supa(ONLINE_TABLE+'?id=eq.'+encodeURIComponent(r._id),{method:'PATCH',headers:apiHeaders({'Prefer':'return=representation'}),body:JSON.stringify(body)});
+    if(!Array.isArray(saved) || saved.length===0){
+      // Si la línea no existe ya en Supabase, crearla completa en lugar de
+      // hacer un PATCH silencioso sobre un id inexistente.
+      r._id=null;
+    }
+  }
+  if(!r._id){
+    const row=toOnlineRow(r);
+    const created=await supa(ONLINE_TABLE,{method:'POST',headers:apiHeaders({'Prefer':'return=representation'}),body:JSON.stringify(row)});
+    if(!Array.isArray(created) || created.length===0 || !created[0]?.id) throw new Error('Supabase no confirmó el guardado de la línea');
+    r._id=created[0].id;
+  }
+  onlineReady=true;
+  setStatus('Guardado automáticamente · sincronizado');
+  return {ok:true,id:r._id};
+}
+async function onlineSaveAll(){
+  if(!onlineReady)return;
+  const rows=flatGroups(groups).filter(r=>r._id).map(r=>({id:r._id,peso_real:(r.pesoReal===''||r.pesoReal==null)?null:Number(String(r.pesoReal).replace(',','.')),lote:(r.lote===''||r.lote==null)?null:String(r.lote)}));
+  for(const x of rows) await supa(ONLINE_TABLE+'?id=eq.'+encodeURIComponent(x.id),{method:'PATCH',headers:apiHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({peso_real:x.peso_real,lote:x.lote})});
+}
+function startRealtimePolling(){
+  if(onlineTimer)clearInterval(onlineTimer);
+  onlineTimer=setInterval(async()=>{try{const fresh=await loadOnlineData();const current=JSON.stringify(flatGroups(groups).map(r=>[r._id,r.pesoReal,r.lote]));const next=JSON.stringify(flatGroups(fresh).map(r=>[r._id,r.pesoReal,r.lote]));if(current!==next){groups=fresh;renderOrders();renderDetail();setStatus('Actualizado desde otro ordenador');}}catch(e){console.warn('sync',e)}},10000);
+}
+
+const initialData = [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "pedidoRef": "26-02859", "serie": "26", "pedido": "2859", "fecha": "11/08/26", "lineas": [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "2859", "pedidoRef": "26-02859", "fecha": "11/08/26", "descripcion": "BACALAO DESALADO LINGOTE", "medida": "UD.", "pesoPedido": 6.14, "pesoReal": "", "observaciones": "", "articulo": "10110"}]}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "pedidoRef": "26-03432", "serie": "26", "pedido": "3432", "fecha": "16/09/26", "lineas": [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "3432", "pedidoRef": "26-03432", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LINGOTE", "medida": "UD.", "pesoPedido": 6.65, "pesoReal": "", "observaciones": "", "articulo": "10110"}]}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "pedidoRef": "26-03372", "serie": "26", "pedido": "3372", "fecha": "11/09/26", "lineas": [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "3372", "pedidoRef": "26-03372", "fecha": "11/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 0.5, "pesoReal": "", "observaciones": "", "articulo": "10140"}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "3372", "pedidoRef": "26-03372", "fecha": "11/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 0.52, "pesoReal": "", "observaciones": "", "articulo": "10140"}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "3372", "pedidoRef": "26-03372", "fecha": "11/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 0.52, "pesoReal": "", "observaciones": "", "articulo": "10140"}]}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "pedidoRef": "26-02621", "serie": "26", "pedido": "2621", "fecha": "31/07/26", "lineas": [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "2621", "pedidoRef": "26-02621", "fecha": "31/07/26", "descripcion": "BACALAO DESALADO BOCADITOS C/PIEL", "medida": "UD.", "pesoPedido": 1.02, "pesoReal": "", "observaciones": "", "articulo": "10147"}]}, {"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "pedidoRef": "26-03119", "serie": "26", "pedido": "3119", "fecha": "24/08/26", "lineas": [{"cliente": "VENTAS ALMACEN -VARIOS CONTADO-", "serie": "26", "pedido": "3119", "pedidoRef": "26-03119", "fecha": "24/08/26", "descripcion": "BACALAO DESALADO BOCADITOS C/PIEL", "medida": "UD.", "pesoPedido": 1.03, "pesoReal": "", "observaciones": "", "articulo": "10147"}]}, {"cliente": "CLIENTES VARIOS - PEÑAS", "pedidoRef": "26-02734", "serie": "26", "pedido": "2734", "fecha": "06/08/26", "lineas": [{"cliente": "CLIENTES VARIOS - PEÑAS", "serie": "26", "pedido": "2734", "pedidoRef": "26-02734", "fecha": "06/08/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 9.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}, {"cliente": "CLIENTES VARIOS - PEÑAS", "serie": "26", "pedido": "2734", "pedidoRef": "26-02734", "fecha": "06/08/26", "descripcion": "BACALAO DESALADO MIGA SELECCION", "medida": "UD.", "pesoPedido": 1.1, "pesoReal": "", "observaciones": "", "articulo": "10150"}]}, {"cliente": "CAFETERIA LOS ALAMOS", "pedidoRef": "P2-82936", "serie": "P2", "pedido": "82936", "fecha": "16/09/26", "lineas": [{"cliente": "CAFETERIA LOS ALAMOS", "serie": "P2", "pedido": "82936", "pedidoRef": "P2-82936", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 5.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}, {"cliente": "CAFETERIA LOS ALAMOS", "serie": "P2", "pedido": "82936", "pedidoRef": "P2-82936", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO BOCADITOS C/PIEL", "medida": "UD.", "pesoPedido": 5.0, "pesoReal": "", "observaciones": "", "articulo": "10147"}, {"cliente": "CAFETERIA LOS ALAMOS", "serie": "P2", "pedido": "82936", "pedidoRef": "P2-82936", "fecha": "16/09/26", "descripcion": "BACALAO COCOCHAS DESALADAS", "medida": "UD.", "pesoPedido": 2.0, "pesoReal": "", "observaciones": "", "articulo": "10175"}]}, {"cliente": "CAFETERIA LOS ALAMOS", "pedidoRef": "P2-82906", "serie": "P2", "pedido": "82906", "fecha": "14/09/26", "lineas": [{"cliente": "CAFETERIA LOS ALAMOS", "serie": "P2", "pedido": "82906", "pedidoRef": "P2-82906", "fecha": "14/09/26", "descripcion": "BACALAO DESALADO COGOTE - MORRO", "medida": "UD.", "pesoPedido": 10.0, "pesoReal": "", "observaciones": "", "articulo": "10180"}]}, {"cliente": "BAR XIREX", "pedidoRef": "P2-82919", "serie": "P2", "pedido": "82919", "fecha": "15/09/26", "lineas": [{"cliente": "BAR XIREX", "serie": "P2", "pedido": "82919", "pedidoRef": "P2-82919", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 2.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}]}, {"cliente": "RESTAURANTE LAS CABAÑAS", "pedidoRef": "P2-82926", "serie": "P2", "pedido": "82926", "fecha": "15/09/26", "lineas": [{"cliente": "RESTAURANTE LAS CABAÑAS", "serie": "P2", "pedido": "82926", "pedidoRef": "P2-82926", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LINGOTE PORCION", "medida": "UD.", "pesoPedido": 20.0, "pesoReal": "", "observaciones": "", "articulo": "10115"}, {"cliente": "RESTAURANTE LAS CABAÑAS", "serie": "P2", "pedido": "82926", "pedidoRef": "P2-82926", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO BOCADITOS C/PIEL", "medida": "UD.", "pesoPedido": 10.0, "pesoReal": "", "observaciones": "", "articulo": "10147"}, {"cliente": "RESTAURANTE LAS CABAÑAS", "serie": "P2", "pedido": "82926", "pedidoRef": "P2-82926", "fecha": "15/09/26", "descripcion": "BACALAO COCOCHAS DESALADAS", "medida": "UD.", "pesoPedido": 4.0, "pesoReal": "", "observaciones": "", "articulo": "10175"}, {"cliente": "RESTAURANTE LAS CABAÑAS", "serie": "P2", "pedido": "82926", "pedidoRef": "P2-82926", "fecha": "15/09/26", "descripcion": "BACALAO COCOCHAS DESALADAS", "medida": "UD.", "pesoPedido": 20.0, "pesoReal": "", "observaciones": "", "articulo": "10175"}]}, {"cliente": "RESTAURANTE LEMUS", "pedidoRef": "P2-82920", "serie": "P2", "pedido": "82920", "fecha": "15/09/26", "lineas": [{"cliente": "RESTAURANTE LEMUS", "serie": "P2", "pedido": "82920", "pedidoRef": "P2-82920", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LOMO IMPERIAL", "medida": "UD.", "pesoPedido": 2.0, "pesoReal": "", "observaciones": "", "articulo": "10130"}, {"cliente": "RESTAURANTE LEMUS", "serie": "P2", "pedido": "82920", "pedidoRef": "P2-82920", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 2.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}]}, {"cliente": "RESTAURANTE MIRASIERRA", "pedidoRef": "P5-18433", "serie": "P5", "pedido": "18433", "fecha": "16/09/26", "lineas": [{"cliente": "RESTAURANTE MIRASIERRA", "serie": "P5", "pedido": "18433", "pedidoRef": "P5-18433", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LINGOTE PORCION", "medida": "UD.", "pesoPedido": 24.0, "pesoReal": "", "observaciones": "", "articulo": "10115"}]}, {"cliente": "ABADIA DE LOS TEMPLARIOS", "pedidoRef": "P5-18428", "serie": "P5", "pedido": "18428", "fecha": "16/09/26", "lineas": [{"cliente": "ABADIA DE LOS TEMPLARIOS", "serie": "P5", "pedido": "18428", "pedidoRef": "P5-18428", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LOMO IMPERIAL", "medida": "UD.", "pesoPedido": 6.0, "pesoReal": "", "observaciones": "", "articulo": "10130"}]}, {"cliente": "RESTAURANTE CASA LUCY", "pedidoRef": "P0-11391", "serie": "P0", "pedido": "11391", "fecha": "15/09/26", "lineas": [{"cliente": "RESTAURANTE CASA LUCY", "serie": "P0", "pedido": "11391", "pedidoRef": "P0-11391", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 6.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}]}, {"cliente": "RESTAURANTE EL BARDO (COMPAÑIA)", "pedidoRef": "P2-82935", "serie": "P2", "pedido": "82935", "fecha": "16/09/26", "lineas": [{"cliente": "RESTAURANTE EL BARDO (COMPAÑIA)", "serie": "P2", "pedido": "82935", "pedidoRef": "P2-82935", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LOMO SELECCION", "medida": "UD.", "pesoPedido": 8.0, "pesoReal": "", "observaciones": "", "articulo": "10140"}]}, {"cliente": "RESTAURANTE LA COCINA VIEJA", "pedidoRef": "P0-11392", "serie": "P0", "pedido": "11392", "fecha": "15/09/26", "lineas": [{"cliente": "RESTAURANTE LA COCINA VIEJA", "serie": "P0", "pedido": "11392", "pedidoRef": "P0-11392", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO SUPREMA GRANDE", "medida": "UD.", "pesoPedido": 3.0, "pesoReal": "", "observaciones": "", "articulo": "10120"}]}, {"cliente": "RESTAURANTE RAICES", "pedidoRef": "P0-11410", "serie": "P0", "pedido": "11410", "fecha": "16/09/26", "lineas": [{"cliente": "RESTAURANTE RAICES", "serie": "P0", "pedido": "11410", "pedidoRef": "P0-11410", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO LOMITO PIL-PIL", "medida": "UD.", "pesoPedido": 6.0, "pesoReal": "", "observaciones": "", "articulo": "10145"}]}, {"cliente": "RESTAURANTE LIBERTEN", "pedidoRef": "P0-11409", "serie": "P0", "pedido": "11409", "fecha": "16/09/26", "lineas": [{"cliente": "RESTAURANTE LIBERTEN", "serie": "P0", "pedido": "11409", "pedidoRef": "P0-11409", "fecha": "16/09/26", "descripcion": "BACALAO DESALADO SUPREMA GRANDE", "medida": "UD.", "pesoPedido": 6.0, "pesoReal": "", "observaciones": "", "articulo": "10120"}]}, {"cliente": "DELAOSSA ALIMENTACION S.L.", "pedidoRef": "26-03405", "serie": "26", "pedido": "3405", "fecha": "15/09/26", "lineas": [{"cliente": "DELAOSSA ALIMENTACION S.L.", "serie": "26", "pedido": "3405", "pedidoRef": "26-03405", "fecha": "15/09/26", "descripcion": "BACALAO DESALADO LINGOTE XL", "medida": "1X 300-350 GR.", "pesoPedido": 2.0, "pesoReal": "", "observaciones": "", "articulo": "10112"}]}];
+let groups = initialData;
+let selected = 0;
+
+function pedidoRef(serie,numero){
+  const a=String(serie??'').trim().padStart(2,'0').slice(-2);
+  const b=String(numero??'').trim().padStart(5,'0').slice(-5);
+  return a+'-'+b;
+}
+let workMode='article';
+let selectedArticle=0;
+let completeOnly=false;
+let pendingOnly=false;
+function setListFilter(mode){completeOnly=mode==='complete';pendingOnly=mode==='pending';renderOrders();}
+function articleList(){
+  const map=new Map();
+  groups.forEach((g,gi)=> (g.lineas||[]).forEach((r,ri)=>{
+    const key=String(r.articulo||'')+'|'+String(r.descripcion||'');
+    if(!map.has(key)) map.set(key,{key,articulo:r.articulo||'',descripcion:r.descripcion||'',lineas:[]});
+    map.get(key).lineas.push({r,g,gi,ri});
+  }));
+  return Array.from(map.values()).sort((a,b)=>{
+    const na=parseInt(String(a.articulo).replace(/\D/g,''),10);
+    const nb=parseInt(String(b.articulo).replace(/\D/g,''),10);
+    if(Number.isFinite(na) && Number.isFinite(nb) && na!==nb) return na-nb;
+    return String(a.articulo).localeCompare(String(b.articulo),'es',{numeric:true});
+  });
+}
+function isLineComplete(r){const v=Number(String(r.pesoReal??'').replace(',','.')); return String(r.pesoReal??'').trim()!=='' && Number.isFinite(v) && v>0;}
+function renderHeaderStats(){
+  const totalPedidos=Array.isArray(groups)?groups.length:0;
+  const lineas=Array.isArray(groups)?groups.flatMap(g=>g.lineas||[]):[];
+  const totalLineas=lineas.length;
+  const totalPeso=lineas.reduce((sum,r)=>sum+(Number(r.pesoPedido)||0),0);
+  const p=document.getElementById('statPedidos');
+  const l=document.getElementById('statLineas');
+  const w=document.getElementById('statPeso');
+  if(p)p.textContent=totalPedidos.toLocaleString('es-ES');
+  if(l)l.textContent=totalLineas.toLocaleString('es-ES');
+  if(w)w.textContent=Math.round(totalPeso).toLocaleString('es-ES');
+}
+function renderOrders(){
+  renderHeaderStats();
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const box=document.getElementById('orders'); box.innerHTML='';
+  const title=document.getElementById('listTitle');
+  const modeBtn=document.getElementById('modeBtn');
+  const allFilterBtn=document.getElementById('allFilterBtn');
+  const completeFilterBtn=document.getElementById('completeFilterBtn');
+  const pendingFilterBtn=document.getElementById('pendingFilterBtn');
+  if(allFilterBtn) allFilterBtn.classList.toggle('active',!completeOnly&&!pendingOnly);
+  if(completeFilterBtn) completeFilterBtn.classList.toggle('active',completeOnly);
+  if(pendingFilterBtn) pendingFilterBtn.classList.toggle('active',pendingOnly);
+  if(workMode==='client'){
+    title.textContent='PEDIDOS POR CLIENTE';
+    modeBtn.textContent='TRABAJAR POR ARTÍCULO';
+    groups.forEach((g,i)=>{
+      const complete=(g.lineas||[]).length>0 && g.lineas.every(isLineComplete);
+      if(completeOnly && !complete)return;
+      if(pendingOnly && complete)return;
+      if(q && !(g.cliente.toLowerCase().includes(q)||String(g.pedidoRef||pedidoRef(g.serie,g.pedido)).toLowerCase().includes(q)||String(g.pedido||'').toLowerCase().includes(q))) return;
+      const d=document.createElement('div');
+      d.className='order'+(i===selected?' active':'')+(complete?' complete':'');
+      const exportBtn=complete?'<button type="button" class="orderExportBtn" title="Exportar pedido al ERP" aria-label="Exportar pedido al ERP">⇩</button>':'';
+      d.innerHTML=`<div class="client clientleft">${esc(g.cliente)}</div><div class="orderref">${esc(clientOrderLabel(g.cliente,g.codigoCliente,g.pedidoRef||pedidoRef(g.serie,g.pedido)))}${complete?'<span class="completebadge">COMPLETO</span>':''}${exportBtn}</div><div class="meta">${g.lineas.length} línea(s)</div>`;
+      d.onclick=()=>{selected=i;renderOrders();renderDetail();};
+      const eb=d.querySelector('.orderExportBtn');
+      if(eb) eb.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();exportOrderERP(g);});
+      box.appendChild(d);
+    });
+  } else {
+    title.textContent='ARTÍCULOS';
+    modeBtn.textContent='TRABAJAR POR CLIENTE';
+    const arts=articleList();
+    arts.forEach((a,i)=>{
+      const matches=!q || a.descripcion.toLowerCase().includes(q)||String(a.articulo).toLowerCase().includes(q)||a.lineas.some(x=>String(x.r.medida||'').toLowerCase().includes(q))||a.lineas.some(x=>x.g.cliente.toLowerCase().includes(q)||String(x.g.pedidoRef||'').toLowerCase().includes(q));
+      if(!matches)return;
+      const complete=a.lineas.length>0 && a.lineas.every(x=>isLineComplete(x.r));
+      if(completeOnly && !complete)return;
+      if(pendingOnly && complete)return;
+      const pendientesArticulo=a.lineas.filter(x=>!isLineComplete(x.r)).length;
+      const d=document.createElement('div'); d.className='order articleitem'+(i===selectedArticle?' active':'')+(complete?' complete':'');
+      d.innerHTML=`<div class="client clientleft">${esc(a.descripcion)}</div><div class="articlecode">Artículo ${esc(a.articulo||'')}</div><div class="meta lineStatus">${a.lineas.length} línea(s) · ${complete?'<span class="completebadge">COMPLETO</span>':`<span class="pendingstatus">${pendientesArticulo} línea(s) pendientes</span>`}</div>`;
+      d.onclick=()=>{selectedArticle=i;renderOrders();renderDetail();};
+      box.appendChild(d);
+    });
+  }
+  if(!box.children.length) box.innerHTML='<div class="empty">No hay coincidencias.</div>';
+}
+const LINE_LOCKS_KEY='bacalao_pesos_lineas_bloqueadas';
+function lineLockKey(r){
+  return String(r._id||[r.pedidoRef,r.articulo,r.fecha,r.pesoPedido].join('|'));
+}
+function isLineLocked(r){
+  try{ const m=JSON.parse(localStorage.getItem(LINE_LOCKS_KEY)||'{}'); return m[lineLockKey(r)]===true; }catch(e){ return false; }
+}
+function setLineLocked(r,locked){
+  try{ const m=JSON.parse(localStorage.getItem(LINE_LOCKS_KEY)||'{}'); const k=lineLockKey(r); if(locked)m[k]=true; else delete m[k]; localStorage.setItem(LINE_LOCKS_KEY,JSON.stringify(m)); }catch(e){}
+}
+function canEditWeights(r){return !isLineLocked(r);}
+function updateLineLockButton(btn,r){
+  const locked=isLineLocked(r);
+  btn.classList.toggle('locked',locked);
+  btn.innerHTML=locked
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"></path><rect x="5" y="10" width="14" height="11" rx="2"></rect><circle cx="12" cy="15" r="1.2"></circle></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 9.2-2.7"></path><path d="M17 10V7a5 5 0 0 0-8.5-3.5"></path><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M12 14v3"></path></svg>';
+  btn.setAttribute('aria-label',locked?'Desbloquear línea':'Bloquear línea');
+  btn.title=locked?'Desbloquear esta línea para modificar peso y lote':'Bloquear esta línea para evitar toques accidentales';
+}
+function wireLineLock(card,r){
+  const btn=card.querySelector('.lineLockBtn');
+  if(!btn)return;
+  updateLineLockButton(btn,r);
+  btn.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();
+    const locked=!isLineLocked(r);
+    setLineLocked(r,locked);
+    updateLineLockButton(btn,r);
+    const w=card.querySelector('.weight'), l=card.querySelector('.lote');
+    if(w){w.classList.toggle('locked',locked);w.title=locked?'Línea bloqueada':'Modificar peso real';}
+    if(l){l.classList.toggle('locked',locked);l.title=locked?'Línea bloqueada':'Modificar lote';}
+    setStatus(locked?'LÍNEA BLOQUEADA':'LÍNEA DESBLOQUEADA');
+  });
+}
+const lineAutoLockTimers = new Map();
+function scheduleAutoLock(r){
+  const k=lineLockKey(r);
+  if(lineAutoLockTimers.has(k)) clearTimeout(lineAutoLockTimers.get(k));
+  if(isLineLocked(r) || !isLineComplete(r) || String(r.lote||'').trim()==='') return;
+  const timer=setTimeout(()=>{
+    lineAutoLockTimers.delete(k);
+    if(isLineComplete(r) && String(r.lote||'').trim()!=='' && !isLineLocked(r)){
+      setLineLocked(r,true);
+      renderOrders(); renderDetail();
+      setStatus('LÍNEA BLOQUEADA AUTOMÁTICAMENTE');
+    }
+  },3000);
+  lineAutoLockTimers.set(k,timer);
+}
+
+
+function printLineLabel(r){
+  if(!r || !isLineComplete(r) || String(r.lote||'').trim()==='') return;
+  const peso=String(r.pesoReal??'').replace('.',',');
+  const cliente=String(r.cliente||'');
+  const pedido=String(r.pedidoRef||pedidoRef(r.serie,r.pedido)||'');
+  const fecha=String(r.fecha||'');
+  const articulo=String(r.articulo||'');
+  const descripcion=String(r.descripcion||'');
+  const lote=String(r.lote||'');
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Etiqueta Bacalaos M. Bueno</title><style>@page{size:115mm 75mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:115mm;height:75mm;font-family:Arial,Helvetica,sans-serif;color:#17384f}.label{width:115mm;height:75mm;padding:4.2mm 6mm 3.2mm;display:flex;flex-direction:column;gap:1.5mm;overflow:hidden}.brand{font-size:4.5mm;font-weight:900;color:#164b78;line-height:1}.sub{font-size:2.35mm;font-weight:700;color:#6c7d89;text-transform:uppercase;line-height:1}.desc{font-size:4.2mm;font-weight:900;line-height:1.08;margin-top:.7mm;height:9.1mm;max-height:9.1mm;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:normal}.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4mm 5mm;margin-top:.4mm}.item{display:flex;flex-direction:column;gap:.45mm;min-width:0}.lab{font-size:2.2mm;font-weight:800;color:#72828d;text-transform:uppercase;line-height:1}.val{font-size:3.25mm;font-weight:800;color:#1b3445;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.highlight{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:auto;padding-top:2.2mm;border-top:.3mm solid #b9c9d5}.big .val{font-size:5.8mm;font-weight:900;line-height:1}.footer{font-size:1.9mm;color:#7b8992;text-align:right;line-height:1}@media print{body{border:0}}</style>
+<style>
+/* v90 · Filtro de completos junto al título del menú izquierdo */
+.list-panel-title{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;min-height:78px;}
+.list-panel-title #listTitle{flex:0 0 auto;}
+.list-panel-title #completeFilterBtn{height:36px;padding:0 13px;border:1px solid #d5e0e7;border-radius:8px;background:#fff;color:#164b78;font-size:12px;font-weight:800;letter-spacing:.15px;box-shadow:0 1px 4px rgba(20,48,70,.05);cursor:pointer;white-space:nowrap;transition:.15s;}
+.list-panel-title #completeFilterBtn:hover{transform:translateY(-1px);box-shadow:0 3px 9px rgba(20,48,70,.09);}
+.list-panel-title #completeFilterBtn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.list-filter-buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.list-filter-buttons button{margin:0;}
+.list-panel-title #pendingFilterBtn{height:36px;padding:0 13px;border:1px solid #e0c7b8;border-radius:8px;background:#fff;color:#9a4d00;font-size:12px;font-weight:800;letter-spacing:.15px;box-shadow:0 1px 4px rgba(20,48,70,.05);cursor:pointer;white-space:nowrap;transition:.15s;}
+.list-panel-title #pendingFilterBtn:hover{transform:translateY(-1px);box-shadow:0 3px 9px rgba(20,48,70,.09);}
+.list-panel-title #pendingFilterBtn.pendingActive{background:#a95700;border-color:#a95700;color:#fff;}
+</style>
+</head><body><div class="label"><div class="brand">BACALAOS M. BUENO</div><div class="sub">El bacalao de los profesionales</div><div class="desc">${escPrint(descripcion)}</div><div class="grid"><div class="item"><div class="lab">Artículo</div><div class="val">${escPrint(articulo)}</div></div><div class="item"><div class="lab">Pedido</div><div class="val">${escPrint(pedido)}</div></div><div class="item"><div class="lab">Cliente</div><div class="val">${escPrint(cliente)}</div></div><div class="item"><div class="lab">Fecha</div><div class="val">${escPrint(fecha)}</div></div></div><div class="highlight"><div class="item big"><div class="lab">Peso real</div><div class="val">${escPrint(peso)} kg</div></div><div class="item big"><div class="lab">Lote</div><div class="val">${escPrint(lote)}</div></div></div><div class="footer">Etiqueta de preparación</div></div><script>window.onload=()=>setTimeout(()=>window.print(),150)<\/script></body></html>`;
+  const w=window.open('','_blank','width=500,height=400');
+  if(!w){setStatus('EL NAVEGADOR HA BLOQUEADO LA VENTANA DE IMPRESIÓN');return;}
+  w.document.open();w.document.write(html);w.document.close();
+}
+function escPrint(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+function renderDetail(){
+  const box=document.getElementById('detail');
+  if(workMode==='client'){
+    const g=groups[selected]; if(!g) {box.innerHTML='<div class="empty">Selecciona un pedido.</div>';return;}
+    box.innerHTML=`<div class="clientname">${esc(g.cliente)}</div><div class="orderref mainref">${esc(clientOrderLabel(g.cliente,g.codigoCliente,g.pedidoRef||pedidoRef(g.serie,g.pedido)))}</div><div class="metahead">${esc(g.fecha)}</div>`;
+    g.lineas.forEach((r,n)=>{
+      const card=document.createElement('div'); card.className='card'+(isLineComplete(r)&&String(r.lote||'').trim()!==''?' detailComplete':' pendingLine');
+      card.innerHTML=`<div class="cardtop"><div><div class="label">ARTÍCULO</div><div class="measure">${esc(r.descripcion)}</div></div></div>
+      <div style="margin-top:6px"><div class="${String(r.medida||'').trim().toUpperCase()!=='UD.'?'measurehighlight':'measureNormal'}">${esc(r.medida)}</div>${String(r.medida||'').trim().toUpperCase()!=='UD.'?'<div class="specialcut">Ojo corte especial</div>':''}</div>
+      <div class="requested">PESO PEDIDO: ${num(r.pesoPedido)} kg</div>
+      ${r.observaciones?`<div class="obs">Observaciones: ${esc(r.observaciones)}</div>`:''}
+      <div class="weightrow"><label>PESO REAL</label><input type="text" class="weight" inputmode="none" readonly onclick="if(canEditWeights(this._pesoOwner)) openDataEntry(this,'weight')" value="${esc(r.pesoReal)}" data-i="${n}" placeholder="0,000"><span class="unit">kg</span><label class="lotelabel">LOTE</label><input type="text" class="lote" inputmode="none" readonly onclick="if(canEditWeights(this._loteOwner)) openDataEntry(this,'lote')" value="${esc(r.lote||'')}" data-i="${n}" placeholder="Nº lote"><span class="lineLockSlot">${isLineComplete(r)&&String(r.lote||'').trim()!==''?'<button type="button" class="lineLockBtn"></button><button type="button" class="linePrintBtn" aria-label="Imprimir etiqueta" title="Imprimir etiqueta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V4h10v4"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v7H6z"></path><path d="M17 12h2"></path></svg></button>':''}</span></div>`;
+      const inp=card.querySelector('input'); inp._pesoOwner=r; wireWeightInput(inp); inp.addEventListener('input',e=>{
+        const expr=e.target.value;
+        // Se conserva la expresión mientras se escribe. Se calcula y guarda al pulsar ACEPTAR.
+        r._pesoExpr=expr;
+      });
+      const loteInp=card.querySelector('.lote'); loteInp._loteOwner=r; wireLotInput(loteInp);
+      loteInp.addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'');r.lote=e.target.value;onlineSaveLine(r).catch(err=>showOnlineError(err));});
+      wireLineLock(card,r);
+      const printBtn=card.querySelector('.linePrintBtn');
+      if(printBtn) printBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();printLineLabel(r);});
+      scheduleAutoLock(r);
+      if(isLineLocked(r)){inp.classList.add('locked');loteInp.classList.add('locked');}
+      box.appendChild(card);
+    });
+  } else {
+    const arts=articleList(), a=arts[selectedArticle];
+    if(!a){box.innerHTML='<div class="empty">Selecciona un artículo.</div>';return;}
+    const complete=a.lineas.length>0 && a.lineas.every(x=>isLineComplete(x.r) && String(x.r.lote||'').trim()!=='');
+    const totalPesoPedido=a.lineas.reduce((sum,item)=>sum+(Number(item.r.pesoPedido)||0),0);
+    const totalPesoReal=a.lineas.reduce((sum,item)=>sum+(Number(String(item.r.pesoReal??'').replace(',','.'))||0),0);
+    const pedidosMap=new Map();
+    a.lineas.forEach(item=>{
+      const ref=String(item.g.pedidoRef||pedidoRef(item.g.serie,item.g.pedido)||'').trim();
+      if(!pedidosMap.has(ref)) pedidosMap.set(ref,[]);
+      pedidosMap.get(ref).push(item.r);
+    });
+    const pedidosTotales=pedidosMap.size;
+    const pedidosHechos=Array.from(pedidosMap.values()).filter(lineasPedido=>lineasPedido.length>0 && lineasPedido.every(r=>isLineComplete(r) && String(r.lote||'').trim()!=='')).length;
+    box.innerHTML=`<div class="clientname">${esc(a.descripcion)}</div><div class="mainref articlemainref">Artículo ${esc(a.articulo||'')}</div><div class="articleTotal"><div class="articleStats"><div><span>TOTAL PEDIDO</span><strong>${Math.round(totalPesoPedido)} kg</strong></div><div><span>TOTAL PESADOS</span><strong>${Math.round(totalPesoReal)} kg</strong></div><div><span>TOTAL PEDIDOS</span><strong>${pedidosHechos} / ${pedidosTotales}</strong><small>HECHOS / TOTALES</small></div></div></div><div class="metahead">${a.lineas.length} línea(s) de distintos pedidos${complete?' · COMPLETO':''}</div>`;
+    a.lineas.forEach((item,n)=>{
+      const r=item.r,g=item.g;
+      const card=document.createElement('div'); card.className='card'+(isLineComplete(r)&&String(r.lote||'').trim()!==''?' detailComplete':' pendingLine');
+      card.innerHTML=`<div class="articlelinehead"><div><div class="lineclient">${esc(g.cliente)}</div><div class="lineorder">${esc(clientOrderLabel(g.cliente,g.codigoCliente,g.pedidoRef||pedidoRef(g.serie,g.pedido)))}</div></div></div>
+      <div class="cardtop" style="margin-top:6px"><div><div class="${String(r.medida||'').trim().toUpperCase()!=='UD.'?'measurehighlight':'measureNormal'}">${esc(r.medida)}</div>${String(r.medida||'').trim().toUpperCase()!=='UD.'?'<div class="specialcut">Ojo corte especial</div>':''}</div></div>
+      <div class="requested">PESO PEDIDO: ${num(r.pesoPedido)} kg</div>
+      ${r.observaciones?`<div class="obs">Observaciones: ${esc(r.observaciones)}</div>`:''}
+      <div class="weightrow"><label>PESO REAL</label><input type="text" class="weight" inputmode="none" readonly onclick="if(canEditWeights(this._pesoOwner)) openDataEntry(this,'weight')" value="${esc(r.pesoReal)}" placeholder="0,000"><span class="unit">kg</span><label class="lotelabel">LOTE</label><input type="text" class="lote" inputmode="none" readonly onclick="if(canEditWeights(this._loteOwner)) openDataEntry(this,'lote')" value="${esc(r.lote||'')}" placeholder="Nº lote"><span class="lineLockSlot">${isLineComplete(r)&&String(r.lote||'').trim()!==''?'<button type="button" class="lineLockBtn"></button><button type="button" class="linePrintBtn" aria-label="Imprimir etiqueta" title="Imprimir etiqueta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V4h10v4"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v7H6z"></path><path d="M17 12h2"></path></svg></button>':''}</span></div>`;
+      const inp=card.querySelector('.weight'); inp._pesoOwner=r; wireWeightInput(inp); inp.addEventListener('input',e=>{
+        const expr=e.target.value;
+        // Se conserva la expresión mientras se escribe. Se calcula y guarda al pulsar ACEPTAR.
+        r._pesoExpr=expr;
+      });
+      const loteInp=card.querySelector('.lote'); loteInp._loteOwner=r; wireLotInput(loteInp);
+      loteInp.addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'');r.lote=e.target.value;onlineSaveLine(r).catch(err=>showOnlineError(err));});
+      wireLineLock(card,r);
+      const printBtn=card.querySelector('.linePrintBtn');
+      if(printBtn) printBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();printLineLabel(r);});
+      scheduleAutoLock(r);
+      if(isLineLocked(r)){inp.classList.add('locked');loteInp.classList.add('locked');}
+      box.appendChild(card);
+    });
+  }
+}
+const touchKeypad=document.getElementById('touchKeypad');
+const keypadTarget=document.getElementById('keypadTarget');
+let activeKeypadInput=null;
+let activeKeypadType='weight';
+let keypadFocusTimer=null;
+function setKeypadTarget(inp,type){
+  if(!inp || !document.body.contains(inp)) return;
+  activeKeypadInput=inp;
+  activeKeypadType=type;
+  if(type==='weight'){
+    // Borrador independiente: mientras se teclean varias cajas, el peso
+    // guardado NO cambia. Solo se confirma en ACEPTAR.
+    inp._pesoExpr=String(inp.value??'');
+  }
+  keypadTarget.textContent=type==='lote'?'EDITANDO · LOTE':'EDITANDO · PESO REAL';
+  touchKeypad.querySelector('[data-key="decimal"]').disabled=(type==='lote');
+  touchKeypad.querySelector('[data-key="plus"]').disabled=(type==='lote');
+  touchKeypad.querySelector('[data-key="minus"]').disabled=(type==='lote');
+}
+function restoreKeypadFocus(){
+  const inp=activeKeypadInput;
+  if(!inp || !document.body.contains(inp)) return;
+  try{
+    inp.focus({preventScroll:true});
+  }catch(_){ inp.focus(); }
+  // Mantener el cursor al final evita que el navegador táctil cambie
+  // el punto de edición al volver a enfocar el campo.
+  try{
+    const pos=inp.value.length;
+    inp.setSelectionRange(pos,pos);
+  }catch(_){ }
+}
+function scheduleKeypadFocus(){
+  if(keypadFocusTimer) cancelAnimationFrame(keypadFocusTimer);
+  keypadFocusTimer=requestAnimationFrame(()=>{
+    keypadFocusTimer=null;
+    restoreKeypadFocus();
+    requestAnimationFrame(restoreKeypadFocus);
+  });
+}
+function fireKeypadInput(){
+  if(!activeKeypadInput || !document.body.contains(activeKeypadInput)) return;
+  activeKeypadInput.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function calculateWeightExpression(value){
+  const raw=String(value??'').trim().replace(/,/g,'.').replace(/\s+/g,'');
+  if(!raw) return null;
+  if(!/^[+-]?\d+(?:\.\d+)?(?:[+-]\d+(?:\.\d+)?)*$/.test(raw)) return null;
+  const nums=raw.match(/[+-]?\d+(?:\.\d+)?/g);
+  if(!nums || nums.join('')!==raw) return null;
+  const result=nums.reduce((sum,token)=>sum+Number(token),0);
+  return Number.isFinite(result) ? Math.round((result+Number.EPSILON)*1000)/1000 : null;
+}
+
+function commitKeypadWeight(){
+  const inp=activeKeypadInput;
+  if(!inp || !document.body.contains(inp) || activeKeypadType!=='weight') return true;
+  const raw=String(inp._pesoExpr??inp.value??'').trim();
+  if(raw===''){
+    inp._pesoOwner.pesoReal='';
+    inp._pesoExpr='';
+    onlineSaveLine(inp._pesoOwner).catch(err=>showOnlineError(err));
+    document.getElementById('status').textContent='Peso guardado automáticamente';
+    renderOrders();
+    return true;
+  }
+  const result=calculateWeightExpression(raw);
+  if(result===null){
+    keypadTarget.textContent='EXPRESIÓN NO VÁLIDA · CORRIGE Y ACEPTA';
+    scheduleKeypadFocus();
+    return false;
+  }
+  if(result===0){
+    inp.value='';
+    inp._pesoOwner.pesoReal='';
+    inp._pesoExpr='';
+  }else{
+    inp.value=String(result).replace('.',',');
+    inp._pesoOwner.pesoReal=result;
+    inp._pesoExpr=String(result).replace('.',',');
+  }
+  onlineSaveLine(inp._pesoOwner).catch(err=>showOnlineError(err));
+  document.getElementById('status').textContent='Peso guardado automáticamente';
+  renderOrders();
+  return true;
+}
+
+function processKeypadButton(btn){
+  // En la pantalla ampliada, el teclado trabaja siempre sobre el campo grande,
+  // aunque el navegador haya movido el foco físico/táctil.
+  const inp=(dataEntryModal && dataEntryModal.classList.contains('show') && activeKeypadInput && document.body.contains(activeKeypadInput))
+    ? activeKeypadInput : dataEntryInput;
+  if(!inp || !document.body.contains(inp)) return;
+  activeKeypadInput=inp;
+  const key=btn.dataset.key;
+  if(key==='ok'){
+    if(dataEntryModal && dataEntryModal.classList.contains('show')){
+      if(activeKeypadType==='weight'){
+        const raw=String(inp._pesoExpr??inp.value??'').trim();
+        const result=raw===''?null:calculateWeightExpression(raw);
+        if(raw!=='' && result===null){
+          document.getElementById('entryHint').textContent='EXPRESIÓN NO VÁLIDA · CORRIGE ANTES DE ACEPTAR';
+          scheduleKeypadFocus();
+          return;
+        }
+      }
+      closeDataEntry(true);
+      return;
+    }
+    if(activeKeypadType==='weight' && !commitKeypadWeight()) return;
+    try{ inp.blur(); }catch(_){ }
+    activeKeypadInput=null;
+    keypadTarget.textContent='Selecciona PESO REAL o LOTE';
+    return;
+  }
+  let v=activeKeypadType==='weight' ? String(inp._pesoExpr??inp.value??'') : String(inp.value||'');
+  if(key==='clear') v='';
+  else if(key==='back') v=v.slice(0,-1);
+  else if(key==='decimal' && activeKeypadType==='weight'){
+    const segment=v.split(/[+-]/).pop();
+    if(!segment.includes(',')&&!segment.includes('.')) v+=',';
+  }else if((key==='plus'||key==='minus') && activeKeypadType==='weight'){
+    const op=key==='plus'?'+':'-';
+    if(v && !/[+-]$/.test(v)) v+=op;
+  }else if(/^\d$/.test(key)) v+=key;
+  inp.value=v;
+  if(activeKeypadType==='weight') inp._pesoExpr=v;
+  fireKeypadInput();
+  scheduleKeypadFocus();
+}
+
+// El teclado nunca debe convertirse en el elemento enfocado. En táctil,
+// preventDefault() en pointerdown evita que el botón robe el foco del input.
+touchKeypad.addEventListener('pointerdown',e=>{
+  const btn=e.target.closest('button[data-key]');
+  if(!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  processKeypadButton(btn);
+},{capture:true});
+
+// Respaldo para navegadores/táctiles que no mantienen correctamente el foco
+// durante la secuencia pointer -> click.
+touchKeypad.addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-key]');
+  if(!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if(btn.dataset.key!=='ok') scheduleKeypadFocus();
+},{capture:true});
+
+function wireWeightInput(inp){
+  inp.addEventListener('focus',()=>setKeypadTarget(inp,'weight'));
+  inp.addEventListener('pointerdown',()=>{ setKeypadTarget(inp,'weight'); scheduleKeypadFocus(); },{passive:true});
+  inp.addEventListener('touchstart',()=>{ setKeypadTarget(inp,'weight'); scheduleKeypadFocus(); },{passive:true});
+}
+function wireLotInput(inp){
+  inp.addEventListener('focus',()=>setKeypadTarget(inp,'lote'));
+  inp.addEventListener('pointerdown',()=>{ setKeypadTarget(inp,'lote'); scheduleKeypadFocus(); },{passive:true});
+  inp.addEventListener('touchstart',()=>{ setKeypadTarget(inp,'lote'); scheduleKeypadFocus(); },{passive:true});
+}
+
+let dataEntryOwner=null;
+let dataEntryOriginalInput=null;
+let dataEntryType='weight';
+let dataEntryModal=document.getElementById('dataEntryModal');
+let dataEntryInput=document.getElementById('entryWeightInput');
+let dataEntryLotInput=document.getElementById('entryLotInput');
+let dataEntryKeys=document.getElementById('entryKeys');
+function openDataEntry(owner,type){
+  const lineOwner=owner?._pesoOwner||owner?._loteOwner;
+  if(lineOwner && !canEditWeights(lineOwner)) return;
+  if(!owner || !dataEntryModal) return;
+  dataEntryOwner=owner; dataEntryOriginalInput=owner; dataEntryType=type;
+  const line=lineOwner;
+  const card=owner.closest('.card');
+  const article=line?.articulo || card?.querySelector('.articlecode')?.textContent || 'Artículo';
+  const description=line?.descripcion || card?.querySelector('.measure')?.textContent || 'Artículo';
+  const requested=Number(line?.pesoPedido ?? 0);
+  const client=line?.cliente || card?.querySelector('.lineclient')?.textContent || '';
+  const order=line?.pedidoRef || card?.querySelector('.lineorder')?.textContent?.replace('PEDIDO','').trim() || '';
+  document.getElementById('entryTypeTitle').textContent='INTRODUCCIÓN DE PESO Y LOTE';
+  document.getElementById('entryArticle').textContent=article;
+  document.getElementById('entryDescription').textContent=description;
+  document.getElementById('entryRequested').textContent='PESO PEDIDO: '+num(requested)+' kg';
+  const clientCode=line?.codigoCliente || '';
+  document.getElementById('entryMeta').textContent=clientOrderLabel(client,clientCode,order);
+  document.getElementById('entryHint').textContent='Pulsa PESO REAL o LOTE para elegir dónde escribir. El peso admite sumas (6,2 + 1,85 + 2,10).';
+
+  dataEntryInput.value=String(line?.pesoReal??'').replace('.',',');
+  dataEntryInput._pesoOwner=line||null;
+  dataEntryInput._ownerInput=owner;
+  dataEntryInput._pesoExpr=dataEntryInput.value;
+
+  // El lote por defecto se obtiene de la tabla persistente de últimos lotes.
+  // Si todavía no existe para ese artículo, usamos como respaldo los lotes
+  // presentes en los datos cargados actualmente.
+  let suggestedLot=String(line?.lote??'').trim();
+  if(!suggestedLot && line){
+    const codigoArticulo=normalizeArticleCode(line.articulo);
+    const persisted=numericLot(latestLots[codigoArticulo]);
+    if(persisted!==null) suggestedLot=String(persisted);
+    if(!suggestedLot){
+      const lotes=[];
+      groups.forEach(g=>(g.lineas||[]).forEach(r=>{
+        if(r!==line && normalizeArticleCode(r.articulo)===codigoArticulo){
+          const v=String(r.lote||'').trim();
+          if(/^\d+$/.test(v)) lotes.push(v);
+        }
+      }));
+      if(lotes.length) suggestedLot=lotes.reduce((mayor,v)=>Number(v)>Number(mayor)?v:mayor,lotes[0]);
+    }
+  }
+  dataEntryLotInput.value=suggestedLot;
+  dataEntryLotInput._loteOwner=line||null;
+  dataEntryLotInput._ownerInput=owner;
+
+  dataEntryInput.inputMode='none';
+  dataEntryLotInput.inputMode='none';
+  dataEntryKeys.appendChild(touchKeypad);
+  touchKeypad.classList.add('show');
+  setKeypadTarget(type==='lote'?dataEntryLotInput:dataEntryInput,type==='lote'?'lote':'weight');
+  dataEntryModal.classList.add('show'); dataEntryModal.setAttribute('aria-hidden','false');
+  setTimeout(()=>restoreKeypadFocus(),0);
+}
+
+let dataEntrySaving=false;
+async function closeDataEntry(commit){
+  if(!dataEntryModal.classList.contains('show')) return;
+  if(commit){
+    const weightInp=dataEntryInput, lotInp=dataEntryLotInput, owner=dataEntryOwner;
+    const line=owner?._pesoOwner||owner?._loteOwner;
+    if(!line){closeDataEntry(false);return;}
+
+    const raw=String(weightInp._pesoExpr??weightInp.value??'').trim();
+    const result=raw===''?null:calculateWeightExpression(raw);
+    if(raw!=='' && result===null){
+      document.getElementById('entryHint').textContent='PESO NO VÁLIDO · CORRIGE ANTES DE ACEPTAR';
+      setKeypadTarget(weightInp,'weight'); scheduleKeypadFocus(); return;
+    }
+    const lote=String(lotInp.value||'').replace(/\D/g,'');
+    if(result===null || result===0){
+      line.pesoReal='';
+      weightInp.value=''; weightInp._pesoExpr='';
+    }else{
+      line.pesoReal=result;
+      weightInp.value=String(result).replace('.',',');
+      weightInp._pesoExpr=weightInp.value;
+    }
+    line.lote=lote;
+
+    if(dataEntrySaving)return;
+    dataEntrySaving=true;
+    document.getElementById('entryHint').textContent='GUARDANDO PESO Y LOTE EN SUPABASE…';
+    try{
+      const saved=await onlineSaveLine(line);
+      if(!saved || !saved.ok || !line._id) throw new Error('Supabase no confirmó el guardado de peso y lote');
+      if(String(line.lote||'').trim()!=='') await rememberLatestLot(line);
+      document.getElementById('entryHint').textContent='PESO Y LOTE GUARDADOS · SUPABASE CONFIRMADO';
+      renderOrders(); renderDetail();
+    }catch(err){
+      document.getElementById('entryHint').textContent='NO SE HA CONFIRMADO EL GUARDADO · SIGUE EN PANTALLA';
+      showOnlineError(err);
+      return;
+    }finally{dataEntrySaving=false;}
+  }
+  const parent=document.querySelector('.keypadpanel');
+  if(parent) parent.appendChild(touchKeypad);
+  activeKeypadInput=null; dataEntryOwner=null; dataEntryOriginalInput=null;
+  dataEntryModal.classList.remove('show'); dataEntryModal.setAttribute('aria-hidden','true');
+  keypadTarget.textContent='Selecciona PESO REAL o LOTE';
+}
+async function acceptDataEntry(){await closeDataEntry(true);}
+
+// Teclado físico: la pantalla de introducción también debe funcionar sin
+// depender del teclado táctil. El input permanece readonly para que el
+// navegador no interfiera con el control de la expresión; aquí procesamos
+// explícitamente las teclas válidas.
+dataEntryModal.addEventListener('keydown',e=>{
+  if(!dataEntryModal.classList.contains('show')) return;
+  const k=e.key;
+  const inp=activeKeypadInput || dataEntryInput;
+  const type=activeKeypadType;
+  let handled=true;
+  if(k>='0' && k<='9'){
+    inp.value=String(inp.value||'')+k;
+  }else if(type==='weight' && (k==='.' || k===',')){
+    const v=String(inp.value||'');
+    const segment=v.split(/[+-]/).pop();
+    if(!segment.includes('.') && !segment.includes(',')) inp.value=v+',';
+  }else if(type==='weight' && (k==='+' || k==='-')){
+    const v=String(inp.value||'');
+    if(v && !/[+-]$/.test(v)) inp.value=v+k;
+  }else if(k==='Backspace'){
+    inp.value=String(inp.value||'').slice(0,-1);
+  }else if(k==='Delete'){
+    inp.value='';
+  }else if(k==='Enter'){
+    acceptDataEntry();
+  }else if(k==='Escape'){
+    closeDataEntry(false);
+  }else{
+    handled=false;
+  }
+  if(handled){
+    e.preventDefault();
+    if(type==='weight') inp._pesoExpr=inp.value;
+  }
+});
+
+// Al abrir la pantalla, el foco queda en el campo grande para que el teclado
+// físico pueda empezar a escribir inmediatamente.
+dataEntryModal.addEventListener('pointerdown',e=>{
+  const field=e.target.closest('#entryWeightInput,#entryLotInput');
+  if(!field) return;
+  e.preventDefault();
+  if(field===dataEntryLotInput){
+    setKeypadTarget(dataEntryLotInput,'lote');
+  }else{
+    setKeypadTarget(dataEntryInput,'weight');
+  }
+  restoreKeypadFocus();
+},{capture:true});
+dataEntryModal.addEventListener('click',e=>{
+  const field=e.target.closest('#entryWeightInput,#entryLotInput');
+  if(field){
+    if(field===dataEntryLotInput) setKeypadTarget(dataEntryLotInput,'lote');
+    else setKeypadTarget(dataEntryInput,'weight');
+    restoreKeypadFocus();
+    return;
+  }
+  if(!e.target.closest('button')) restoreKeypadFocus();
+});
+// Sustituimos la apertura directa del teclado por una pantalla independiente.
+function toggleCompleteFilter(){setListFilter(completeOnly?'all':'complete');}
+function togglePendingFilter(){setListFilter(pendingOnly?'all':'pending');}
+function toggleWorkMode(){
+  workMode=workMode==='client'?'article':'client';
+  document.getElementById('search').value='';
+  if(workMode==='article') selectedArticle=0;
+  document.getElementById('search').placeholder=workMode==='article'?'Buscar artículo, cliente o pedido…':'Buscar cliente o pedido…';
+  renderOrders();renderDetail();
+}
+function save(){
+ onlineSaveAll().catch(err=>showOnlineError(err));
+ document.getElementById('status').textContent='Pesos guardados en este ordenador';
+}
+function num(v){return Number(v||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function pdfCp1252(str){
+  const map={'€':0x80,'‚':0x82,'ƒ':0x83,'„':0x84,'…':0x85,'†':0x86,'‡':0x87,'ˆ':0x88,'‰':0x89,'Š':0x8A,'‹':0x8B,'Œ':0x8C,'Ž':0x8E,'‘':0x91,'’':0x92,'“':0x93,'”':0x94,'•':0x95,'–':0x96,'—':0x97,'˜':0x98,'™':0x99,'š':0x9A,'›':0x9B,'œ':0x9C,'ž':0x9E,'Ÿ':0x9F};
+  const out=[]; for(const ch of String(str??'')){const c=ch.codePointAt(0); if(c<=255) out.push(c); else if(map[ch]) out.push(map[ch]); else out.push(63);} return new Uint8Array(out);
+}
+function pdfStr(str){
+  const b=pdfCp1252(str); let s='(';
+  for(const x of b){ if(x===40||x===41||x===92)s+='\\'+String.fromCharCode(x); else s+=String.fromCharCode(x); }
+  return s+')';
+}
+function pdfWrap(text,maxChars){
+  const words=String(text??'').trim().split(/\s+/); const lines=[]; let line='';
+  words.forEach(w=>{ if(!line) line=w; else if((line+' '+w).length<=maxChars) line+=' '+w; else {lines.push(line);line=w;} }); if(line)lines.push(line); return lines.length?lines:[''];
+}
+function exportPDF(){
+  if(!groups.length){alert('No hay pedidos para exportar.');return;}
+  try{
+    const W=595.28,H=841.89,margin=34,pageW=W-margin*2;
+    const pages=[]; let ops=[], y=H-margin;
+    const n2=n=>Number(n||0).toFixed(2);
+    function text(x,yy,size,txt,bold=false){ops.push(`${bold?'/F2':'/F1'} ${n2(size)} Tf 1 0 0 1 ${n2(x)} ${n2(yy)} Tm ${pdfStr(txt)} Tj`);}
+    function line(x1,y1,x2,y2){ops.push(`${n2(x1)} ${n2(y1)} m ${n2(x2)} ${n2(y2)} l S`);}
+    function rect(x0,y0,w,h){ops.push(`${n2(x0)} ${n2(y0)} ${n2(w)} ${n2(h)} re S`);}
+    function fillRect(x0,y0,w,h,r=0.92,g=0.95,b=0.97){ops.push(`${r} ${g} ${b} rg`);ops.push(`${n2(x0)} ${n2(y0)} ${n2(w)} ${n2(h)} re f`);ops.push('0 0 0 rg');ops.push('0 0 0 RG');}
+    function newPage(){if(ops.length)pages.push(ops.join('\n'));ops=[];y=H-margin;}
+    function docHeader(){text(margin,y,15,'BACALAOS M. BUENO',true);y-=18;text(margin,y,10,'RECOGIDA DE PESOS',true);y-=20;}
+    groups.forEach((g,gi)=>{
+      const rows=g.lineas||[];
+      const heights=rows.map(r=>Math.max(20,pdfWrap(r.descripcion,42).length*8+8));
+      const total=40+20+heights.reduce((a,b)=>a+b,0)+7;
+      if(y!==H-margin && y-total<margin)newPage();
+      if(y===H-margin)docHeader();
+      if(y-total<margin){newPage();docHeader();}
+      const top=y, bottom=y-total;
+      rect(margin,bottom,pageW,total);
+      const ref=g.pedidoRef||pedidoRef(g.serie,g.pedido);
+      fillRect(margin,top-40,pageW,40,0.09,0.29,0.47);
+      ops.push('1 1 1 rg');
+      text(margin+10,top-15,11,g.cliente||'',true);
+      text(margin+10,top-29,8,'Pedido '+ref,true);
+      text(W-margin-75,top-15,7,g.fecha||'');
+      ops.push('0 0 0 rg');
+      y=top-40;
+      const head=20; fillRect(margin,y-head,pageW,head,0.88,0.93,0.97);
+      const x=[margin,margin+210,margin+295,margin+380,margin+455,W-margin];
+      text(x[0]+5,y-13,6.5,'ARTÍCULO',true);text(x[1]+5,y-13,6.5,'MEDIDA',true);text(x[2]+5,y-13,6.5,'PEDIDO',true);text(x[3]+5,y-13,6.5,'PESO REAL',true);text(x[4]+5,y-13,6.5,'LOTE',true);
+      y-=head;
+      rows.forEach((r,ri)=>{
+        const h=heights[ri], rt=y;
+        line(margin,rt,W-margin,rt);
+        [x[1],x[2],x[3],x[4]].forEach(xx=>line(xx,rt,xx,rt-h));
+        pdfWrap(r.descripcion,42).forEach((t,i)=>text(x[0]+5,rt-10-i*8,6.5,t));
+        text(x[1]+5,rt-10,6.5,r.medida||'');
+        text(x[2]+5,rt-10,7,num(r.pesoPedido));
+        const real=(r.pesoReal!==''&&r.pesoReal!=null&&!isNaN(Number(String(r.pesoReal).replace(',','.'))))?Number(String(r.pesoReal).replace(',','.')).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}):'—';
+        text(x[3]+5,rt-10,7,real,true);
+        text(x[4]+5,rt-10,7,r.lote||'—',true);
+        y=rt-h;
+      });
+      y=bottom-7;
+    });
+    if(ops.length)newPage();
+    const objects=[];
+    const add=o=>objects.push(o);
+    add('<< /Type /Catalog /Pages 2 0 R >>');
+    const pageNums=pages.map((_,i)=>`${3+i*2} 0 R`).join(' ');
+    add(`<< /Type /Pages /Kids [${pageNums}] /Count ${pages.length} >>`);
+    const f1=3+pages.length*2, f2=f1+1;
+    pages.forEach((content,i)=>{
+      const pageObj=3+i*2, contentObj=4+i*2;
+      add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${contentObj} 0 R >>`);
+      const bytes=pdfCp1252(content+'\n');
+      add(`<< /Length ${bytes.length} >>\nstream\n${content}\nendstream`);
+    });
+    add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+    let chunks=[pdfCp1252('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')],pos=chunks[0].length,offs=[0];
+    objects.forEach((o,i)=>{offs[i+1]=pos;const b=pdfCp1252(`${i+1} 0 obj\n${o}\nendobj\n`);chunks.push(b);pos+=b.length;});
+    const xref=pos;let tail=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;for(let i=1;i<=objects.length;i++)tail+=String(offs[i]).padStart(10,'0')+' 00000 n \n';tail+=`trailer\n<< /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;chunks.push(pdfCp1252(tail));
+    const blob=new Blob(chunks,{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='recogida_pesos.pdf';a.style.display='none';document.body.appendChild(a);a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},3000);
+    const st=document.getElementById('status');if(st)st.textContent='PDF generado: recogida_pesos.pdf';
+  }catch(err){console.error(err);alert('No se pudo generar el PDF: '+(err&&err.message?err.message:err));}
+}
+function exportOrderERP(g){
+  if(!g || !Array.isArray(g.lineas) || !g.lineas.length || !g.lineas.every(isLineComplete)) return;
+  const header=['Serie','Numero','Fecha','Codigo articulo','Medida','Peso real','Lote'];
+  const quote=v=>String(v??'').replaceAll('"','""');
+  const rows=g.lineas.map(r=>{
+    const medidaTexto=String(r.medida||'').trim().toUpperCase();
+    const codigoMedida=String(MEDIDA_CODIGO[medidaTexto]||medidaTexto).padStart(2,'0');
+    return [
+      String(r.serie||g.serie||'').trim(),
+      String(r.pedido||g.pedido||'').trim(),
+      String(r.fecha||g.fecha||'').trim(),
+      String(r.articulo||'').trim(),
+      codigoMedida,
+      r.pesoReal,
+      String(r.lote??'').trim()
+    ];
+  });
+  const csv=['\ufeff'+header.map(quote).map(v=>'"'+v+'"').join(';'),...rows.map(row=>row.map(quote).map(v=>'"'+v+'"').join(';'))].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='pedido_'+(String(g.pedido||'sin_pedido').trim())+'_ERP.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  setStatus('CSV ERP generado · Pedido: '+(String(g.pedido||'—').trim()||'—'));
+}
+function exportCSV(){
+  const esc = x => String(x ?? '').replaceAll('"','""');
+  const codigoMedida2 = r => {
+    const texto=String(r.medida??'').trim().toUpperCase();
+    const codigo=String(MEDIDA_CODIGO[texto] ?? texto).trim();
+    if(/^\d+$/.test(codigo)) return codigo.padStart(2,'0').slice(-2);
+    return codigo;
+  };
+  let lines = ['Serie;Numero;Fecha;Codigo articulo;Medida;Peso real;Lote'];
+  groups.forEach(g=>g.lineas.forEach(r=>{
+    lines.push([
+      String(r.serie||g.serie||'').trim(),
+      String(r.pedido||g.pedido||'').trim(),
+      String(r.fecha||g.fecha||'').trim(),
+      String(r.articulo||'').trim(),
+      codigoMedida2(r),
+      r.pesoReal,
+      String(r.lote??'').trim()
+    ].map(esc).map(x=>'"'+x+'"').join(';'));
+  }));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='recogida_pesos.csv';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+let pendingImport=null;
+
+function u16(a,o){return a[o]|(a[o+1]<<8)}
+function u32(a,o){return (a[o]|(a[o+1]<<8)|(a[o+2]<<16)|(a[o+3]<<24))>>>0}
+function utf8(a){return new TextDecoder('utf-8').decode(a)}
+
+async function inflateRaw(bytes){
+  if(typeof DecompressionStream==='undefined') throw new Error('Este navegador no permite descomprimir Excel localmente. Usa Chrome o Edge actualizado.');
+  const ds=new DecompressionStream('deflate-raw');
+  const ab=await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(ab);
+}
+async function unzip(buf){
+  const a=new Uint8Array(buf), out={};
+  let eocd=-1;
+  for(let i=a.length-22;i>=Math.max(0,a.length-66000);i--) if(u32(a,i)===0x06054b50){eocd=i;break}
+  if(eocd<0) throw new Error('El archivo no parece ser un XLSX válido.');
+  const cdSize=u32(a,eocd+12), cdOff=u32(a,eocd+16);
+  let p=cdOff;
+  while(p<cdOff+cdSize){
+    if(u32(a,p)!==0x02014b50) break;
+    const method=u16(a,p+10), csize=u32(a,p+20), usize=u32(a,p+24);
+    const nlen=u16(a,p+28), xlen=u16(a,p+30), clen=u16(a,p+32);
+    const name=utf8(a.slice(p+46,p+46+nlen));
+    const local=u32(a,p+42), ln=u16(a,local+26), lx=u16(a,local+28);
+    const data=a.slice(local+30+ln+lx,local+30+ln+lx+csize);
+    out[name]=method===0?data:await inflateRaw(data);
+    p+=46+nlen+xlen+clen;
+  }
+  return out;
+}
+function xml(zip,name){
+  const b=zip[name]; if(!b) return null;
+  return new DOMParser().parseFromString(utf8(b),'application/xml');
+}
+function colNum(ref){let m=String(ref).match(/^[A-Z]+/i);if(!m)return 0;let n=0;for(const c of m[0].toUpperCase())n=n*26+c.charCodeAt(0)-64;return n-1}
+function cellValue(cell, shared){
+  let v=cell.querySelector('v')?.textContent ?? '';
+  const t=cell.getAttribute('t');
+  if(t==='s') return shared[Number(v)] ?? '';
+  if(t==='inlineStr') return cell.querySelector('is t')?.textContent ?? '';
+  return v;
+}
+function parseSheet(zip, shared, sheetPath){
+  const doc=xml(zip,sheetPath); if(!doc) throw new Error('No se ha podido leer la hoja de datos.');
+  const rows=[...doc.querySelectorAll('sheetData > row')].map(r=>{
+    const arr=[]; [...r.children].filter(x=>x.localName==='c').forEach(c=>arr[colNum(c.getAttribute('r'))]=cellValue(c,shared));
+    return arr;
+  });
+  return rows;
+}
+function getPath(zip, relTarget){
+  if(relTarget.startsWith('/')) return relTarget.slice(1);
+  return 'xl/'+relTarget.replace(/^(\.\/)+/,'');
+}
+async function readXlsx(file){
+  // ERP: soporta XLS antiguo (BIFF) y XLSX/XLSM mediante SheetJS.
+  if(typeof XLSX === "undefined") throw new Error("No se ha cargado el lector de Excel. Comprueba que tienes conexión a Internet al abrir la aplicación.");
+  const ab = await file.arrayBuffer();
+  let wb;
+  try {
+    wb = XLSX.read(ab,{type:"array",cellDates:false,cellNF:false,cellText:false});
+  } catch(e) {
+    throw new Error("No se ha podido leer el archivo ERP. Asegúrate de que es un Excel .xls o .xlsx válido.");
+  }
+  if(!wb.SheetNames || !wb.SheetNames.length) throw new Error("El Excel no contiene ninguna hoja.");
+  // Preferimos la hoja del ERP si existe; si no, usamos la primera.
+  const preferred = wb.SheetNames.find(n => normalizeHeaderName(n).includes("pendienteservirdetallado"));
+  const sheetName = preferred || wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  if(!ws) throw new Error("No se ha encontrado la hoja de datos.");
+  const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false});
+  if(!rows.length) throw new Error("La hoja seleccionada está vacía.");
+  const headers = (rows[0]||[]).map(v=>String(v??"").trim());
+  return {rows:rows,headers:headers,sheet:sheetName};
+}
+
+function normalizeHeaderName(v){
+  return String(v ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function normalizeHeaders(rows){
+  const first = Array.isArray(rows) && rows.length ? (rows[0] || []) : [];
+  return first.map(v => normalizeHeaderName(v));
+}
+function buildImported(rows){
+  const headers=normalizeHeaders(rows), ix={}; headers.forEach((h,i)=>ix[h]=i);
+  const required=['articulo','descripcion','numero','fecha','medida','pedido','servido','pendiente'];
+  const missing=required.filter(h=>ix[h]===undefined);
+  if(missing.length) throw new Error('Faltan columnas obligatorias: '+missing.join(', '));
+  const get=(r,n)=>r[ix[n]];
+  const medidas=MEDIDAS;
+  const mt=v=>{if(v==null||v==='')return '';let x=String(v).trim();if(x.endsWith('.0'))x=x.slice(0,-2);return medidas[x.padStart(2,'0')]||x};
+  let cliente='', result=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i], desc=get(r,'descripcion'), serie=ix.serie!==undefined?get(r,'serie'):null;
+    const numero=get(r,'numero'), pedido=get(r,'pedido'), pend=get(r,'pendiente');
+    const isClient=desc && (serie==null||serie==='') && (numero==null||numero===''||Number(numero)===0) &&
+      (pedido==null||pedido===''||Number(pedido)===0) && (pend==null||pend===''||Number(pend)===0);
+    if(isClient){
+      const codigoCliente=String(get(r,'articulo')??'').trim();
+      // Clientes especiales del ERP: se descartan siempre junto con todas sus líneas.
+      if(codigoCliente==='4300000100' || codigoCliente==='4300000105'){
+        cliente='';
+        continue;
+      }
+      cliente=String(desc).trim();
+      saveClientCode(cliente,codigoCliente);
+      continue;
+    }
+    if(!cliente||numero==null||numero===''||Number(numero)===0)continue;
+    const pending=Number(pend||0); if(!(pending>0))continue;
+    const serieTexto=ix.serie!==undefined?String(serie??'').trim():'';
+    const numeroTexto=String(numero??'').trim();
+    const pedidoRef=(serieTexto.padStart(2,'0').slice(-2))+'-'+numeroTexto.padStart(5,'0').slice(-5);
+    result.push({cliente,codigoCliente:getClientCodeMap()[cliente]||'',serie:serieTexto,pedido:String(numero),fecha:String(get(r,'fecha')??''),descripcion:String(desc||''),medida:mt(get(r,'medida')),pesoPedido:pending,pesoReal:'',lote:'',observaciones:ix.observaciones!==undefined?String(get(r,'observaciones')??'').trim():'',articulo:String(get(r,'articulo')??''),pedidoRef});
+  }
+  // Acumular SOLO líneas con el mismo cliente + pedido + artículo + medida + observaciones.
+  // El peso pedido se suma; el resto de campos se conserva de la primera línea.
+  const acumuladas=[];
+  const porClave=new Map();
+  result.forEach(r=>{
+    const clave=[
+      String(r.cliente??'').trim(),
+      String(r.pedidoRef??'').trim(),
+      String(r.articulo??'').trim(),
+      String(r.medida??'').trim(),
+      String(r.observaciones??'').trim()
+    ].join('\u001f');
+    if(porClave.has(clave)){
+      porClave.get(clave).pesoPedido += Number(r.pesoPedido)||0;
+    }else{
+      const copia={...r,pesoPedido:Number(r.pesoPedido)||0};
+      porClave.set(clave,copia);
+      acumuladas.push(copia);
+    }
+  });
+  const grouped={}; acumuladas.forEach(r=>{let k=r.pedidoRef+'|'+r.cliente;(grouped[k]??={pedido:r.pedido,serie:r.serie,pedidoRef:r.pedidoRef,cliente:r.cliente,codigoCliente:r.codigoCliente||getClientCodeMap()[r.cliente]||'',fecha:r.fecha,lineas:[]}).lineas.push(r)});
+  return {groups:Object.values(grouped), headers, raw:rows};
+}
+function showImportPreview(file, parsed){
+  pendingImport=parsed;
+  document.getElementById('previewFile').textContent=file.name+' · hoja '+parsed.sheet;
+
+  const t=document.getElementById('previewTable');
+  const interpretation = [
+    ['articulo (fila cliente)','Código del cliente ERP'],
+    ['descripcion','Descripción del cliente en fila de cabecera / artículo en líneas'],
+    ['medida','Medida → texto'],
+    ['pedido','Peso solicitado original (referencia ERP)'],
+    ['pendiente','Peso pedido que se muestra en pantalla (kg)'],
+    ['observaciones','Observaciones'],
+    ['serie','Serie del pedido'],
+    ['numero','Número de pedido · se muestra como XX-XXXXX junto a serie'],
+    ['fecha','Fecha'],
+    ['articulo','Código interno del artículo']
+  ];
+  t.innerHTML='<tr><th>Columna ERP</th><th>La aplicación la interpreta como</th></tr>'+
+    interpretation.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${esc(x[1])}</td></tr>`).join('');
+
+  const rt=document.getElementById('previewRows');
+  const sample=parsed.raw.slice(0,11);
+  rt.innerHTML='<tr><th>Fila</th>'+parsed.headers.map(h=>`<th>${esc(h||'(vacía)')}</th>`).join('')+'</tr>'+
+    sample.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+parsed.headers.map((_,j)=>`<td>${esc(r[j]??'')}</td>`).join('')+'</tr>').join('');
+
+  const lineas=parsed.groups.reduce((n,g)=>n+g.lineas.length,0);
+  document.getElementById('previewNote').innerHTML=
+    `<b>${esc(file.name)}</b><br>
+     Se ha leído la hoja <b>${esc(parsed.sheet)}</b>.<br>
+     El programa ha interpretado <b>${parsed.raw.length-1}</b> filas y ha encontrado
+     <b>${lineas} líneas pendientes</b> correspondientes a <b>${parsed.groups.length} pedidos</b>.<br>
+     <span style="color:#164b78">Los clientes 4300000100 y 4300000105 se descartan siempre. Al confirmar, se borrarán los datos actuales y se cargarán exclusivamente estos datos.</span>`;
+
+  document.getElementById('importModal').classList.add('show');
+}
+function closeImportPreview(){pendingImport=null;document.getElementById('importModal').classList.remove('show')}
+async function confirmImport(){
+  if(!pendingImport)return;
+  try{
+    setStatus('Subiendo la importación a Supabase…');
+    const resultadoImport=await replaceOnlineData(pendingImport.groups);
+    groups=await loadOnlineData();
+    await saveLatestLotsFromGroups(groups);
+    selected=0; selectedArticle=0;
+    renderOrders();renderDetail();closeImportPreview();
+    setStatus(`Importación completada: ${groups.reduce((n,g)=>n+g.lineas.length,0)} líneas · ${groups.length} pedidos${resultadoImport.protegidas?` · ${resultadoImport.protegidas} línea(s) completada(s) conservada(s)`:''}. Datos sincronizados online.`);
+  }catch(err){
+    console.error(err);
+    document.getElementById('previewNote').innerHTML='<b>No se ha podido guardar la importación.</b><br>'+esc(err.message||String(err))+'<br><br><span style="color:#164b78">Los datos online anteriores no se han modificado.</span>';
+  }
+}
+async function importExcel(event){
+  const input=event.target;
+  const file=input.files&&input.files[0];
+  input.value='';
+  if(!file)return;
+  pendingImport=null;
+  document.getElementById('previewFile').textContent=file.name+' · leyendo archivo…';
+  document.getElementById('previewNote').innerHTML='<b>Procesando el Excel…</b><br>Espera un momento. Cuando termine aparecerá la vista previa antes de sustituir los datos actuales.';
+  document.getElementById('previewTable').innerHTML='<tr><td style="padding:18px">Leyendo columnas del ERP…</td></tr>';
+  document.getElementById('previewRows').innerHTML='';
+  document.getElementById('importModal').classList.add('show');
+  try{
+    const parsed=await readXlsx(file);
+    const built=buildImported(parsed.rows);
+    built.sheet=parsed.sheet;
+    showImportPreview(file,built);
+  }catch(err){
+    console.error(err);
+    document.getElementById('previewFile').textContent=file.name+' · error de importación';
+    document.getElementById('previewNote').innerHTML='<b>No se ha podido leer el archivo.</b><br>'+esc(err.message||String(err))+'<br><br><span style="color:#164b78">Los datos actuales no se han modificado.</span>';
+    document.getElementById('previewTable').innerHTML='';
+    document.getElementById('previewRows').innerHTML='';
+  }
+}
+async function bootOnline(){
+  try{
+    setStatus('Conectando con Supabase…');
+    groups=await loadOnlineData();
+    await loadLatestLots();
+    await saveLatestLotsFromGroups(groups);
+    renderOrders();renderDetail();
+    setStatus(`Conectado · ${groups.reduce((n,g)=>n+g.lineas.length,0)} líneas · ${groups.length} pedidos`);
+    startRealtimePolling();
+  }catch(err){
+    console.error(err);
+    groups=initialData;
+    renderOrders();renderDetail();
+    setStatus('Sin conexión a Supabase · mostrando datos de referencia');
+  }
+}
+bootOnline();
+</script>
+
+
+
+
+</body>
+</html><style id="complete-filter-final-position">
+.list-panel-title{display:flex !important;flex-direction:column !important;align-items:flex-start !important;justify-content:flex-start !important;gap:7px !important;}
+.list-filter-buttons{display:flex !important;align-items:center !important;gap:7px !important;flex-wrap:nowrap !important;}
+.list-filter-buttons button{height:34px !important;padding:0 13px !important;border-radius:8px !important;font-size:12px !important;font-weight:800 !important;border:1px solid #d6dde3 !important;box-shadow:0 1px 4px rgba(20,48,70,.06) !important;cursor:pointer !important;white-space:nowrap !important;transition:.15s !important;}
+#allFilterBtn{background:#fff !important;color:#425563 !important;}
+#pendingFilterBtn{background:#f7dfdd !important;color:#a62d25 !important;border-color:#e4b5b1 !important;}
+#completeFilterBtn{background:#dff1df !important;color:#28652d !important;border-color:#b9d9bb !important;}
+.list-filter-buttons button.active{box-shadow:inset 0 0 0 2px rgba(22,75,120,.28),0 2px 6px rgba(20,48,70,.10) !important;transform:translateY(-1px) !important;}
+.list-panel-title #listTitle{display:block !important;width:100% !important;line-height:1.2 !important;}
+</style>
