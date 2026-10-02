@@ -449,7 +449,7 @@ let workMode='article';
 let selectedArticle=0;
 let completeOnly=false;
 let pendingOnly=false;
-function setListFilter(mode){completeOnly=mode==='complete';pendingOnly=mode==='pending';renderOrders();}
+function setListFilter(mode){completeOnly=mode==='complete';pendingOnly=mode==='pending';renderOrders();renderDetail();}
 function articleList(){
   const map=new Map();
   groups.forEach((g,gi)=> (g.lineas||[]).forEach((r,ri)=>{
