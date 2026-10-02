@@ -130,6 +130,24 @@ main{padding:12px;max-width:none}.kpis{grid-template-columns:repeat(2,1fr);gap:8
 table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}.processHead{display:block}.actions{flex-wrap:wrap}.detail .cubaManage{grid-template-columns:1fr}.detail .cubaChangeBox{grid-column:1!important}.summarybar{gap:6px}.summarybar span{padding:6px 8px;font-size:11px}.row{grid-template-columns:minmax(0,1fr) 76px 76px 38px;gap:5px}.row input,.row select{padding:8px 6px;font-size:12px}button{padding:9px 11px;font-size:12px}input,select{padding:9px;font-size:14px}
 }
 @media (max-width:560px){header h1{font-size:14px;max-width:65vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.clock{display:none}main{padding:8px}.kpis{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.processHead h3{font-size:16px}.actions button{width:100%;flex-basis:100%}.cubaChangeBox select{min-height:42px}}
+
+/* Ajuste estético móvil: compactar tarjetas de Producción y Cubas en proceso sin modificar funciones */
+@media (max-width:900px){
+  #produccion .card,#cubas .card{padding:9px;margin-bottom:9px}
+  #produccion .meta,#cubas .meta{font-size:10px;line-height:1.15;margin-bottom:3px}
+  #produccion .processHead,#cubas .processHead{gap:5px;margin-bottom:3px}
+  #produccion .processHead h3,#cubas .processHead h3{font-size:15px;margin-bottom:2px}
+  #produccion .timeline,#cubas .timeline{height:20px;margin:7px 0 4px}
+  #produccion .actions,#cubas .actions{margin-top:5px;gap:5px;position:relative;z-index:2}
+  #produccion .actions button,#cubas .actions button{padding:7px 9px;min-height:32px;line-height:1.05}
+  #produccion .detail,#cubas .detail{margin-top:6px;padding-top:7px}
+}
+@media (max-width:560px){
+  #produccion .card,#cubas .card{padding:8px;margin-bottom:7px}
+  #produccion .timeline,#cubas .timeline{height:18px;margin:5px 0 3px}
+  #produccion .actions,#cubas .actions{margin-top:3px;gap:4px}
+  #produccion .actions button,#cubas .actions button{padding:7px 8px;min-height:31px;font-size:11px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
