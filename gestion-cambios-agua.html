@@ -40,6 +40,15 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 @media(max-width:900px){.recipeRow{grid-template-columns:40px 1fr 100px 90px 1fr 40px}}
 .innerNav{display:flex;gap:6px;margin:14px 0 18px}.innerNav button{border:1px solid #cbd7e0;background:#fff;padding:9px 14px;border-radius:8px;color:#24435d;cursor:pointer}.innerNav button.active{background:#174d76;color:#fff}.panelHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.tableWrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;border-bottom:1px solid #e1e8ee;text-align:left}th{font-size:12px;text-transform:uppercase;color:#60788d}.actionBtn{border:0;background:none;color:#174d76;font-weight:700;cursor:pointer;margin-right:8px}.dangerText{color:#b42318}.statusPill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#e9f5ed;color:#287443}.statusBusy{background:#fff0d8;color:#9a6500} .statusOff{background:#f1f3f5;color:#6c757d;}
 
+
+.registrosFilters{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:14px;padding:12px;background:#f8fafc;border:1px solid #dbe5ea;border-radius:9px}
+.registrosFilters .field{min-width:0}
+.registrosFilters .filterActions{display:flex;gap:7px}
+.registrosFilters input,.registrosFilters select{height:40px}
+@media(max-width:1050px){.registrosFilters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.registrosFilters{grid-template-columns:1fr 1fr}.registrosFilters .wide{grid-column:1/-1}.registrosFilters .filterActions{grid-column:1/-1}.registrosFilters .filterActions button{flex:1}}
+@media(max-width:560px){.registrosFilters{grid-template-columns:1fr}.registrosFilters .wide{grid-column:auto}.registrosFilters .filterActions{grid-column:auto}}
+
 .filterBtn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:8px 13px;font-weight:700;cursor:pointer}.filterBtn.active{background:#123f67;color:#fff;border-color:#123f67}.muted{color:#64748b;font-size:13px}.summary{display:flex;justify-content:space-between;gap:15px;background:#f1f5f9;border:1px solid #dbe3ea;border-radius:8px;padding:10px 14px;color:#475569}.summary strong{color:#123f67}
 
 /* v105 - Produccion rediseñada */
@@ -248,8 +257,18 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 </section>
 
 <section id="registros" class="section">
-<div class="panelHead" style="margin-bottom:14px"><div><h2 style="margin:0">Registros</h2><div class="subtitle" style="margin-top:4px">Histórico de procesos terminados. Consulta el detalle completo de cada proceso.</div></div><div style="display:flex;gap:8px;align-items:center"><input id="regSearch" oninput="renderRecords()" placeholder="Buscar proceso, cuba, artículo o lote..." style="width:310px"><button class="secondary" onclick="exportRecordsCSV()">Exportar CSV</button></div></div>
-<div class="card"><div class="summarybar"><span id="regCount">0 procesos registrados</span><span id="regKg">0 kg procesados</span><span id="regMonth">0 este mes</span></div></div>
+<div class="panelHead" style="margin-bottom:14px"><div><h2 style="margin:0">Registros</h2><div class="subtitle" style="margin-top:4px">Histórico de procesos terminados. Consulta el detalle completo de cada proceso.</div></div><div style="display:flex;gap:8px;align-items:center"><button class="secondary" onclick="exportRecordsCSV()">Exportar CSV</button></div></div>
+<div class="card">
+<div class="summarybar"><span id="regCount">0 procesos registrados</span><span id="regKg">0 kg procesados</span><span id="regMonth">0 este mes</span><span id="regFiltered" style="display:none"></span></div>
+<div class="registrosFilters">
+  <div class="field wide"><label>Buscar artículo, lote o proceso</label><input id="regSearch" oninput="renderRecords()" placeholder="Código, descripción, lote o nº proceso..."></div>
+  <div class="field"><label>Cuba</label><select id="regFilterCuba" onchange="renderRecords()"><option value="">Todas</option></select></div>
+  <div class="field"><label>Operario</label><select id="regFilterOperator" onchange="renderRecords()"><option value="">Todos</option></select></div>
+  <div class="field"><label>Desde</label><input id="regFilterFrom" type="date" onchange="renderRecords()"></div>
+  <div class="field"><label>Hasta</label><input id="regFilterTo" type="date" onchange="renderRecords()"></div>
+  <div class="filterActions"><button type="button" class="secondary" onclick="clearRecordFilters()">Limpiar filtros</button></div>
+</div>
+</div>
 <div class="card"><div class="panelHead"><div><h3>Histórico de procesos</h3><div class="meta">Cada registro conserva cuba, artículos, lotes, receta, hidratación y datos de salida.</div></div></div>
 <div class="tableWrap"><table><thead><tr><th>Nº PROCESO</th><th>INICIO</th><th>FINAL</th><th>CUBA</th><th>ARTÍCULOS / LOTES</th><th>KG</th><th>OPERARIO</th><th>RECETA</th><th>ESTADO</th><th></th></tr></thead><tbody id="recordsBody"></tbody></table></div></div>
 <div id="recordDetail" class="card" style="display:none"></div>
@@ -1249,18 +1268,62 @@ function formatDateEU(value){
   const pad=n=>String(n).padStart(2,'0');
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+function populateRecordFilterOptions(){
+  const cubaSel=document.getElementById('regFilterCuba');
+  const opSel=document.getElementById('regFilterOperator');
+  if(cubaSel){
+    const cur=cubaSel.value;
+    const cubas=[...new Set(records.map(r=>String(r.cuba||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+    cubaSel.innerHTML='<option value="">Todas</option>'+cubas.map(x=>'<option value="'+String(x).replace(/"/g,'&quot;')+'">'+x+'</option>').join('');
+    if(cubas.includes(cur))cubaSel.value=cur;
+  }
+  if(opSel){
+    const cur=opSel.value;
+    const ops=[...new Set(records.map(r=>String(r.operator||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    opSel.innerHTML='<option value="">Todos</option>'+ops.map(x=>'<option value="'+String(x).replace(/"/g,'&quot;')+'">'+x+'</option>').join('');
+    if(ops.includes(cur))opSel.value=cur;
+  }
+}
+function clearRecordFilters(){
+  const ids=['regSearch','regFilterCuba','regFilterOperator','regFilterFrom','regFilterTo'];
+  ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  renderRecords();
+}
+function recordMatchesFilters(r){
+  const q=(document.getElementById('regSearch')?.value||'').trim().toLowerCase();
+  const cuba=(document.getElementById('regFilterCuba')?.value||'').trim();
+  const operator=(document.getElementById('regFilterOperator')?.value||'').trim();
+  const from=document.getElementById('regFilterFrom')?.value||'';
+  const to=document.getElementById('regFilterTo')?.value||'';
+  if(q){
+    const hay=[r.id,r.cuba,r.operator,r.recipe,r.recipeDesc,...(r.lines||[]).flatMap(x=>{const n=recordLineNorm(x);return [n.code,n.desc,n.lot];})].join(' ').toLowerCase();
+    if(!hay.includes(q))return false;
+  }
+  if(cuba && String(r.cuba||'')!==cuba)return false;
+  if(operator && String(r.operator||'')!==operator)return false;
+  const end=r.end?new Date(r.end):null;
+  if(from){
+    const d=new Date(from+'T00:00:00');
+    if(!end||end<d)return false;
+  }
+  if(to){
+    const d=new Date(to+'T23:59:59.999');
+    if(!end||end>d)return false;
+  }
+  return true;
+}
 function renderRecords(){
-  const q=(document.getElementById('regSearch')?.value||'').toLowerCase();
+  populateRecordFilterOptions();
   const b=document.getElementById('recordsBody');
   if(!b)return;
-  const rows=records.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
-  const totalProcesos=records.length;
-  const totalKg=records.reduce((sum,r)=>{
+  const rows=records.filter(recordMatchesFilters);
+  const totalProcesos=rows.length;
+  const totalKg=rows.reduce((sum,r)=>{
     const ls=(r.lines||[]).map(recordLineNorm);
     return sum+Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0));
   },0);
   const now=new Date();
-  const totalMes=records.filter(r=>{
+  const totalMes=rows.filter(r=>{
     if(!r.end)return false;
     const d=new Date(r.end);
     return !Number.isNaN(d.getTime()) && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
@@ -1268,14 +1331,20 @@ function renderRecords(){
   const countEl=document.getElementById('regCount');
   const kgEl=document.getElementById('regKg');
   const monthEl=document.getElementById('regMonth');
-  if(countEl)countEl.textContent=totalProcesos.toLocaleString('es-ES')+' proceso'+(totalProcesos===1?'':'s')+' registrado'+(totalProcesos===1?'':'s');
-  if(kgEl)kgEl.textContent=totalKg.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg procesados';
+  const filteredEl=document.getElementById('regFiltered');
+  if(countEl)countEl.textContent=totalProcesos.toLocaleString('es-ES')+' proceso'+(totalProcesos===1?'':'s')+' encontrado'+(totalProcesos===1?'':'s');
+  if(kgEl)kgEl.textContent=totalKg.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';
   if(monthEl)monthEl.textContent=totalMes.toLocaleString('es-ES')+' este mes';
+  const active=!!(document.getElementById('regSearch')?.value||document.getElementById('regFilterCuba')?.value||document.getElementById('regFilterOperator')?.value||document.getElementById('regFilterFrom')?.value||document.getElementById('regFilterTo')?.value);
+  if(filteredEl){
+    filteredEl.style.display=active?'inline-block':'none';
+    filteredEl.textContent=active?'Filtros activos':'';
+  }
   b.innerHTML=rows.map(r=>{
     const ls=(r.lines||[]).map(recordLineNorm);
     const kg=Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0));
     return `<tr><td><b>${r.id}</b></td><td>${formatDateEU(r.start)}</td><td>${formatDateEU(r.end)}</td><td>${r.cuba}</td><td>${ls.map(x=>x.code+' · '+x.lot).join('<br>')}</td><td>${kg.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</td><td>${r.operator}</td><td>${r.recipe}</td><td><span class="badge green">Terminado</span></td><td><button class="actionBtn" onclick="consultRecord('${r.id}')">Consultar</button></td></tr>`;
-  }).join('')||'<tr><td colspan="10">No hay registros que coincidan.</td></tr>';
+  }).join('')||'<tr><td colspan="10" style="padding:24px;text-align:center;color:#64748b">No hay registros que coincidan con los filtros.</td></tr>';
 }
 function consultRecord(id){const r=records.find(x=>x.id===id);if(!r)return;const ls=(r.lines||[]).map(recordLineNorm);const d=document.getElementById('recordDetail');d.style.display='block';d.innerHTML=`<div class="panelHead"><div><h3>${r.id} · ${r.cuba}</h3><div class="meta">Inicio ${formatDateEU(r.start)} · Final ${formatDateEU(r.end)} · Operario ${r.operator} · Receta ${r.recipe}</div></div><button class="secondary" onclick="document.getElementById('recordDetail').style.display='none'">Cerrar</button></div><h4>Artículos y salida</h4><table><thead><tr><th>Código</th><th>Artículo</th><th>Lote</th><th>Kg entrada</th><th>Hidratación</th><th>Kg salida</th><th>Coste real €/kg</th><th>Coste salida</th></tr></thead><tbody>${ls.map(x=>`<tr><td>${x.code}</td><td>${x.desc}</td><td>${x.lot}</td><td>${x.kgEntrada.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</td><td>${x.hidratacion.toLocaleString('es-ES',{maximumFractionDigits:3})}%</td><td><b>${x.kgSalida.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td><td>${x.costeReal==null?'—':x.costeReal.toLocaleString('es-ES',{minimumFractionDigits:4,maximumFractionDigits:4})}</td><td>${x.costeSalida==null?'—':x.costeSalida.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}</td></tr>`).join('')}</tbody></table><h4 style="margin-top:18px">Resumen de salida</h4><div class="summarybar"><span>Entrada <b>${Number(r.kgEntrada||ls.reduce((a,x)=>a+x.kgEntrada,0)).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})} kg</b></span><span>Salida <b>${Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0)).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})} kg</b></span><span>Coste total <b>${ls.reduce((a,x)=>a+(x.costeSalida||0),0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})} €</b></span></div><h4 style="margin-top:18px">Operaciones realizadas</h4><table><thead><tr><th>Operación</th><th>Hora teórica</th><th>Hora real</th><th>Estado</th></tr></thead><tbody>${r.ops.map(x=>`<tr><td><b>${x[0]}</b></td><td>${formatDateEU(x[1])}</td><td>${formatDateEU(x[2])}</td><td><span class="badge green">Realizada</span></td></tr>`).join('')}</tbody></table>`;d.scrollIntoView({behavior:'smooth',block:'start'});}
 function exportRecordsCSV(){const rows=records.map(r=>{const ls=(r.lines||[]).map(recordLineNorm);return ls.map(x=>({proceso:r.id,cuba:r.cuba,fecha_inicio:r.start,fecha_fin:r.end,operario:r.operator,receta:r.recipe,codigo_articulo:x.code,articulo:x.desc,lote:x.lot,kg_entrada:x.kgEntrada,hidratacion_pct:x.hidratacion,kg_salida:x.kgSalida,coste_real_kg:x.costeReal==null?'':x.costeReal,coste_salida_total:x.costeSalida==null?'':x.costeSalida}));}).flat();const header=['proceso','cuba','fecha_inicio','fecha_fin','operario','receta','codigo_articulo','articulo','lote','kg_entrada','hidratacion_pct','kg_salida','coste_real_kg','coste_salida_total'];const csv=[header,...rows.map(r=>header.map(k=>String(r[k]??'').replaceAll('"','""')))];const text=csv.map(row=>row.map(v=>'"'+v+'"').join(';')).join('\r\n');const blob=new Blob([text],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='registros_salida_agua.csv';a.click();URL.revokeObjectURL(url);}
