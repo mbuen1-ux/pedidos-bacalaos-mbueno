@@ -612,7 +612,11 @@ function renderDetail(){
   if(workMode==='client'){
     const g=groups[selected]; if(!g) {box.innerHTML='<div class="empty">Selecciona un pedido.</div>';return;}
     box.innerHTML=`<div class="clientname">${esc(g.cliente)}</div><div class="orderref mainref">${esc(clientOrderLabel(g.cliente,g.codigoCliente,g.pedidoRef||pedidoRef(g.serie,g.pedido)))}</div><div class="metahead">${esc(g.fecha)}</div>`;
-    g.lineas.forEach((r,n)=>{
+    const lineasDetalle = g.lineas.filter(r => {
+      const completa = isLineComplete(r) && String(r.lote||'').trim()!=='';
+      return completeOnly ? completa : (pendingOnly ? !completa : true);
+    });
+    lineasDetalle.forEach((r,n)=>{
       const card=document.createElement('div'); card.className='card'+(isLineComplete(r)&&String(r.lote||'').trim()!==''?' detailComplete':' pendingLine');
       card.innerHTML=`<div class="cardtop"><div><div class="label">ARTÍCULO</div><div class="measure">${esc(r.descripcion)}</div></div></div>
       <div style="margin-top:6px"><div class="${String(r.medida||'').trim().toUpperCase()!=='UD.'?'measurehighlight':'measureNormal'}">${esc(r.medida)}</div>${String(r.medida||'').trim().toUpperCase()!=='UD.'?'<div class="specialcut">Ojo corte especial</div>':''}</div>
@@ -648,7 +652,12 @@ function renderDetail(){
     const pedidosTotales=pedidosMap.size;
     const pedidosHechos=Array.from(pedidosMap.values()).filter(lineasPedido=>lineasPedido.length>0 && lineasPedido.every(r=>isLineComplete(r) && String(r.lote||'').trim()!=='')).length;
     box.innerHTML=`<div class="clientname">${esc(a.descripcion)}</div><div class="mainref articlemainref">Artículo ${esc(a.articulo||'')}</div><div class="articleTotal"><div class="articleStats"><div><span>TOTAL PEDIDO</span><strong>${Math.round(totalPesoPedido)} kg</strong></div><div><span>TOTAL PESADOS</span><strong>${Math.round(totalPesoReal)} kg</strong></div><div><span>TOTAL PEDIDOS</span><strong>${pedidosHechos} / ${pedidosTotales}</strong><small>HECHOS / TOTALES</small></div></div></div><div class="metahead">${a.lineas.length} línea(s) de distintos pedidos${complete?' · COMPLETO':''}</div>`;
-    a.lineas.forEach((item,n)=>{
+    const lineasDetalle = a.lineas.filter(item => {
+      const r=item.r;
+      const completa = isLineComplete(r) && String(r.lote||'').trim()!=='';
+      return completeOnly ? completa : (pendingOnly ? !completa : true);
+    });
+    lineasDetalle.forEach((item,n)=>{
       const r=item.r,g=item.g;
       const card=document.createElement('div'); card.className='card'+(isLineComplete(r)&&String(r.lote||'').trim()!==''?' detailComplete':' pendingLine');
       card.innerHTML=`<div class="articlelinehead"><div><div class="lineclient">${esc(g.cliente)}</div><div class="lineorder">${esc(clientOrderLabel(g.cliente,g.codigoCliente,g.pedidoRef||pedidoRef(g.serie,g.pedido)))}</div></div></div>
