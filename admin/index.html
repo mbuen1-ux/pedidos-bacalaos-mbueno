@@ -5067,7 +5067,7 @@ window.mbSaveListStatusV110=save;
     try{if(window.__mbOrdersState&&Array.isArray(window.__mbOrdersState.orders))sources.push(window.__mbOrdersState.orders)}catch(e){}
     try{if(typeof orders!=='undefined'&&Array.isArray(orders))sources.push(orders)}catch(e){}
     sources.forEach(arr=>arr.forEach(o=>{if(o&&o.id)maps.set(String(o.id),normalize(o))}));
-    const arr=[...maps.values()].sort((a,b)=>String(b.date+b.time).localeCompare(String(a.date+a.time)));
+    const arr=[...maps.values()].sort((a,b)=>String(b.createdAt||((b.date||"")+"T"+(b.time||""))).localeCompare(String(a.createdAt||((a.date||"")+"T"+(a.time||"")))));
     window.__mbAdminOrders=arr;
     window.orders=arr;
     try{if(window.__mbOrdersState)window.__mbOrdersState.orders=arr}catch(e){}
@@ -5134,7 +5134,8 @@ window.mbSaveListStatusV110=save;
     const arr=source();
     const q=(document.getElementById("o47-search")?.value||"").trim().toLowerCase();
     const f=document.getElementById("o47-filter")?.value||"all";
-    const list=arr.filter(o=>{
+    const ordered=arr.slice().sort((a,b)=>String(b.createdAt||((b.date||"")+"T"+(b.time||""))).localeCompare(String(a.createdAt||((a.date||"")+"T"+(a.time||"")))));
+     const list=ordered.filter(o=>{
       const txt=((o.client||"")+" "+(o.id||"")).toLowerCase();
       return (f==="all"||o.status===f)&&(!q||txt.includes(q));
     });
@@ -5167,7 +5168,7 @@ window.mbSaveListStatusV110=save;
     set("summarySent",arr.filter(o=>o.status==="Enviado").length);
     const recent=document.getElementById("recent");
     if(recent){
-      const sorted=arr.slice().sort((a,b)=>String((b.date||"")+" "+(b.time||"")).localeCompare(String((a.date||"")+" "+(a.time||"")))).slice(0,5);
+      const sorted=arr.slice().sort((a,b)=>String(b.createdAt||((b.date||"")+"T"+(b.time||""))).localeCompare(String(a.createdAt||((a.date||"")+"T"+(a.time||"")))).slice(0,5);
       recent.innerHTML=sorted.length?sorted.map(o=>`<tr><td>${esc(o.time||"")}</td><td><div class="client">${esc(o.client||"Cliente")}</div><div class="sub">${esc(o.id||"")}</div></td><td>${esc(o.items||"")}</td><td><b>${money((o.lines||[]).reduce((a,l)=>a+Number(l.actual??l[2]??0)*Number(l.price??l[3]??0),0))}</b></td><td>${esc(o.status||"Nuevo")}</td></tr>`).join(""):'<tr><td colspan="5" class="empty">No hay pedidos recientes.</td></tr>';
     }
   }
