@@ -4949,7 +4949,7 @@ window.mbSaveListStatusV110=save;
   async function load(){
     if(!cfg().url||!cfg().key)return;
     try{
-      const pedidos=await get("pedidos?select=id,numero,cliente_id,fecha,hora,estado&order=fecha.desc,hora.desc");
+      const pedidos=await get("pedidos?select=id,numero,cliente_id,fecha,hora,estado,created_at&order=created_at.desc.nullslast,fecha.desc,hora.desc");
       const clientes=await get("clientes?select=id,codigo,nombre");
       const arts=await get("articulos?select=id,referencia,nombre&limit=5000");
       let lineas=[];
