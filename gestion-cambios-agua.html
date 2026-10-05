@@ -97,6 +97,9 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 #cubaList .detail,#prodCubaList .detail{font-size:12px}
 #cubaList .timeline,#prodCubaList .timeline{margin-top:6px}
 #cubaList .actions,#prodCubaList .actions{margin-top:10px}
+/* Cubas en proceso: el botón queda debajo de la línea de procesos, sin solaparse */
+#cubaList>.card.process .actions{position:relative;left:auto;right:auto;bottom:auto;height:auto;min-height:36px;display:flex;align-items:center;margin-top:6px!important;z-index:2}
+
 @media(max-width:1100px){#cubaList,#prodCubaList{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){#cubaList,#prodCubaList{grid-template-columns:1fr}}
 @media(min-width:1101px){#cubaList,#prodCubaList{grid-auto-rows:340px;align-items:stretch}}
