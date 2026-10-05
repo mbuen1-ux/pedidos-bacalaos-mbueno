@@ -5204,7 +5204,11 @@ window.mbSaveListStatusV110=save;
     set("summarySent",arr.filter(o=>o.status==="Enviado").length);
     const recent=document.getElementById("recent");
     if(recent){
-      const sorted=arr.slice().sort((a,b)=>String(b.createdAt||((b.date||"")+"T"+(b.time||""))).localeCompare(String(a.createdAt||((a.date||"")+"T"+(a.time||"")))).slice(0,5);
+      const sorted=arr.slice().sort((a,b)=>{
+        const da=String(a.createdAt||((a.date||"")+"T"+(a.time||"")));
+        const db=String(b.createdAt||((b.date||"")+"T"+(b.time||"")));
+        return db.localeCompare(da);
+      }).slice(0,5);
       recent.innerHTML=sorted.length?sorted.map(o=>{
         const total=(o.lines||[]).reduce((a,l)=>a+Number(l.actual??l[2]??0)*Number(l.price??l[3]??0),0);
         return `<tr>
