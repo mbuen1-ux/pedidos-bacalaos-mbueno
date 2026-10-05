@@ -1464,17 +1464,12 @@ let rows=orders.filter(o=>(f==='all'||o.status===f)&&(o.client.toLowerCase().inc
 document.querySelector('#ordersTable').innerHTML=rows||'<tr><td colspan="7">No hay pedidos que coincidan.</td></tr>';
 }
 function renderRecent(){
-  /* sincronización local de pedidos de prueba desactivada */
-  const tbody=document.querySelector('#recent'); if(!tbody)return;
-  const pad=n=>String(n).padStart(2,'0'); const now=new Date();
-  const today=pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear();
-  const parseDate=o=>{const m=String(o.date||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1],...(String(o.time||'00:00').split(':').map(Number))):new Date(0)};
-  const todayOrders=orders.filter(o=>String(o.date||'')===today).sort((a,b)=>parseDate(b)-parseDate(a));
-  const recent=(todayOrders.length?todayOrders:orders.slice().sort((a,b)=>parseDate(b)-parseDate(a))).slice(0,5);
-  if(!recent.length){tbody.innerHTML='<tr><td colspan="5" class="empty">No hay pedidos recientes.</td></tr>';return;}
-  tbody.innerHTML=recent.map(o=>`<tr><td>${o.time||''}</td><td><div class="client">${o.client||'Cliente'}</div><div class="sub">${o.id}</div></td><td>${o.items||((o.lines||[]).map(l=>l[0]).join(' · '))}</td><td><b>${eur(o.total||0)}</b></td><td>${badge(o.status||'Nuevo')}</td></tr>`).join('');
-}
-function show(id){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.querySelector('#'+id).classList.add('active');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.panel===id));if(id==='orders')renderOrders();if(id==='products'&&window.mbLoadArticlesFromSupabase){window.mbLoadArticlesFromSupabase();}}
+  // Unificamos cualquier llamada legacy con el render actual de "Últimos pedidos".
+  if(typeof renderDashboardRecent==="function"){
+    renderDashboardRecent();
+    return;
+  }
+}function show(id){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.querySelector('#'+id).classList.add('active');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.panel===id));if(id==='orders')renderOrders();if(id==='products'&&window.mbLoadArticlesFromSupabase){window.mbLoadArticlesFromSupabase();}}
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>show(b.dataset.panel));
 document.querySelector('#newProductBtn')?.addEventListener('click',newProduct);
 document.querySelector('#importProductsBtn')?.addEventListener('click',openImportArticles); document.querySelector('#readArticleExcelBtn')?.addEventListener('click',analyseArticleExcel); document.querySelector('#confirmArticleImportBtn')?.addEventListener('click',applyArticleImportSelection); document.querySelector('#selectAllArticlesBtn')?.addEventListener('click',()=>setAllArticleSelection(true)); document.querySelector('#unselectAllArticlesBtn')?.addEventListener('click',()=>setAllArticleSelection(false));
