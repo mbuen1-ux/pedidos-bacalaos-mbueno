@@ -255,6 +255,9 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 <style>
 #orders .o47-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 #orders .o47-toolbar input,#orders .o47-toolbar select{min-height:42px}
+#orders .order-status-filters{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+#orders .order-status-filters label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#405363;cursor:pointer;white-space:nowrap}
+#orders .order-status-filters input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer}
 #orders .o47-table{width:100%;border-collapse:collapse}
 #orders .o47-table th,#orders .o47-table td{padding:11px 10px;border-bottom:1px solid #e8edf3;text-align:left;vertical-align:middle}
 #orders .o47-table th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#64748b}
@@ -298,13 +301,12 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 <div class="card">
   <div class="o47-toolbar">
     <input class="search" id="o47-search" placeholder="Buscar cliente o pedido...">
-    <select class="select" id="o47-filter">
-      <option value="all">Todos los estados</option>
-      <option value="Nuevo">Nuevo</option>
-      <option value="En preparación">En preparación</option>
-      <option value="Enviado">Enviado</option>
-      <option value="Cancelado">Cancelado</option>
-    </select>
+    <div class="order-status-filters" id="o47-status-filters" aria-label="Filtrar por estado">
+      <label><input type="checkbox" class="o47-status-check" value="Nuevo" checked> Nuevo</label>
+      <label><input type="checkbox" class="o47-status-check" value="En preparación" checked> En preparación</label>
+      <label><input type="checkbox" class="o47-status-check" value="Enviado" checked> Enviado</label>
+      <label><input type="checkbox" class="o47-status-check" value="Cancelado" checked> Cancelado</label>
+    </div>
     <span style="flex:1"></span>
     
   </div>
@@ -2500,7 +2502,7 @@ document.addEventListener("input",e=>{
  $("o47-total").textContent=money(total(o));
 });
 
-$("o47-filter").addEventListener("change",e=>{state.filter=e.target.value;state.selectedOrders.clear();render();});
+document.addEventListener("change",e=>{if(!e.target.matches("#o47-status-filters .o47-status-check"))return;state.selectedOrders.clear();render();});
 $("o47-search").addEventListener("input",e=>{state.search=e.target.value;render();});
 render();
 renderDashboardRecent();
@@ -5163,11 +5165,11 @@ window.mbSaveListStatusV110=save;
     if(!body)return;
     const arr=source();
     const q=(document.getElementById("o47-search")?.value||"").trim().toLowerCase();
-    const f=document.getElementById("o47-filter")?.value||"all";
+    const selectedStatuses=[...document.querySelectorAll("#o47-status-filters .o47-status-check:checked")].map(x=>x.value);
     const ordered=arr.slice().sort((a,b)=>String(b.createdAt||((b.date||"")+"T"+(b.time||""))).localeCompare(String(a.createdAt||((a.date||"")+"T"+(a.time||"")))));
      const list=ordered.filter(o=>{
       const txt=((o.client||"")+" "+(o.id||"")).toLowerCase();
-      return (f==="all"||o.status===f)&&(!q||txt.includes(q));
+      return selectedStatuses.includes(String(o.status||""))&&(!q||txt.includes(q));
     });
     body.innerHTML=list.map(o=>{
       const total=(o.lines||[]).reduce((a,l)=>a+Number(l.actual??l[2]??0)*Number(l.price??l[3]??0),0);
@@ -5829,7 +5831,8 @@ window.mbSaveListStatusV110=save;
         (Array.isArray(window.orders)?window.orders:[]));
       // El ERP solo debe recibir pedidos abiertos: Nuevo y En preparación.
       // Enviado y Cancelado quedan fuera de la exportación.
-      const orders=allOrders.filter(o=>o && (o.status==='Nuevo' || o.status==='En preparación'));
+      const selectedStatuses=[...document.querySelectorAll("#o47-status-filters .o47-status-check:checked")].map(x=>x.value);
+      const orders=allOrders.filter(o=>o && selectedStatuses.includes(String(o.status||"")));
       const headers={apikey:c.key,Authorization:'Bearer '+c.key,Accept:'application/json'};
       const cr=await fetch(c.url+'/rest/v1/clientes?select=id,codigo,nombre,email,telefono&limit=10000',{headers});
       const ct=await cr.text();
