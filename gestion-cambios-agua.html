@@ -116,6 +116,11 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 /* Detalle abierto: el botón Ocultar detalle queda después de toda la información */
 #cubaList>.card.process.detail-open .detail,#prodCubaList>.card.process.detail-open .detail{order:5;margin-bottom:0!important}
 #cubaList>.card.process.detail-open .actions,#prodCubaList>.card.process.detail-open .actions{order:6;position:relative;left:0;right:auto;bottom:auto!important;height:36px;min-height:36px;margin:8px 0 0 0!important;padding:0!important;z-index:2;white-space:nowrap;justify-content:flex-start;align-self:flex-start}
+/* Detalle abierto: la tarjeta crece solo lo necesario y el botón queda al final */
+#cubaList>.card.process.detail-open,#prodCubaList>.card.process.detail-open{padding-bottom:14px!important;min-height:0!important;height:auto!important}
+#cubaList>.card.process.detail-open .detail,#prodCubaList>.card.process.detail-open .detail{margin-bottom:0!important}
+#cubaList>.card.process.detail-open .actions,#prodCubaList>.card.process.detail-open .actions{margin-top:8px!important;margin-bottom:0!important}
+
 
 
 
