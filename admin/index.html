@@ -6049,62 +6049,7 @@ window.mbSaveListStatusV110=save;
     const title=$("selectedTariffTitle")?.textContent||'Tarifa de precios';
     const lines=rows.map(r=>{const c=r.children;return `<tr><td>${esc(c[1]?.innerText||'')}</td><td>${esc(c[2]?.innerText||'')}</td><td style="text-align:right">${esc(c[3]?.querySelector('input')?.value||'0')} €/kg</td></tr>`}).join('');
     const w=window.open('','_blank'); if(!w){alert('El navegador ha bloqueado la ventana del PDF. Permite ventanas emergentes para este sitio.');return;}
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;color:#183044;margin:38px}h1{font-size:22px;margin:0 0 6px}p{color:#647686;margin:0 0 22px}table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid #dfe5ea;text-align:left}th{font-size:12px;color:#647686;text-transform:uppercase}footer{margin-top:30px;font-size:11px;color:#71808c}@media print{button{display:none}}</style></head><body><h1>BACALAOS M. BUENO</h1><p>${esc(title)}</p><table><thead><tr><th>Referencia</th><th>Artículo</th><th style="text-align:right">Precio €/kg</th></tr></thead><tbody>${lines}</tbody></table><footer>Tarifa de precios · ${new Date().toLocaleDateString('es-ES')}</footer><script>window.onload=function(){window.print()}<\/script><script id="summary-recent-direct-v191">
-(function(){
-  "use strict";
-  const cfg=()=>window.MB_SUPABASE||{};
-  const H=()=>({apikey:cfg().key,Authorization:"Bearer "+cfg().key,Accept:"application/json"});
-  const esc=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
-  const money=v=>Number(v||0).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
-
-  async function loadRecentDirect(){
-    const recent=document.getElementById("recent");
-    if(!recent)return;
-    const c=cfg();
-    if(!c.url||!c.key)return;
-    try{
-      const url=c.url+"/rest/v1/pedidos?select=id,numero,fecha,hora,estado,total_estimado,created_at,clientes(nombre)&order=created_at.desc.nullslast,fecha.desc,hora.desc&limit=5";
-      const res=await fetch(url,{headers:H()});
-      const rows=await res.json();
-      if(!res.ok)throw new Error(rows?.message||("HTTP "+res.status));
-
-      recent.innerHTML=(Array.isArray(rows)?rows:[]).map(o=>{
-        const cliente=Array.isArray(o.clientes)?o.clientes[0]:o.clientes;
-        return `<tr>
-          <td><button type="button" class="o75-order-link o47-open" data-id="${esc(o.numero||o.id)}">${esc(o.numero||o.id)}</button></td>
-          <td>${esc(o.fecha||"")}</td>
-          <td>${esc(String(o.hora||"").slice(0,8))}</td>
-          <td>${esc(cliente?.nombre||"")}</td>
-          <td><select class="select o50-status-list" data-id="${esc(o.numero||o.id)}">
-            ${["Nuevo","En preparación","Enviado","Cancelado"].map(st=>`<option value="${esc(st)}" ${o.estado===st?"selected":""}>${esc(st)}</option>`).join("")}
-          </select></td>
-          <td><strong>${money(o.total_estimado)}</strong></td>
-        </tr>`;
-      }).join("")||'<tr><td colspan="6" style="text-align:center;padding:28px;color:#64748b">No hay pedidos recientes.</td></tr>';
-    }catch(err){
-      console.warn("Resumen: no se pudieron cargar los últimos pedidos desde Supabase",err);
-    }
-  }
-
-  window.mbRefreshSummaryRecent=loadRecentDirect;
-  function boot(){
-    loadRecentDirect();
-    setTimeout(loadRecentDirect,700);
-    setTimeout(loadRecentDirect,1800);
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);
-  else boot();
-
-  document.addEventListener("click",function(e){
-    const nav=e.target.closest?.('[data-panel="dashboard"]');
-    if(nav)setTimeout(loadRecentDirect,250);
-  },true);
-  window.addEventListener("change",function(e){
-    const sel=e.target?.closest?.("#dashboard #recent .o50-status-list");
-    if(sel)setTimeout(loadRecentDirect,700);
-  },true);
-})();
-</script>
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;color:#183044;margin:38px}h1{font-size:22px;margin:0 0 6px}p{color:#647686;margin:0 0 22px}table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid #dfe5ea;text-align:left}th{font-size:12px;color:#647686;text-transform:uppercase}footer{margin-top:30px;font-size:11px;color:#71808c}@media print{button{display:none}}</style></head><body><h1>BACALAOS M. BUENO</h1><p>${esc(title)}</p><table><thead><tr><th>Referencia</th><th>Artículo</th><th style="text-align:right">Precio €/kg</th></tr></thead><tbody>${lines}</tbody></table><footer>Tarifa de precios · ${new Date().toLocaleDateString('es-ES')}</footer><script>window.onload=function(){window.print()}<\/script>
 </body></html>`);
     w.document.close();
   }
