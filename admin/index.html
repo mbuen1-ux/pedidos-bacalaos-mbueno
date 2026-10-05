@@ -4438,7 +4438,32 @@ window.mbSaveListStatusV110=save;
   },false);
 })();
 </script>
-\n</body>
+\n<script id="summary-recent-live-refresh-v191">
+(function(){
+  "use strict";
+  const cfg=()=>window.MB_SUPABASE||{};
+  const H=()=>({apikey:cfg().key,Authorization:"Bearer "+cfg().key,Accept:"application/json"});
+  async function refreshSummaryFromSupabase(){
+    const c=cfg(); if(!c.url||!c.key)return;
+    try{
+      const r=await fetch(c.url+"/rest/v1/pedidos?select=id,numero,cliente_id,fecha,hora,estado,created_at&order=created_at.desc.nullslast,fecha.desc,hora.desc",{headers:H()});
+      if(!r.ok)return;
+      const rows=await r.json();
+      if(typeof window.mbLoadOrdersFromSupabase==="function"){
+        await window.mbLoadOrdersFromSupabase();
+      }else if(typeof window.renderOrdersFinal==="function"){
+        window.renderOrdersFinal();
+      }
+    }catch(e){ console.warn("No se pudo actualizar Últimos pedidos desde Supabase",e); }
+  }
+  window.addEventListener("change",function(e){
+    const sel=e.target?.closest?.("#dashboard #recent .o50-status-list");
+    if(!sel)return;
+    setTimeout(refreshSummaryFromSupabase,500);
+  },true);
+})();
+</script>
+</body>
 
 <!-- orders-lines-supabase-v135 desactivado en v139: sustituido por el sincronizador único v138. -->
 
