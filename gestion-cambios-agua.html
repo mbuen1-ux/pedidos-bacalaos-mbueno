@@ -805,13 +805,11 @@ function updateInicioDisponibilidad(){
   box.innerHTML=rows.map(r=>{
     const label=r.isToday?'Hoy · '+r.dateLabel:r.dateLabel;
     const time=r.t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    const release=r.finishing?'+ '+r.finishing+' se libera'+(r.finishing===1?'':'n')+' en este corte':'';
     return '<div class="inicioDisponibilidadItem">'+
       '<div class="dispFecha">'+label+'</div>'+
       '<div class="dispHora">'+time+'</div>'+
       '<div class="dispNumero">'+r.free+'</div>'+
       '<div class="dispTexto">cubas libres</div>'+
-      '<div class="dispLiberadas">'+release+'</div>'+
       '</div>';
   }).join('');
 }
