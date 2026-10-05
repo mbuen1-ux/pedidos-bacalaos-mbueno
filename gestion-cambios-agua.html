@@ -133,6 +133,18 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 #cubaList .availableBadge,#prodCubaList .availableBadge{font-size:15px!important;font-weight:800;padding:7px 11px!important;letter-spacing:.1px}
 @media(max-width:700px){#cubaList,#prodCubaList{grid-auto-rows:auto} #cubaList>.card.process,#prodCubaList>.card.process{height:auto}}
 
+/* Disponibilidad futura de cubas en Inicio */
+.inicioDisponibilidad{margin-top:14px}
+.inicioDisponibilidadGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.inicioDisponibilidadItem{background:#fff;border:2px solid #d5e0e7;border-radius:8px;padding:10px 8px;text-align:center;min-width:0}
+.inicioDisponibilidadItem .dispFecha{font-size:11px;font-weight:800;color:#617585;text-transform:capitalize}
+.inicioDisponibilidadItem .dispHora{font-size:16px;font-weight:900;color:#174d76;margin-top:2px}
+.inicioDisponibilidadItem .dispNumero{font-size:28px;line-height:1;font-weight:900;color:#17324d;margin-top:5px}
+.inicioDisponibilidadItem .dispTexto{font-size:10px;color:#71808c;margin-top:3px;font-weight:700}
+.inicioDisponibilidadItem .dispLiberadas{font-size:10px;color:#287443;margin-top:5px;font-weight:800;min-height:14px}
+@media(max-width:1250px){.inicioDisponibilidadGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.inicioDisponibilidadGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.inicioDisponibilidadItem .dispNumero{font-size:25px}}
+
 /* v172: panel compacto de estado de cubas en Inicio */
 .inicioCubasPanel{margin-top:14px}
 .inicioCubasMini{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
@@ -215,6 +227,10 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <div class="card kpi"><span>Operaciones pendientes</span><b id="kpiPending">0</b></div>
 <div class="card kpi"><span>Fuera de hora</span><b id="kpiLate">0</b></div>
 <div class="card kpi"><span>Kilos en proceso</span><b id="kpiKg">0 kg</b></div>
+</div>
+<div class="card inicioDisponibilidad">
+  <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
+  <div id="inicioDisponibilidadGrid" class="inicioDisponibilidadGrid"><div class="meta">Calculando disponibilidad...</div></div>
 </div>
 <div class="grid2">
 <div class="card"><h3>Situación de cubas</h3><div class="summarybar cubaSituationBar"><button type="button" class="situationBtn normal" onclick="filterCubasSituation('green')">🟢 <b id="sumNormal">0</b> en proceso normal</button><button type="button" class="situationBtn ready" onclick="filterCubasSituation('yellow')">🟡 <b id="sumReady">0</b> operaciones disponibles</button><button type="button" class="situationBtn late" onclick="filterCubasSituation('red')">🔴 <b id="sumLate">0</b> fuera de hora</button></div><p class="meta">Toca una situación para ir a Cubas en proceso filtrada por ese estado.</p></div>
@@ -745,7 +761,63 @@ function renderCubaCards(target){
  if(target==='cubaList'){const f=document.getElementById('cubaFilterClear');if(f)f.textContent=cubaSituationFilter==='all'?'Mostrar todas':'Mostrar todas · filtro activo';}
  return busy;
 }
+function updateInicioDisponibilidad(){
+  const box=document.getElementById('inicioDisponibilidadGrid');
+  if(!box)return;
+  const cubes=Object.values(liveCubas||{}).filter(c=>c.active!==false);
+  const now=new Date();
+  const checkpoints=[];
+  // Los 6 siguientes cortes de disponibilidad: 08:00 y 20:00.
+  const cursor=new Date(now);
+  cursor.setSeconds(0,0);
+  for(let d=0;d<4 && checkpoints.length<6;d++){
+    const base=new Date(cursor);
+    base.setDate(cursor.getDate()+d);
+    for(const hour of [8,20]){
+      const t=new Date(base);
+      t.setHours(hour,0,0,0);
+      if(t.getTime()<=now.getTime())continue;
+      checkpoints.push(t);
+      if(checkpoints.length>=6)break;
+    }
+  }
+  const rows=checkpoints.map(t=>{
+    // Una cuba queda libre si ya está libre o si su proceso termina en/antes del corte.
+    const busyAt=cubes.filter(c=>{
+      if(!c.busy)return false;
+      const start=new Date(c.start||0).getTime();
+      if(Number.isFinite(start)&&start>t.getTime())return false;
+      const ops=Array.isArray(c.ops)?c.ops:[];
+      const finish=ops.length?new Date(ops[ops.length-1][1]||0).getTime():NaN;
+      return !Number.isFinite(finish) || finish>t.getTime();
+    }).length;
+    const free=Math.max(0,cubes.length-busyAt);
+    const finishing=cubes.filter(c=>{
+      if(!c.busy)return false;
+      const ops=Array.isArray(c.ops)?c.ops:[];
+      const finish=ops.length?new Date(ops[ops.length-1][1]||0).getTime():NaN;
+      return Number.isFinite(finish)&&Math.abs(finish-t.getTime())<60000;
+    }).length;
+    const dateLabel=t.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'2-digit'}).replace(/^./,m=>m.toUpperCase());
+    const isToday=t.toDateString()===now.toDateString();
+    return {t,free,finishing,dateLabel,isToday};
+  });
+  box.innerHTML=rows.map(r=>{
+    const label=r.isToday?'Hoy · '+r.dateLabel:r.dateLabel;
+    const time=r.t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    const release=r.finishing?'+ '+r.finishing+' se libera'+(r.finishing===1?'':'n')+' en este corte':'';
+    return '<div class="inicioDisponibilidadItem">'+
+      '<div class="dispFecha">'+label+'</div>'+
+      '<div class="dispHora">'+time+'</div>'+
+      '<div class="dispNumero">'+r.free+'</div>'+
+      '<div class="dispTexto">cubas libres</div>'+
+      '<div class="dispLiberadas">'+release+'</div>'+
+      '</div>';
+  }).join('');
+}
+
 function updateInicioDashboard(){
+  updateInicioDisponibilidad();
   const cubes=Object.values(liveCubas||{}).filter(c=>c.active!==false);
   const busy=cubes.filter(c=>c.busy);
   let pending=0,late=0,ready=0,kg=0,normal=0;
