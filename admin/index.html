@@ -255,7 +255,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 #dashboard .summary-recent-orders th:last-child,#dashboard .summary-recent-orders td:last-child{text-align:right}
 #dashboard .summary-recent-orders .o75-order-link{border:0;background:none;padding:0;color:#183044;font:inherit;font-weight:700;cursor:pointer;text-align:left}
 #dashboard .summary-recent-orders .o75-order-link:hover{text-decoration:underline}
-#dashboard .summary-recent-orders .select{min-width:145px}
+#dashboard .summary-recent-orders .select{min-width:145px}\n#dashboard .summary-recent-orders .o50-status-list{display:inline-block}
 @media(max-width:760px){#dashboard .summary-recent-orders{min-width:760px}}
 </style>
 <section id="dashboard" class="panel active">
@@ -3983,7 +3983,7 @@ async function save(sel){
 
 // Window capture is earlier than all document-level legacy listeners.
 window.addEventListener("change",function(e){
-  const sel=e.target?.closest?.(".o50-status-list,[data-unified-status],[data-v46-status],[data-order-status]");
+  const sel=e.target?.closest?.(".o50-status-list,.summary-status-list,[data-unified-status],[data-v46-status],[data-order-status]");
   if(!sel)return;
   e.preventDefault();
   e.stopImmediatePropagation();
@@ -5182,7 +5182,7 @@ window.mbSaveListStatusV110=save;
         <td>${esc(o.date||"")}</td>
         <td>${esc(o.time||"")}</td>
         <td>${esc(o.client||"")}</td>
-        <td><select class="select o50-status-list" data-id="${esc(o.id)}">
+        <td><select class="select o50-status-list summary-status-list" data-id="${esc(o.id)}">
           ${["Nuevo","En preparación","Enviado","Cancelado"].map(st=>`<option value="${esc(st)}" ${o.status===st?"selected":""}>${esc(st)}</option>`).join("")}
         </select></td>
         <td><strong>${money(total)}</strong></td>
