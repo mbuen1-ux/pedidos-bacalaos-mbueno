@@ -248,16 +248,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 <button class="nav" data-panel="settings"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-1.5 1.5-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7v.2h-2.1v-.2a1.8 1.8 0 0 0-1.1-1.7 1.8 1.8 0 0 0-2 .4l-.1.1-1.5-1.5.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.7-1.1H7v-2.1h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2l-.1-.1 1.5-1.5.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 13 5.8V5h2.1v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1 1.5 1.5-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.7 1.1h.2v2.1H21a1.8 1.8 0 0 0-1.6 1.8z"/></svg></span>Configuración</button>
 </aside>
 <main class="main">
-<style id="summary-recent-orders-v190">
-#dashboard .summary-recent-orders{width:100%;border-collapse:collapse}
-#dashboard .summary-recent-orders th,#dashboard .summary-recent-orders td{padding:11px 10px;border-bottom:1px solid #e8edf3;text-align:left;vertical-align:middle}
-#dashboard .summary-recent-orders th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#64748b}
-#dashboard .summary-recent-orders th:last-child,#dashboard .summary-recent-orders td:last-child{text-align:right}
-#dashboard .summary-recent-orders .o75-order-link{border:0;background:none;padding:0;color:#183044;font:inherit;font-weight:700;cursor:pointer;text-align:left}
-#dashboard .summary-recent-orders .o75-order-link:hover{text-decoration:underline}
-#dashboard .summary-recent-orders .select{min-width:145px}\n#dashboard .summary-recent-orders .o50-status-list{display:inline-block}
-@media(max-width:760px){#dashboard .summary-recent-orders{min-width:760px}}
-</style>
+
 <section id="dashboard" class="panel active">
 <div class="head"><div><h1>Resumen</h1><p>Actividad del portal de pedidos</p></div><button class="btn" onclick="show('orders')">Ver pedidos</button></div>
 <div class="stats">
@@ -266,7 +257,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 <div class="stat"><div class="l">Enviados</div><div class="n" id="summarySent">0</div><div class="l"><span class="dot green"></span>Completados</div></div>
 <div class="stat"><div class="l">Clientes activos</div><div class="n" id="summaryClients">0</div><div class="l">Portal privado</div></div>
 </div>
-<div class="card"><h2>Últimos pedidos</h2><div class="tablewrap"><table class="o47-table summary-recent-orders"><thead><tr><th>Pedido</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Estado</th><th>Total</th></tr></thead><tbody id="recent"></tbody></table></div></div>
+<div class="card"><h2>Últimos pedidos</h2><div class="tablewrap"><table class="o47-table"><thead><tr><th>Pedido</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Estado</th><th>Total</th></tr></thead><tbody id="recent"></tbody></table></div></div>
 </section>
 
 
@@ -5202,28 +5193,23 @@ window.mbSaveListStatusV110=save;
     set("summaryPending",arr.filter(o=>o.status==="Nuevo").length);
     set("summaryPrep",arr.filter(o=>o.status==="En preparación").length);
     set("summarySent",arr.filter(o=>o.status==="Enviado").length);
+
+    /*
+     * Últimos pedidos NO tiene un render propio.
+     * Copiamos exactamente las mismas filas que acaba de pintar Pedidos
+     * (#o47-table), incluidos sus botones, selectores y data-id.
+     * Solo limitamos la copia a los 5 primeros.
+     */
     const recent=document.getElementById("recent");
-    if(recent){
-      const sorted=arr.slice().sort((a,b)=>{
-        const da=String(a.createdAt||((a.date||"")+"T"+(a.time||"")));
-        const db=String(b.createdAt||((b.date||"")+"T"+(b.time||"")));
-        return db.localeCompare(da);
-      }).slice(0,5);
-      recent.innerHTML=sorted.length?sorted.map(o=>{
-        const total=(o.lines||[]).reduce((a,l)=>a+Number(l.actual??l[2]??0)*Number(l.price??l[3]??0),0);
-        return `<tr>
-          <td><button type="button" class="o75-order-link o47-open" data-id="${esc(o.id)}">${esc(o.id)}</button></td>
-          <td>${esc(o.date||"")}</td>
-          <td>${esc(o.time||"")}</td>
-          <td>${esc(o.client||"")}</td>
-          <td><select class="select o50-status-list" data-id="${esc(o.id)}">
-            ${["Nuevo","En preparación","Enviado","Cancelado"].map(st=>`<option value="${esc(st)}" ${o.status===st?"selected":""}>${esc(st)}</option>`).join("")}
-          </select></td>
-          <td><strong>${money(total)}</strong></td>
-        </tr>`;
-      }).join(""):'<tr><td colspan="6" style="text-align:center;padding:28px;color:#64748b">No hay pedidos recientes.</td></tr>';
+    const ordersBody=document.getElementById("o47-table");
+    if(recent && ordersBody){
+      const rows=[...ordersBody.querySelectorAll("tr")].slice(0,5);
+      recent.innerHTML=rows.length
+        ? rows.map(row=>row.cloneNode(true).outerHTML).join("")
+        : '<tr><td colspan="6" style="text-align:center;padding:28px;color:#64748b">No hay pedidos recientes.</td></tr>';
     }
   }
+
   window.renderOrdersFinal=render;
   // Ensure both creation and administration share exactly the same array.
   try{
