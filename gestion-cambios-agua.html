@@ -32,6 +32,12 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 .process.frameRed{border:2px solid #d65a52}
 .process.frameGreen{border:2px solid #5a9b6c}
 .process.frameGray{border:2px solid #d9dfe3}
+/* Cubas en proceso: el marco sigue directamente el color del proceso activo */
+#cubaList>.card.process:has(.timeline .activeProcess){border-color:#2f6fae!important}
+#cubaList>.card.process:has(.timeline .activeProcess.ready){border-color:#e0ad2f!important}
+#cubaList>.card.process:has(.timeline .activeProcess.late){border-color:#d65a52!important}
+#cubaList>.card.process:has(.timeline .done){border-color:#5a9b6c!important}
+
 
 .processHead{display:flex;justify-content:space-between;gap:12px}.processHead h3{margin:0 0 5px}.meta{color:#6e7d87;font-size:12px}.actions{margin-top:12px;display:flex;gap:8px}
 /* v162: detalle de cuba más compacto y perfectamente alineado */
