@@ -129,7 +129,7 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 
 #cubaList>.card.process,#prodCubaList>.card.process{position:relative;padding-bottom:64px}
 #cubaList>.card.process .detail,#prodCubaList>.card.process .detail{margin-bottom:52px}
-#cubaList .cubaDetailBtn,#prodCubaList .cubaDetailBtn{width:110px;min-height:36px;box-sizing:border-box}
+#cubaList .cubaDetailBtn,#prodCubaList .cubaDetailBtn{width:110px;min-height:36px;box-sizing:border-box}\n#cubaList>.card.process .actions button,#prodCubaList>.card.process .actions button{white-space:nowrap}
 #cubaList .availableBadge,#prodCubaList .availableBadge{font-size:15px!important;font-weight:800;padding:7px 11px!important;letter-spacing:.1px}
 @media(max-width:700px){#cubaList,#prodCubaList{grid-auto-rows:auto} #cubaList>.card.process,#prodCubaList>.card.process{height:auto}}
 
@@ -158,7 +158,7 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 .inicioCubaMini .miniState{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;white-space:nowrap}
 .inicioCubaMini .miniDot{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid rgba(0,0,0,.10);box-sizing:border-box}
 .inicioCubaMini .miniDot.green{background:#5a9b6c}.inicioCubaMini .miniDot.yellow{background:#e0ad2f}.inicioCubaMini .miniDot.red{background:#d65a52}.inicioCubaMini .miniDot.gray{background:#cfd7dc}
-.inicioCubaMini .miniAction{width:auto;min-width:112px;min-height:29px;padding:5px 9px;border-radius:6px;font-size:10px;font-weight:900;cursor:pointer;flex:0 0 auto}.inicioCubaMini .miniTop .miniAction{margin:0}
+.inicioCubaMini .miniAction{width:auto;min-width:112px;min-height:29px;padding:5px 9px;border-radius:6px;font-size:10px;font-weight:900;cursor:pointer;flex:0 0 auto}\n.inicioCubaMini .miniAction{white-space:nowrap}.inicioCubaMini .miniTop .miniAction{margin:0}
 .inicioCubaMini .miniAction.yellow{background:#fff0bf;color:#805d00;border:1px solid #e3c96c}.inicioCubaMini .miniAction.red{background:#fbe0dd;color:#9e2923;border:1px solid #e0a19a}
 @media(max-width:1250px){.inicioCubasMini{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:900px){.inicioCubasMini{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -750,7 +750,7 @@ function renderCubaCards(target){
    const totalOps=ops.length;
    const timeline=totalOps?ops.map((o,i)=>`<div class="seg ${i<done?'done':i===done?'activeProcess '+(st==='ready'?'ready':st==='late'?'late':''):'future'}" style="width:${100/totalOps}%">${o[0]}</div>`).join(''):'';
    const detailOps=totalOps?ops.map((o,i)=>{const os=opStatus(c,i);return `<div class="op"><div><b>${i+1}. ${o[0]}</b><span>Teórica: ${fmtDate(o[1])}</span>${i<done?'<span>Realizada</span>':i===done&&isBusy?'<span>Hora real: pendiente</span>':'<span>Futura</span>'}</div><span class="badge ${os==='done'?'green':os==='late'?'red':os==='ready'?'yellow':'gray'}">${os==='done'?'Realizado':os==='late'?'Fuera de hora':os==='ready'?'Disponible':'Futuro'}</span></div>`}).join(''):'<div class="meta">No hay proceso ni operaciones asociadas a esta cuba.</div>';
-   const btn=(isBusy&&current&&(st==='late'||st==='ready'))?`<button class="${st==='late'?'danger':'actionAvailable'}" onclick="markOpByKey('${key}')">Marcar ${current[0].toLowerCase()} realizado</button>`:'';
+   const btn=(isBusy&&current&&(st==='late'||st==='ready'))?`<button class="${st==='late'?'danger':'actionAvailable'}" onclick="markOpByKey('${key}')">Cambio Realizado</button>`:'';
    const manage=isBusy?`<div class="cubaManage"><button class="secondary" onclick="openCubaChange('${key}',this)">Cambiar cuba</button><button class="danger" onclick="cancelProduction('${key}')">Cancelar producción</button><div id="cubaChange_${key}" class="cubaChangeBox" style="display:none;margin-top:10px"><div class="field"><label>Nueva cuba</label><select><option value="">Seleccionar cuba libre</option></select></div><button class="primary" style="margin-top:8px" onclick="changeProductionCuba('${key}',this.closest('.cubaChangeBox'))">Confirmar cambio de cuba</button></div></div>`:'';
    const finish=ops.length?ops[ops.length-1][1]:null;
    const productSummary=lines.length?lines.map(x=>`<div><b>${Number(x.kg||0).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:0})} kg</b> <strong>${x.desc||''}</strong></div>`).join(''):'<span class="meta">Sin productos cargados.</span>';
@@ -890,7 +890,7 @@ function updateInicioDashboard(){
       const nextOp=current ? String(current[0]||'').trim() : 'Vaciar y envasar';
       const nextTime=current && current[1] ? new Date(current[1]) : null;
       const nextText=nextOp==='Vaciar y envasar' ? `<div>Vaciar y envasar</div>` : `<div>${nextOp}</div>${nextTime&&Number.isFinite(nextTime.getTime())?`<div style="margin-top:2px;font-size:11px;font-weight:900">${nextTime.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${nextTime.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>`:''}`;
-      const action=(current&&(st==='ready'||st==='late'))?`<button class="miniAction ${color}" onclick="markOp('${String(c.id).replace(/'/g,"\\'")}');event.stopPropagation()">${st==='late'?'Marcar cambio realizado':'Accionar cambio'}</button>`:'';
+      const action=(current&&(st==='ready'||st==='late'))?`<button class="miniAction ${color}" onclick="markOp('${String(c.id).replace(/'/g,"\\'")}');event.stopPropagation()">${st==='late'?'Cambio Realizado':'Accionar cambio'}</button>`:'';
       const miniCubaNum=String(c.name||c.id).replace(/^cuba\s*/i,"");
       return `<div class="inicioCubaMini"><div class="miniNum">${miniCubaNum}</div><div class="miniBody"><div class="miniTop"><span class="miniKg">${kgText}</span>${action||`<span class="miniState"><i class="miniDot ${color}"></i>${stateText}</span>`}</div><div class="miniProcess"><b>${articleText}</b></div><div class="miniNext"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.2px;margin-bottom:2px">Prox.</div>${nextText}</div></div></div>`;
     }).join('')||'<div class="meta">No hay cubas configuradas.</div>';
