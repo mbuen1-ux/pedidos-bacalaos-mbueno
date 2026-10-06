@@ -4551,6 +4551,144 @@ window.mbSaveListStatusV110=save;
 })();
 </script>
 <!-- V194 Supabase DELETE RLS fix -->
+
+<script id="tariff-reference-loader-v194">
+(function(){
+  "use strict";
+  const SB=window.mbSupabaseFetch;
+  if(typeof SB!=="function") return;
+  const $=id=>document.getElementById(id);
+  const txt=v=>String(v??"").trim();
+  const esc=v=>txt(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const codeOf=t=>txt(t?.codigo??t?.code??"").replace(/^ERP-/i,"");
+  const numRef=v=>{const s=txt(v);const n=Number(s.replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:Infinity;};
+  let state={tariffId:null, tariff:null, articles:[], links:[], values:new Map()};
+
+  function sortArticles(rows){
+    return [...rows].sort((a,b)=>{
+      const na=numRef(a.referencia),nb=numRef(b.referencia);
+      if(na!==nb)return na-nb;
+      return txt(a.referencia).localeCompare(txt(b.referencia),'es',{numeric:true,sensitivity:'base'});
+    });
+  }
+
+  function ensureToolbar(){
+    const editor=$("tariffEditor"); if(!editor)return;
+    let bar=$("v194-reference-toolbar");
+    if(bar)return;
+    bar=document.createElement("div");
+    bar.id="v194-reference-toolbar";
+    bar.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;background:#f7f9fb;border:1px solid #dfe5ea;border-radius:9px";
+    bar.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn light" id="v194-reference-btn">Cargar precios de tarifa de referencia</button><span class="sub">Copia los precios de otra tarifa para poder modificarlos.</span></div>';
+    const existing=editor.querySelector("#v185-tariff-toolbar");
+    if(existing) existing.parentNode.insertBefore(bar,existing);
+    else editor.insertBefore(bar,editor.firstChild);
+  }
+
+  function render(){
+    const body=$("tariffPricesTable"); if(!body)return;
+    const rows=sortArticles(state.articles).map(a=>{
+      const key=String(a.id);
+      const value=state.values.has(key)?Number(state.values.get(key)):0;
+      return '<tr data-v194-article-id="'+esc(key)+'">'+
+        '<td style="text-align:center"><input type="checkbox" class="v194-check" checked></td>'+
+        '<td><b>'+esc(a.referencia||"")+'</b></td>'+
+        '<td>'+esc(a.nombre||"Artículo")+'</td>'+
+        '<td><input class="tariff-price-input v194-price" data-article-id="'+esc(key)+'" type="number" min="0" step="0.01" value="'+value.toFixed(2)+'" style="width:130px"> €/kg</td>'+
+      '</tr>';
+    }).join("");
+    body.innerHTML=rows||'<tr><td colspan="4" class="sub">No hay artículos en el catálogo.</td></tr>';
+    $("selectedTariffInfo").textContent=state.articles.length+" artículos · "+(state.tariff?codeOf(state.tariff):"");
+    ensureToolbar();
+  }
+
+  async function show(id){
+    const tariffId=String(id);
+    try{
+      const trows=await SB("tarifas?select=*&id=eq."+encodeURIComponent(tariffId)+"&limit=1");
+      const t=Array.isArray(trows)?trows[0]:null;
+      if(!t)throw new Error("No se ha encontrado la tarifa.");
+      const [arts,links]=await Promise.all([
+        SB("articulos?select=id,referencia,nombre&limit=5000"),
+        SB("tarifa_articulos?select=id,tarifa_id,articulo_id,precio_kg&tarifa_id=eq."+encodeURIComponent(tariffId)+"&limit=5000")
+      ]);
+      state.tariffId=tariffId; state.tariff=t; state.articles=Array.isArray(arts)?arts:[]; state.links=Array.isArray(links)?links:[];
+      state.values=new Map(state.articles.map(a=>[String(a.id),0]));
+      state.links.forEach(l=>state.values.set(String(l.articulo_id),Number(l.precio_kg??0)));
+      $("selectedTariffTitle").textContent=codeOf(t)+" · "+txt(t.nombre);
+      $("tariffEditorEmpty").style.display="none";
+      $("tariffEditor").style.display="block";
+      $("closeTariffDetailBtn").style.display="inline-flex";
+      render();
+    }catch(e){alert("No se han podido cargar los precios: "+(e.message||e));}
+  }
+
+  async function loadReference(){
+    if(!state.tariffId){alert("Selecciona primero una tarifa.");return;}
+    const current=codeOf(state.tariff);
+    const code=prompt("Escribe el código de la tarifa de referencia:","");
+    if(code===null)return;
+    const refCode=txt(code).replace(/^ERP-/i,"");
+    if(!refCode){alert("Introduce un código de tarifa.");return;}
+    if(refCode===current){alert("La tarifa de referencia no puede ser la misma tarifa.");return;}
+    try{
+      const ts=await SB("tarifas?select=id,codigo,nombre&codigo=eq."+encodeURIComponent(refCode)+"&limit=1");
+      if(!Array.isArray(ts)||!ts.length)throw new Error("No existe una tarifa con el código "+refCode+".");
+      const ref=ts[0];
+      const links=await SB("tarifa_articulos?select=articulo_id,precio_kg&tarifa_id=eq."+encodeURIComponent(String(ref.id))+"&limit=5000");
+      const map=new Map((Array.isArray(links)?links:[]).map(x=>[String(x.articulo_id),Number(x.precio_kg??0)]));
+      state.articles.forEach(a=>state.values.set(String(a.id),map.has(String(a.id))?map.get(String(a.id)):0));
+      render();
+      const count=state.articles.filter(a=>map.has(String(a.id))).length;
+      alert("Precios cargados desde la tarifa "+refCode+" ("+count+" artículos con precio).\n\nAhora puedes modificarlos y pulsar «Guardar precios».");
+    }catch(e){alert("No se han podido cargar los precios de la tarifa de referencia.\n\n"+(e.message||e));}
+  }
+
+  async function save(){
+    if(!state.tariffId)return;
+    const rows=[...document.querySelectorAll("#tariffPricesTable tr[data-v194-article-id]")].filter(r=>r.querySelector(".v194-check")?.checked);
+    if(!rows.length){alert("Selecciona al menos un artículo para guardar.");return;}
+    try{
+      let saved=0;
+      for(const row of rows){
+        const aid=String(row.dataset.v194ArticleId);
+        const input=row.querySelector(".v194-price");
+        const price=Number(String(input?.value??"").replace(",","."));
+        if(!Number.isFinite(price)||price<0)throw new Error("Hay un precio no válido.");
+        const existing=state.links.find(x=>String(x.articulo_id)===aid);
+        if(existing){
+          await SB("tarifa_articulos?id=eq."+encodeURIComponent(String(existing.id)),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({precio_kg:price})});
+        }else{
+          await SB("tarifa_articulos",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({tarifa_id:state.tariffId,articulo_id:aid,precio_kg:price})});
+        }
+        saved++;
+      }
+      alert("Precios guardados correctamente en Supabase ("+saved+" artículos).");
+      await show(state.tariffId);
+      if(typeof window.renderTariffs==="function")await window.renderTariffs();
+    }catch(e){alert("No se han podido guardar los precios: "+(e.message||e));}
+  }
+
+  window.showTariffPrices=show;
+  window.saveTariffPrices=save;
+
+  document.addEventListener("click",function(e){
+    const view=e.target.closest?.("[data-v185-view],[data-v62-view],[data-v59-view],[data-mb58-view],[data-online-tview]");
+    if(view){
+      e.preventDefault(); e.stopImmediatePropagation();
+      const id=view.dataset.v185View||view.dataset.v62View||view.dataset.v59View||view.dataset.mb58View||view.dataset.onlineTview;
+      show(id);
+      return;
+    }
+    if(e.target.id==="v194-reference-btn"){
+      e.preventDefault(); e.stopImmediatePropagation();
+      loadReference();
+      return;
+    }
+  },true);
+})();
+</script>
+
 </body>
 
 <!-- orders-lines-supabase-v135 desactivado en v139: sustituido por el sincronizador único v138. -->
