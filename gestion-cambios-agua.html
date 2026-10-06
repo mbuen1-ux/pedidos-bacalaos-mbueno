@@ -469,7 +469,7 @@ function renderLines(){
   const cap=Number(document.getElementById('cubaSel')?.selectedOptions?.[0]?.dataset?.cap||50);
   document.getElementById('loadTotal').textContent=t.toFixed(3).replace('.',',')+' kg';
   document.getElementById('capBar').style.width=Math.min(t/cap*100,100)+'%';
-  checkRecipe();renderProdRecipeInfo();
+  checkRecipe();renderProdRecipeInfo();updateProductionEndBox();
 }
 function rememberLot(i,lot){
   const desc=lines[i]?.desc;if(!desc||!lot)return;
@@ -628,7 +628,7 @@ function productionEndInfo(){
   const hora=document.getElementById('hora')?.value;
   if(!fecha||!hora)return null;
   const r=recipeForArticle(lines[0]?.desc);
-  if(!r||!Array.isArray(r.steps)||!r.steps.length)return null;
+  if(!r||r.active===false||!Array.isArray(r.steps)||!r.steps.length)return null;
   const totalHours=r.steps.reduce((sum,st)=>sum+Number(st.hours||0),0);
   const start=new Date(fecha+'T'+hora);
   if(!Number.isFinite(start.getTime()))return null;
