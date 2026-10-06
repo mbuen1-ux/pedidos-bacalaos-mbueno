@@ -6256,17 +6256,22 @@ window.mbSaveListStatusV110=save;
       ]);
       currentRows=Array.isArray(rows)?rows:[];
       currentArticles=new Map((Array.isArray(arts)?arts:[]).map(a=>[String(a.id),a]));
-      const sorted=sortRows(currentRows);
+      const sorted=[...currentArticles.values()].sort((a,b)=>{
+        const na=numRef(a.referencia),nb=numRef(b.referencia);
+        if(na!==nb)return na-nb;
+        return txt(a.referencia).localeCompare(txt(b.referencia),'es',{numeric:true,sensitivity:'base'});
+      });
       $("selectedTariffTitle").textContent=code(t)+' · '+txt(t.nombre);
       $("selectedTariffInfo").textContent=sorted.length+' artículos';
       $("tariffEditorEmpty").style.display='none';
       $("tariffEditor").style.display='block';
       $("closeTariffDetailBtn").style.display='inline-flex';
       const body=$("tariffPricesTable");
-      body.innerHTML=sorted.map(r=>{
-        const a=currentArticles.get(String(r.articulo_id))||{};
-        return `<tr data-v185-row="${esc(r.id)}"><td style="text-align:center"><input type="checkbox" class="v185-check" checked></td><td><b>${esc(a.referencia||'')}</b></td><td>${esc(a.nombre||'Artículo')}</td><td><input class="tariff-price-input" data-row-id="${esc(r.id)}" type="number" min="0" step="0.01" value="${Number(r.precio_kg??0).toFixed(2)}" style="width:130px"> €/kg</td></tr>`;
-      }).join('')||'<tr><td colspan="4" class="sub">No hay precios.</td></tr>';
+      body.innerHTML=sorted.map(a=>{
+        const link=currentRows.find(r=>String(r.articulo_id)===String(a.id));
+        const price=link?Number(link.precio_kg??0):0;
+        return `<tr data-v185-row="${esc(link?.id||'new-'+a.id)}"><td style="text-align:center"><input type="checkbox" class="v185-check" checked></td><td><b>${esc(a.referencia||'')}</b></td><td>${esc(a.nombre||'Artículo')}</td><td><input class="tariff-price-input" data-row-id="${esc(link?.id||'')}" data-article-id="${esc(a.id)}" type="number" min="0" step="0.01" value="${price.toFixed(2)}" style="width:130px"> €/kg</td></tr>`;
+      }).join('')||'<tr><td colspan="4" class="sub">No hay artículos en el catálogo.</td></tr>';
       renderPriceControls();
       syncHeader();
     }catch(e){
@@ -6287,11 +6292,20 @@ window.mbSaveListStatusV110=save;
   window.renderTariffs=loadTariffList;
   window.showTariffPrices=show;
   window.saveTariffPrices=async function(){
-    const inputs=[...document.querySelectorAll('#tariffPricesTable .tariff-price-input')].filter(i=>i.closest('tr')?.querySelector('.v185-check')?.checked);
-    if(!inputs.length){alert('Selecciona al menos un artículo para guardar.');return;}
+    const rows=[...document.querySelectorAll('#tariffPricesTable tr[data-v185-row]')].filter(r=>r.querySelector('.v185-check')?.checked);
+    if(!rows.length){alert('Selecciona al menos un artículo para guardar.');return;}
     try{
-      for(const input of inputs){const n=Number(String(input.value).replace(',','.'));if(!Number.isFinite(n)||n<0)throw new Error('Hay un precio no válido.');await SB('tarifa_articulos?id=eq.'+encodeURIComponent(input.dataset.rowId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({precio_kg:n})});}
-      alert('Precios guardados correctamente en Supabase.'); await show(currentId);
+      for(const row of rows){
+        const input=row.querySelector('.tariff-price-input');
+        const n=Number(String(input?.value??'').replace(',','.'));
+        if(!Number.isFinite(n)||n<0)throw new Error('Hay un precio no válido.');
+        const aid=String(input.dataset.articleId);
+        const existing=currentRows.find(x=>String(x.articulo_id)===aid);
+        if(existing) await SB('tarifa_articulos?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({precio_kg:n})});
+        else await SB('tarifa_articulos',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({tarifa_id:currentId,articulo_id:aid,precio_kg:n})});
+      }
+      alert('Precios guardados correctamente en Supabase.');
+      await show(currentId);
     }catch(e){alert('No se han podido guardar los precios: '+(e.message||e));}
   };
 
