@@ -483,8 +483,8 @@ function updateArticle(i,value){
   lines[i].lot=value?lastLotForArticle(value):'';
   lines[i].kg=a?Number(a.kg||0):0;
   renderLines();
-}
   updateProductionEndBox();
+}
 function checkRecipe(){
   const err=document.getElementById('prodError');
   if(!lines.length){err.style.display='none';err.textContent='';return false;}
@@ -669,8 +669,12 @@ async function startProduction(){
   c.process=String(numberData);
   const ops=(r.steps||[]).map((st,i)=>{const t=new Date(d);let elapsed=0;for(let j=0;j<=i;j++)elapsed+=Number(r.steps[j].hours||0);t.setTime(t.getTime()+elapsed*3600000);return[st.process,localIsoMinute(t)]});
   const plannedEnd=new Date(ops[ops.length-1][1]);
+  const endText=formatProductionEnd(plannedEnd);
   if(isWeekendEnd(plannedEnd)){
-    const answer=confirm('ATENCIÓN: el proceso completo terminaría el '+formatProductionEnd(plannedEnd)+'. Es sábado por la tarde o domingo. ¿Quieres iniciar de todos modos?');
+    const answer=confirm('ATENCIÓN: el proceso completo terminaría el '+endText+'. Es sábado por la tarde o domingo. ¿Quieres iniciar de todos modos?');
+    if(!answer)return;
+  }else{
+    const answer=confirm('El proceso completo terminará el '+endText+'. ¿Quieres iniciar el proceso?');
     if(!answer)return;
   }
   try{
