@@ -6207,7 +6207,7 @@ window.mbSaveListStatusV110=save;
       }).map(t=>{
         const n=links.filter(x=>String(x.tarifa_id)===String(t.id)).length;
         const nc=clients.filter(c=>txt(c.tarifa_codigo).replace(/^ERP-/i,"")===code(t)).length;
-        return `<tr><td><b>${esc(code(t))}</b></td><td><b>${esc(t.nombre||"")}</b><div class="sub">${esc(t.descripcion||"")}</div></td><td>${n}</td><td>${nc}</td><td><span class="badge ${t.activo===false?'pending':'done'}">${t.activo===false?'Inactiva':'Activa'}</span></td><td style="text-align:right"><button class="btn light" type="button" data-v185-view="${esc(t.id)}">Ver precios</button> <button class="btn light" type="button" data-v185-edit="${esc(t.id)}">Editar</button></td></tr>`;
+        return `<tr><td><b>${esc(code(t))}</b></td><td><b>${esc(t.nombre||"")}</b><div class="sub">${esc(t.descripcion||"")}</div></td><td>${n}</td><td>${nc}</td><td><span class="badge ${t.activo===false?'pending':'done'}">${t.activo===false?'Inactiva':'Activa'}</span></td><td style="text-align:right"><button class="btn light" type="button" data-v185-view="${esc(t.id)}">Ver precios</button> <button class="btn light" type="button" data-v185-edit="${esc(t.id)}" onclick="window.v185EditTariff && window.v185EditTariff('${esc(t.id)}')">Editar tarifa</button></td></tr>`;
       }).join("")||'<tr><td colspan="6" class="sub">No hay tarifas online.</td></tr>';
     }catch(e){
       body.innerHTML='<tr><td colspan="6" class="sub">No se han podido cargar las tarifas: '+esc(e.message||e)+'</td></tr>';
@@ -6224,13 +6224,27 @@ window.mbSaveListStatusV110=save;
     });
   }
 
+  window.v185EditTariff=async function(id){
+    try{
+      const t=(window.__onlineTariffs||[]).find(x=>String(x.id)===String(id)) || (await SB('tarifas?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1'))[0];
+      if(!t)throw new Error('No se ha encontrado la tarifa.');
+      window.editingTariffId=t.id;
+      $('tariffModalTitle').textContent='Editar tarifa';
+      $('tariffCode').value=code(t);
+      $('tariffName').value=txt(t.nombre);
+      $('tariffDescription').value=txt(t.descripcion);
+      $('tariffActive').value=String(t.activo!==false);
+      $('tariffOverlay').style.display='flex';
+    }catch(e){alert('No se puede editar la tarifa: '+(e.message||e));}
+  };
+
   function renderPriceControls(){
     const editor=$("tariffEditor"); if(!editor)return;
     let bar=$("v185-tariff-toolbar");
     if(!bar){
       bar=document.createElement('div'); bar.id='v185-tariff-toolbar';
       bar.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;background:#f7f9fb;border:1px solid #dfe5ea;border-radius:9px';
-      bar.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn light" id="v185-select-all">Seleccionar todos</button><button type="button" class="btn light" id="v185-unselect-all">Desmarcar todos</button></div><button type="button" class="btn" id="v185-pdf">Exportar PDF</button>';
+      bar.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn light" id="v185-select-all">Seleccionar todos</button><button type="button" class="btn light" id="v185-unselect-all">Desmarcar todos</button><button type="button" class="btn light" id="v185-reference">Cargar precios de tarifa de referencia</button></div><button type="button" class="btn" id="v185-pdf">Exportar PDF</button>';
       const table=editor.querySelector('.tablewrap'); editor.insertBefore(bar,table);
     }
     const table=editor.querySelector('table');
@@ -6317,6 +6331,28 @@ window.mbSaveListStatusV110=save;
     if(e.target.id==='v185-select-all'){e.preventDefault();document.querySelectorAll('#tariffPricesTable .v185-check').forEach(x=>x.checked=true);syncHeader();return;}
     if(e.target.id==='v185-unselect-all'){e.preventDefault();document.querySelectorAll('#tariffPricesTable .v185-check').forEach(x=>x.checked=false);syncHeader();return;}
     if(e.target.id==='v185-pdf'){e.preventDefault();exportPdf();return;}
+    if(e.target.id==='v185-reference'){
+      e.preventDefault();
+      const raw=prompt('Escribe el código de la tarifa de referencia:');
+      const refCode=txt(raw).replace(/^ERP-/i,'');
+      if(!refCode)return;
+      (async()=>{
+        try{
+          const ts=await SB('tarifas?select=id,codigo,nombre&codigo=eq.'+encodeURIComponent(refCode)+'&limit=1');
+          const ref=Array.isArray(ts)&&ts[0];
+          if(!ref)throw new Error('No existe una tarifa con el código '+refCode+'.');
+          const links=await SB('tarifa_articulos?select=articulo_id,precio_kg&tarifa_id=eq.'+encodeURIComponent(ref.id)+'&limit=5000');
+          const map=new Map((Array.isArray(links)?links:[]).map(x=>[String(x.articulo_id),Number(x.precio_kg??0)]));
+          let matched=0;
+          document.querySelectorAll('#tariffPricesTable .tariff-price-input').forEach(inp=>{
+            const aid=String(inp.dataset.articleId||'');
+            if(map.has(aid)){inp.value=Number(map.get(aid)||0).toFixed(2);matched++;}
+          });
+          alert('Precios cargados de la tarifa '+refCode+'. Se han encontrado '+matched+' artículos. Puedes modificarlos antes de guardar.');
+        }catch(err){alert('No se han podido cargar los precios de referencia: '+(err.message||err));}
+      })();
+      return;
+    }
     if(e.target.id==='v185-check-all'){document.querySelectorAll('#tariffPricesTable .v185-check').forEach(x=>x.checked=e.target.checked);return;}
     if(e.target.classList?.contains('v185-check')){setTimeout(syncHeader,0);}
   },true);
