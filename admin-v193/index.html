@@ -1892,6 +1892,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     const n={kilos:'Kilos',units:'Piezas enteras',portions:'Porciones',portions_box:'Porciones caja',small_box:'Caja pequeña',large_box:'Caja grande',custom:'Formato personalizado'};
     let x=n[f.type]||f.label||'Formato personalizado';
     if(f.weight)x+=' · '+Number(f.weight).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg aprox.';
+    if(f.descripcion)x+=' · '+String(f.descripcion).trim();
     return x;
   }
   function approx(p,label){const f=formats(p).find(x=>flabel(x)===label);return Number(f?.weight||1)}
@@ -4273,7 +4274,7 @@ window.mbSaveListStatusV110=save;
     const p=window.productCatalog?.find(x=>x.sku===window.mbCurrentEditSku);const fs=Array.isArray(p?.formats)?p.formats:[];
     rows.forEach((row,i)=>{
       const f=fs[i]||{};const t=ensureType(f);const first=row.querySelector('.npes-type');if(first){const sel=document.createElement('select');sel.className='mb-ft-type';sel.style.minWidth='180px';sel.innerHTML=types.map(x=>`<option value="${x.id}" ${t&&String(x.id)===String(t.id)?'selected':''}>${esc(x.codigo)} · ${esc(x.nombre)}</option>`).join('');first.replaceWith(sel);}
-      const d=document.createElement('input');d.className='mb-ft-desc';d.placeholder='Descripción / opción';d.value=f.descripcion||'';d.title='Permite distinguir dos opciones del mismo código';row.insertBefore(d,row.querySelector('.npes-default-qty'));
+      const d=document.createElement('input');d.className='mb-ft-desc';d.placeholder='Descripción personalizada (opcional)';d.value=f.descripcion||'';d.title='Descripción que se mostrará en los pedidos cuando esté informada';d.style.cssText='grid-column:1/-1;width:100%;min-height:40px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px';row.appendChild(d);
     });
   }
   // Intercept opening so the existing editor is enriched with master format types.
