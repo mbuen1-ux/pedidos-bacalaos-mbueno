@@ -214,6 +214,17 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 
 #cubaList>.card.process .finalProcessBox,#prodCubaList>.card.process .finalProcessBox{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:6px;margin:2px 0!important}
 #cubaList>.card.process .timeline,#prodCubaList>.card.process .timeline{width:100%;box-sizing:border-box}
+
+/* Reordenación profesional de tarjetas de cubas */
+#cubaList>.card.process,#prodCubaList>.card.process{gap:0}
+#cubaList>.card.process .cubaCountdown,#prodCubaList>.card.process .cubaCountdown{margin:7px 0 4px!important}
+#cubaList>.card.process .timeline,#prodCubaList>.card.process .timeline{margin:0 0 5px!important;order:3}
+#cubaList>.card.process>div[style*="margin:10px 0"],#prodCubaList>.card.process>div[style*="margin:10px 0"]{margin:4px 0!important;min-height:0}
+#cubaList>.card.process .finalProcessBox,#prodCubaList>.card.process .finalProcessBox{margin:2px 0 5px!important;padding:6px 10px!important;order:4}
+#cubaList>.card.process .finalProcessBox span,#prodCubaList>.card.process .finalProcessBox span{font-size:9px!important}
+#cubaList>.card.process .finalProcessBox strong,#prodCubaList>.card.process .finalProcessBox strong{font-size:12px!important}
+#cubaList>.card.process .actions,#prodCubaList>.card.process .actions{margin-top:4px!important}
+@media(max-width:900px){#cubaList>.card.process .cubaCountdown,#prodCubaList>.card.process .cubaCountdown{margin:5px 0 3px!important}#cubaList>.card.process .finalProcessBox,#prodCubaList>.card.process .finalProcessBox{margin:1px 0 4px!important;padding:5px 8px!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
