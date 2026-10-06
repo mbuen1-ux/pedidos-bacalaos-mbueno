@@ -655,7 +655,6 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 
   <div class="formgrid" style="margin-top:14px">
     <div class="field"><label>Precio (€/kg)</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="0,00"><div class="edit-note">El precio siempre se expresa por kilo.</div></div>
-    <div class="field"><label>Unidades por caja</label><input id="productBoxUnits" type="number" min="0" step="1" placeholder="Opcional"></div>
     <div class="field"><label>Cantidad mínima</label><input id="productMinQty" type="number" min="0" step="0.001" value="1"></div>
   </div>
 
@@ -1923,6 +1922,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     const n={kilos:'Kilos',units:'Piezas enteras',portions:'Porciones',portions_box:'Porciones caja',small_box:'Caja pequeña',large_box:'Caja grande',custom:'Formato personalizado'};
     let x=n[f.type]||f.label||'Formato personalizado';
     if(f.weight)x+=' · '+Number(f.weight).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg aprox.';
+    if(f.boxUnits)x+=' · '+Number(f.boxUnits).toLocaleString('es-ES')+' uds./caja';
     if(f.descripcion)x+=' · '+String(f.descripcion).trim();
     return x;
   }
@@ -4174,7 +4174,7 @@ window.mbSaveListStatusV110=save;
     installFormatMasterTypes();
     const [arts,formats]=await Promise.all([
       req('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo,imagen_url,destacado,oferta&order=referencia.asc'),
-      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc')
+      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc')
     ]);
     const byArticle=new Map((Array.isArray(formats)?formats:[]).map(f=>[String(f.articulo_id),f]));
     const mapped=(Array.isArray(arts)?arts:[]).map(a=>{
