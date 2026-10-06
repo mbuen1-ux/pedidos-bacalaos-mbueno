@@ -87,25 +87,30 @@ aside{padding:20px 12px}
 </style>
 <style id="format-editor-v194">
 /* v194 · editor de formatos: una fila clara + descripción en segunda línea */
-#productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:10px}
-#productFormatsBuilder .format-row{display:block!important;background:#f7f9fb;border:1px solid #dfe5ea;border-radius:10px;padding:12px!important;margin:0!important}
-#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(210px,1.7fr) minmax(145px,1fr) minmax(165px,1.15fr) auto auto;gap:10px;align-items:end}
-#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:block;font-size:11px;font-weight:700;color:#687887;margin:0 0 5px}
-#productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input,#productFormatsBuilder .fm-desc-field input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #cfd9e1;border-radius:7px;background:#fff;font-size:14px;box-sizing:border-box}
-#productFormatsBuilder .fm-input-unit{display:flex;align-items:center;gap:7px}
+#productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:12px}
+#productFormatsBuilder .format-row{display:block!important;background:#f5f8fa;border:1px solid #d7e0e7;border-radius:12px;padding:10px!important;margin:0!important;box-shadow:0 1px 2px rgba(20,45,65,.04)}
+#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(250px,1.8fr) minmax(145px,1fr) minmax(175px,1.15fr) 112px 92px;gap:8px;align-items:stretch}
+#productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{background:#fff;border:1px solid #dfe6eb;border-radius:9px;padding:8px 9px;box-sizing:border-box}
+#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:flex;align-items:center;min-height:15px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:800;color:#71808c;margin:0 0 5px}
+#productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input{width:100%;min-height:38px;padding:7px 9px;border:1px solid #cbd7df;border-radius:7px;background:#fff;font-size:13px;box-sizing:border-box;outline:none}
+#productFormatsBuilder .fm-field select:focus,#productFormatsBuilder .fm-field input:focus,#productFormatsBuilder .fm-desc-field input:focus{border-color:#7899b1;box-shadow:0 0 0 2px rgba(69,108,137,.08)}
+#productFormatsBuilder .fm-input-unit{display:flex;align-items:center;gap:6px}
 #productFormatsBuilder .fm-input-unit input{min-width:0}
-#productFormatsBuilder .fm-input-unit span{min-width:30px;color:#687887;font-size:12px;font-weight:700}
-#productFormatsBuilder .fm-order>div{display:flex;gap:5px}
-#productFormatsBuilder .fm-order .mini{width:38px;padding:8px 0}
-#productFormatsBuilder .fm-delete .mini{min-width:86px}
-#productFormatsBuilder .fm-desc-field{margin-top:10px;padding-top:10px;border-top:1px solid #e5ebef}
-#productFormatsBuilder .fm-desc-field label span{font-weight:400;color:#8795a1}
-#productFormatsBuilder .fm-desc-field input{font-size:13px}
-@media(max-width:760px){
-  #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr;gap:9px}
+#productFormatsBuilder .fm-input-unit span{min-width:30px;color:#687887;font-size:11px;font-weight:800;text-align:left}
+#productFormatsBuilder .fm-order>div{display:flex;gap:5px;height:38px}
+#productFormatsBuilder .fm-order .mini{flex:1;width:auto;padding:6px 0;min-height:38px;border:1px solid #d1dce3;background:#fff;border-radius:7px}
+#productFormatsBuilder .fm-delete .mini{width:100%;min-height:38px;border-radius:7px}
+#productFormatsBuilder .fm-desc-field{margin-top:8px;background:#fff;border:1px solid #dfe6eb;border-radius:9px;padding:8px 9px}
+#productFormatsBuilder .fm-desc-field label span{font-weight:500;text-transform:none;letter-spacing:0;color:#8a98a3;margin-left:4px}
+#productFormatsBuilder .fm-desc-field input{width:100%;min-height:38px;padding:7px 9px;border:1px solid #cbd7df;border-radius:7px;background:#fff;font-size:13px;box-sizing:border-box}
+@media(max-width:900px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr}
   #productFormatsBuilder .fm-type-field{grid-column:1/-1}
-  #productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{align-self:end}
-  #productFormatsBuilder .fm-desc-field{margin-top:9px}
+  #productFormatsBuilder .fm-desc-field{margin-top:8px}
+}
+@media(max-width:520px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr}
+  #productFormatsBuilder .fm-type-field{grid-column:auto}
 }
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
