@@ -731,7 +731,7 @@ function updateCubaCountdowns(){
    if(!Number.isFinite(t))return;
    const diff=t-Date.now();
    const st=el.dataset.cubaCountdownStatus||'future';
-   el.textContent=formatCountdown(Math.abs(diff))+(diff>0?' restante':' excedido');
+   el.textContent=diff>0?formatCountdown(diff):'00:00:00';
    if(st==='late'){
      el.style.color='#b91c1c';el.style.background='#fee2e2';
    }else if(st==='ready'){
