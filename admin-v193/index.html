@@ -85,6 +85,29 @@ aside{padding:20px 12px}
 .btn{border-radius:7px}
 .search,.select,input,select,textarea{border-radius:7px}
 </style>
+<style id="format-editor-v194">
+/* v194 · editor de formatos: una fila clara + descripción en segunda línea */
+#productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:10px}
+#productFormatsBuilder .format-row{display:block!important;background:#f7f9fb;border:1px solid #dfe5ea;border-radius:10px;padding:12px!important;margin:0!important}
+#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(210px,1.7fr) minmax(145px,1fr) minmax(165px,1.15fr) auto auto;gap:10px;align-items:end}
+#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:block;font-size:11px;font-weight:700;color:#687887;margin:0 0 5px}
+#productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input,#productFormatsBuilder .fm-desc-field input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #cfd9e1;border-radius:7px;background:#fff;font-size:14px;box-sizing:border-box}
+#productFormatsBuilder .fm-input-unit{display:flex;align-items:center;gap:7px}
+#productFormatsBuilder .fm-input-unit input{min-width:0}
+#productFormatsBuilder .fm-input-unit span{min-width:30px;color:#687887;font-size:12px;font-weight:700}
+#productFormatsBuilder .fm-order>div{display:flex;gap:5px}
+#productFormatsBuilder .fm-order .mini{width:38px;padding:8px 0}
+#productFormatsBuilder .fm-delete .mini{min-width:86px}
+#productFormatsBuilder .fm-desc-field{margin-top:10px;padding-top:10px;border-top:1px solid #e5ebef}
+#productFormatsBuilder .fm-desc-field label span{font-weight:400;color:#8795a1}
+#productFormatsBuilder .fm-desc-field input{font-size:13px}
+@media(max-width:760px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr;gap:9px}
+  #productFormatsBuilder .fm-type-field{grid-column:1/-1}
+  #productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{align-self:end}
+  #productFormatsBuilder .fm-desc-field{margin-top:9px}
+}
+</style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <style id="orders-v27-css">
@@ -4305,14 +4328,36 @@ window.mbSaveListStatusV110=save;
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
   function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
     if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
-    box.innerHTML=draft.map((f,i)=>{const t=typeFor(f);return `<div class="format-row" data-fi="${i}" style="display:grid;grid-template-columns:170px 125px 1fr 72px 92px 34px 34px 72px;gap:7px;align-items:center;margin-bottom:8px">
-      <select class="fm-type" data-i="${i}" style="min-width:0"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
-      <input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="Peso base">
-      <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Descripción / opción">
-      <input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad por defecto">
-      <span style="font-size:12px;color:#667">${t?escF(t.nombre):''}</span>
-      <button class="mini fm-up" data-i="${i}" type="button">↑</button><button class="mini fm-down" data-i="${i}" type="button">↓</button><button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
-    </div>`}).join('');
+    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{const t=typeFor(f);const unit=t?.nombre||'';
+      return `<div class="format-row" data-fi="${i}">
+        <div class="fm-main">
+          <div class="fm-field fm-type-field">
+            <label>Formato</label>
+            <select class="fm-type" data-i="${i}"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
+          </div>
+          <div class="fm-field">
+            <label>Peso aproximado</label>
+            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="0,00"><span>kg</span></div>
+          </div>
+          <div class="fm-field">
+            <label>Cantidad por defecto</label>
+            <div class="fm-input-unit"><input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad que se propondrá al crear un pedido"><span>${escF(unit)}</span></div>
+          </div>
+          <div class="fm-order">
+            <label>Orden</label>
+            <div><button class="mini fm-up" data-i="${i}" type="button" title="Subir">↑</button><button class="mini fm-down" data-i="${i}" type="button" title="Bajar">↓</button></div>
+          </div>
+          <div class="fm-delete">
+            <label>&nbsp;</label>
+            <button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
+          </div>
+        </div>
+        <div class="fm-desc-field">
+          <label>Descripción personalizada <span>(opcional)</span></label>
+          <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Ej.: bandeja, corte especial, presentación para el cliente...">
+        </div>
+      </div>`;
+    }).join('')+'</div>';
     box.querySelectorAll('.fm-type').forEach(el=>el.onchange=()=>{const i=+el.dataset.i,t=fmTypes.find(x=>String(x.id)===String(el.value));draft[i].tipoFormatoId=t?.id||null;draft[i].code=t?.codigo||'';draft[i].type='master';draft[i].label=t?.nombre||'';draft[i].nombre=t?.nombre||'';render();});
     box.querySelectorAll('.fm-weight').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].weight=el.value===''?null:Number(el.value);});
     box.querySelectorAll('.fm-desc').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].descripcion=el.value;});
