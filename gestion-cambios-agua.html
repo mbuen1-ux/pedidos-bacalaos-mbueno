@@ -225,6 +225,15 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 #cubaList>.card.process .finalProcessBox strong,#prodCubaList>.card.process .finalProcessBox strong{font-size:12px!important}
 #cubaList>.card.process .actions,#prodCubaList>.card.process .actions{margin-top:4px!important}
 @media(max-width:900px){#cubaList>.card.process .cubaCountdown,#prodCubaList>.card.process .cubaCountdown{margin:5px 0 3px!important}#cubaList>.card.process .finalProcessBox,#prodCubaList>.card.process .finalProcessBox{margin:1px 0 4px!important;padding:5px 8px!important}}
+
+/* Inicio: proceso actual y siguiente claramente diferenciados */
+.inicioCubaMini .miniNext{display:grid;gap:5px;padding:6px 7px}
+.inicioCubaMini .miniProcessLine,.inicioCubaMini .miniNextLine{line-height:1.15}
+.inicioCubaMini .miniProcessLine{color:#17324d}
+.inicioCubaMini .miniNextLine{color:#174d76;border-top:1px solid #cbd9e2;padding-top:5px}
+.inicioCubaMini .miniLineLabel{display:block;font-size:9px;font-weight:900;letter-spacing:.35px;text-transform:uppercase;color:#71808c;margin-bottom:2px}
+.inicioCubaMini .miniNextLine .miniLineLabel{color:#174d76}
+.inicioCubaMini .miniLineTime{font-size:9px;font-weight:800;color:#71808c;margin-top:2px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -962,12 +971,16 @@ function updateInicioDashboard(){
       // exactamente igual que en Cambios de agua: es la operación actual (cambio que toca)
       // y su hora teórica. Solo después de completar todas las operaciones se muestra
       // "Vaciar y envasar".
-      const nextOp=current ? String(current[0]||'').trim() : 'Vaciar y envasar';
-      const nextTime=current && current[1] ? new Date(current[1]) : null;
-      const nextText=nextOp==='Vaciar y envasar' ? `<div>Vaciar y envasar</div>` : `<div>${nextOp}</div>${nextTime&&Number.isFinite(nextTime.getTime())?`<div style="margin-top:2px;font-size:11px;font-weight:900">${nextTime.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${nextTime.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>`:''}`;
+      const processOp=current ? String(current[0]||'').trim() : '—';
+      const processTime=current && current[1] ? new Date(current[1]) : null;
+      const next=current && ops[done+1] ? ops[done+1] : null;
+      const nextOp=next ? String(next[0]||'').trim() : 'Vaciar y envasar';
+      const nextTime=next && next[1] ? new Date(next[1]) : null;
+      const processLine=processOp==='—' ? '—' : `<div><span class="miniLineLabel">PROCESO</span><b>${processOp}</b></div>${processTime&&Number.isFinite(processTime.getTime())?`<div class="miniLineTime">${processTime.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${processTime.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>`:''}`;
+      const nextLine=`<div><span class="miniLineLabel">SIGUIENTE</span><b>${nextOp}</b></div>${nextTime&&Number.isFinite(nextTime.getTime())?`<div class="miniLineTime">${nextTime.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${nextTime.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>`:''}`;
       const action=(current&&(st==='ready'||st==='late'))?`<button class="miniAction ${color}" onclick="markOp('${String(c.id).replace(/'/g,"\\'")}');event.stopPropagation()">${st==='late'?'Cambio Realizado':'Accionar cambio'}</button>`:'';
       const miniCubaNum=String(c.name||c.id).replace(/^cuba\s*/i,"");
-      return `<div class="inicioCubaMini"><div class="miniNum">${miniCubaNum}</div><div class="miniBody"><div class="miniTop"><span class="miniKg">${kgText}</span>${action||`<span class="miniState"><i class="miniDot ${color}"></i>${stateText}</span>`}</div><div class="miniProcess"><b>${articleText}</b></div><div class="miniNext"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.2px;margin-bottom:2px">Prox.</div>${nextText}</div></div></div>`;
+      return `<div class="inicioCubaMini"><div class="miniNum">${miniCubaNum}</div><div class="miniBody"><div class="miniTop"><span class="miniKg">${kgText}</span>${action||`<span class="miniState"><i class="miniDot ${color}"></i>${stateText}</span>`}</div><div class="miniProcess"><b>${articleText}</b></div><div class="miniNext"><div class="miniProcessLine">${processLine}</div><div class="miniNextLine">${nextLine}</div></div></div></div>`;
     }).join('')||'<div class="meta">No hay cubas configuradas.</div>';
   }
 }
