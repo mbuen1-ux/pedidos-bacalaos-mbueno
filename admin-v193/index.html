@@ -6247,6 +6247,15 @@ window.mbSaveListStatusV110=save;
       bar.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn light" id="v185-select-all">Seleccionar todos</button><button type="button" class="btn light" id="v185-unselect-all">Desmarcar todos</button><button type="button" class="btn light" id="v185-reference">Cargar precios de tarifa de referencia</button></div><button type="button" class="btn" id="v185-pdf">Exportar PDF</button>';
       const table=editor.querySelector('.tablewrap'); editor.insertBefore(bar,table);
     }
+    if(!bar.querySelector('#v185-reference')){
+      const controls=bar.firstElementChild;
+      if(controls){
+        const b=document.createElement('button');
+        b.type='button'; b.className='btn light'; b.id='v185-reference';
+        b.textContent='Cargar precios de tarifa de referencia';
+        controls.appendChild(b);
+      }
+    }
     const table=editor.querySelector('table');
     const thead=table?.querySelector('thead tr');
     if(thead && !thead.querySelector('.v185-head-check')){
