@@ -477,7 +477,7 @@ function rememberLot(i,lot){
 }
 function updateArticle(i,value){
   const a=articles.find(x=>String(x.code)===String(value));
-  if(!a){ lines[i].code=''; lines[i].desc=''; lines[i].lot=''; lines[i].kg=0; renderLines(); return; }
+  if(!a){ lines[i].code=''; lines[i].desc=''; lines[i].lot=''; lines[i].kg=0; renderLines(); updateProductionEndBox(); return; }
   lines[i].code=String(a.code);
   lines[i].desc=a.desc;
   lines[i].lot=value?lastLotForArticle(value):'';
