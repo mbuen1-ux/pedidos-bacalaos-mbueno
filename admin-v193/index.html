@@ -89,7 +89,7 @@ aside{padding:20px 12px}
 /* v194 · editor de formatos: una fila clara + descripción en segunda línea */
 #productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:12px}
 #productFormatsBuilder .format-row{display:block!important;background:#f5f8fa;border:1px solid #d7e0e7;border-radius:12px;padding:10px!important;margin:0!important;box-shadow:0 1px 2px rgba(20,45,65,.04)}
-#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(105px,1fr) minmax(125px,1.15fr) 78px 88px;gap:7px;align-items:stretch;width:100%;box-sizing:border-box}
+#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(95px,1fr) minmax(115px,1.05fr) minmax(95px,1fr) 78px 88px;gap:7px;align-items:stretch;width:100%;box-sizing:border-box}
 #productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{background:#fff;border:1px solid #dfe6eb;border-radius:8px;padding:7px 8px;box-sizing:border-box;min-width:0}
 #productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:flex;align-items:center;min-height:14px;font-size:10px;text-transform:uppercase;letter-spacing:.035em;font-weight:800;color:#71808c;margin:0 0 4px}
 #productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input{width:100%;min-width:0;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box;outline:none}
@@ -104,7 +104,7 @@ aside{padding:20px 12px}
 #productFormatsBuilder .fm-desc-field label span{font-weight:500;text-transform:none;letter-spacing:0;color:#8a98a3;margin-left:4px}
 #productFormatsBuilder .fm-desc-field input{width:100%;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box}
 @media(max-width:900px){
-  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,2fr) minmax(100px,1fr) minmax(115px,1.1fr) 72px 82px}
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,1.7fr) minmax(90px,1fr) minmax(105px,1fr) minmax(90px,1fr) 72px 82px}
 }
 @media(max-width:650px){
   #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr}
@@ -4427,7 +4427,7 @@ window.mbSaveListStatusV110=save;
       const arts=await ar.json();
       const a=Array.isArray(arts)?arts[0]:null;
       if(!a)return [];
-      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
+      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
       if(!fr.ok)return [];
       const formats=await fr.json();
       const tr=await fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo&activo=eq.true&order=orden.asc,codigo.asc',{headers:H});
@@ -4441,6 +4441,7 @@ window.mbSaveListStatusV110=save;
         let text=(code?code+' · ':'')+name;
         if(f.peso_aproximado!=null && Number.isFinite(Number(f.peso_aproximado)))
           text+=' · '+Number(f.peso_aproximado).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg aprox.';
+        if(f.unidades_caja) text+=' · '+Number(f.unidades_caja).toLocaleString('es-ES')+' uds./caja';
         if(f.descripcion) text+=' · '+String(f.descripcion);
         return {id:f.id,text};
       });
@@ -4917,7 +4918,7 @@ window.mbSaveListStatusV110=save;
       const a=arts[0];
       const [tr,fr]=await Promise.all([
         fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
-        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
+        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
       ]);
       if(!tr.ok) throw new Error('No se pudieron cargar los tipos de formato. HTTP '+tr.status);
       if(!fr.ok) throw new Error('No se pudieron cargar los formatos del artículo. HTTP '+fr.status);
@@ -4935,6 +4936,7 @@ window.mbSaveListStatusV110=save;
           type:'master',
           weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),
           defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto)||1,
+          boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),
           label:display,
           nombre:display,
           descripcion:f.descripcion||'',
@@ -5707,7 +5709,7 @@ window.mbSaveListStatusV110=save;
       // No usamos el catálogo local para evitar que una representación antigua
       // vuelva a convertir el peso aproximado en 1.
       const fr=await api(
-        "formatos?select=id,nombre,descripcion,peso_aproximado,cantidad_defecto,activo,orden&articulo_id=eq."+
+        "formatos?select=id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,activo,orden&articulo_id=eq."+
         encodeURIComponent(String(a.id))+"&activo=eq.true&order=orden.asc"
       );
       const dbFormats=Array.isArray(fr)?fr:[];
