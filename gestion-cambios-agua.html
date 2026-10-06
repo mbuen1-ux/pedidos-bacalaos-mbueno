@@ -671,10 +671,7 @@ async function startProduction(){
   const plannedEnd=new Date(ops[ops.length-1][1]);
   const endText=formatProductionEnd(plannedEnd);
   if(isWeekendEnd(plannedEnd)){
-    const answer=confirm('ATENCIÓN: el proceso completo terminaría el '+endText+'. Es sábado por la tarde o domingo. ¿Quieres iniciar de todos modos?');
-    if(!answer)return;
-  }else{
-    const answer=confirm('El proceso completo terminará el '+endText+'. ¿Quieres iniciar el proceso?');
+    const answer=confirm('⚠️\n\nEl proceso terminaría en fin de semana.\n\n¿Continuar?');
     if(!answer)return;
   }
   try{
