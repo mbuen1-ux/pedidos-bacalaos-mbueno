@@ -350,7 +350,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
   </div>
   <div class="tablewrap">
     <table class="client-clean-table">
-      <thead><tr><th style="width:42px">✓</th><th>Código</th><th>Cliente</th><th>Tarifa</th><th>Estado</th><th>Editar</th><th>Pedido</th></tr></thead>
+      <thead><tr><th style="width:42px">✓</th><th>Código</th><th>Cliente</th><th>Tarifa</th><th>Estado</th><th>Editar</th><th>Pedido</th><th>Eliminar</th></tr></thead>
       <tbody id="clientsTable"></tbody>
     </table>
   </div>
@@ -1328,6 +1328,7 @@ function renderClients(){
    <td><span class="badge ${c.active?'done':'pending'}">${c.active?'Activo':'Inactivo'}</span></td>
    <td><button type="button" class="btn light client-action" onclick="editClient('${String(c.code).replace(/'/g,"\\'")}')">Editar</button></td>
    <td><button type="button" class="btn client-action create-order-v33" data-client-id="${c.id||c.code}">Crear pedido</button></td>
+   <td><button type="button" class="btn light client-action" onclick="deleteSingleClient('${String(c.code).replace(/'/g,"\\'")}')">🗑</button></td>
    </tr>`;
  }).join('');
  document.querySelector('#clientsTable').innerHTML=rows||'<tr><td colspan="7" class="empty-row">No hay clientes que coincidan.</td></tr>';
@@ -1352,6 +1353,28 @@ function selectAllClientsVisible(){
 function deselectAllClients(){
   document.querySelectorAll('#clientsTable .client-select-check').forEach(x=>x.checked=false);
   updateClientSelectionUI();
+}
+async function deleteSingleClient(code){
+  const c=clients.find(x=>String(x.code)===String(code));
+  if(!c)return;
+  if(!confirm('¿Eliminar definitivamente el cliente '+(c.name||c.code)+' ('+c.code+') de la administración y de Supabase?\\n\\nEsta acción no se puede deshacer.'))return;
+  try{
+    if(typeof window.mbSupabaseFetch!=='function')throw new Error('La conexión con Supabase no está disponible.');
+    if(!c.id)throw new Error('El cliente no tiene ID de Supabase. No se ha eliminado nada.');
+    const orders=await window.mbSupabaseFetch('pedidos?select=id,numero,cliente_id&cliente_id=eq.'+encodeURIComponent(c.id),{method:'GET'});
+    if(Array.isArray(orders)&&orders.length){
+      throw new Error('Este cliente tiene '+orders.length+' pedido'+(orders.length===1?'':'s')+' asociado'+(orders.length===1?'':'s')+' ('+orders.map(o=>o.numero||o.id).join(', ')+'). No se ha eliminado.');
+    }
+    const deleted=await window.mbSupabaseFetch('clientes?id=eq.'+encodeURIComponent(c.id),{method:'DELETE',headers:{'Prefer':'return=representation'}});
+    if(!Array.isArray(deleted)||!deleted.length)throw new Error('Supabase no confirmó el borrado.');
+    const i=clients.findIndex(x=>String(x.code)===String(code));
+    if(i>=0)clients.splice(i,1);
+    saveClients();renderClients();
+    alert('Cliente eliminado correctamente de la administración y de Supabase.');
+  }catch(e){
+    console.error('No se pudo eliminar el cliente',e);
+    alert('No se ha podido eliminar el cliente.\\n\\n'+(e?.message||e));
+  }finally{updateClientSelectionUI();}
 }
 async function deleteSelectedClients(){
   const codes=[...document.querySelectorAll('#clientsTable .client-select-check:checked')].map(x=>String(x.dataset.clientCode||'')).filter(Boolean);
