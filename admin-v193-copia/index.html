@@ -89,7 +89,7 @@ aside{padding:20px 12px}
 /* v194 · editor de formatos: una fila clara + descripción en segunda línea */
 #productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:12px}
 #productFormatsBuilder .format-row{display:block!important;background:#f5f8fa;border:1px solid #d7e0e7;border-radius:12px;padding:10px!important;margin:0!important;box-shadow:0 1px 2px rgba(20,45,65,.04)}
-#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(105px,1fr) minmax(125px,1.15fr) 78px 88px;gap:7px;align-items:stretch;width:100%;box-sizing:border-box}
+#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(120px,1.15fr) minmax(130px,1.2fr) minmax(115px,1.1fr) 54px 54px;gap:7px;align-items:stretch;width:100%;box-sizing:border-box}
 #productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{background:#fff;border:1px solid #dfe6eb;border-radius:8px;padding:7px 8px;box-sizing:border-box;min-width:0}
 #productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:flex;align-items:center;min-height:14px;font-size:10px;text-transform:uppercase;letter-spacing:.035em;font-weight:800;color:#71808c;margin:0 0 4px}
 #productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input{width:100%;min-width:0;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box;outline:none}
@@ -100,11 +100,22 @@ aside{padding:20px 12px}
 #productFormatsBuilder .fm-order>div{display:flex;gap:4px;height:36px}
 #productFormatsBuilder .fm-order .mini{flex:1;width:0;padding:5px 0;min-height:36px;height:36px;border:1px solid #d1dce3;background:#fff;border-radius:6px}
 #productFormatsBuilder .fm-delete .mini{width:100%;min-width:0;min-height:36px;height:36px;padding:5px 4px;border-radius:6px;white-space:nowrap}
+/* Alineación limpia y compacta */
+#productFormatsBuilder .fm-main{align-items:start}
+#productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{min-height:0}
+#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label{height:14px;min-height:14px;line-height:14px;box-sizing:border-box}
+#productFormatsBuilder .fm-field>select,#productFormatsBuilder .fm-field>.fm-input-unit,#productFormatsBuilder .fm-order>div,#productFormatsBuilder .fm-delete>.mini{margin-top:4px;height:36px;min-height:36px;box-sizing:border-box}
+#productFormatsBuilder .fm-input-unit{width:100%;display:flex;align-items:center;gap:5px}
+#productFormatsBuilder .fm-input-unit input{flex:1 1 auto;width:1%;min-width:0;height:36px;min-height:36px;box-sizing:border-box}
+#productFormatsBuilder .fm-input-unit span{flex:0 0 auto;min-width:24px;white-space:nowrap;line-height:36px}
 #productFormatsBuilder .fm-desc-field{margin-top:7px;background:#fff;border:1px solid #dfe6eb;border-radius:8px;padding:7px 8px}
 #productFormatsBuilder .fm-desc-field label span{font-weight:500;text-transform:none;letter-spacing:0;color:#8a98a3;margin-left:4px}
 #productFormatsBuilder .fm-desc-field input{width:100%;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box}
 @media(max-width:900px){
-  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,2fr) minmax(100px,1fr) minmax(115px,1.1fr) 72px 82px}
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,2fr) minmax(105px,1.1fr) minmax(115px,1.15fr) minmax(105px,1.05fr) 52px 48px;gap:6px}
+  #productFormatsBuilder .fm-order>div{gap:3px}
+  #productFormatsBuilder .fm-order .mini{padding:0;min-width:0}
+  #productFormatsBuilder .fm-delete .mini{padding:0;font-size:14px}
 }
 @media(max-width:650px){
   #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr}
@@ -655,7 +666,6 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 
   <div class="formgrid" style="margin-top:14px">
     <div class="field"><label>Precio (€/kg)</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="0,00"><div class="edit-note">El precio siempre se expresa por kilo.</div></div>
-    <div class="field"><label>Unidades por caja</label><input id="productBoxUnits" type="number" min="0" step="1" placeholder="Opcional"></div>
     <div class="field"><label>Cantidad mínima</label><input id="productMinQty" type="number" min="0" step="0.001" value="1"></div>
   </div>
 
@@ -1260,7 +1270,7 @@ function newProduct(){
  document.querySelector('#productCategory').value='Sin clasificar';
  setProductFormats([]);
  document.querySelector('#productPrice').value='';
- document.querySelector('#productBoxUnits').value='';
+ 
  document.querySelector('#productMinQty').value='1';
  document.querySelector('#productActive').checked=true;
  document.querySelector('#productImageInput').value='';
@@ -1278,7 +1288,7 @@ function editProduct(sku){
  document.querySelector('#productCategory').value=p.category;
  setProductFormats(p.formats);
  document.querySelector('#productPrice').value=p.price;
- document.querySelector('#productBoxUnits').value=p.boxUnits||'';
+ 
  document.querySelector('#productMinQty').value=p.minQty;
  document.querySelector('#productActive').checked=p.active;
  document.querySelector('#productImageInput').value='';
@@ -1315,7 +1325,7 @@ function saveProduct(){
  if(editingProductSku){
    const p=productCatalog.find(x=>x.sku===editingProductSku);
    if(sku!==editingProductSku && productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
-   Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});
+   Object.assign(p,{sku,name,description,category,formats,price,minQty,active,image:productImageData});
  }else{
    if(productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
    productCatalog.push({sku,name,description,category,formats,price:Number.isFinite(price)?price:0,boxUnits,minQty,active,image:productImageData});
@@ -1626,7 +1636,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
       const H={apikey:cfg.key,Authorization:'Bearer '+cfg.key,Accept:'application/json'};
       const [typesRes,formatsRes]=await Promise.all([
         fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
-        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc',{headers:H})
+        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc',{headers:H})
       ]);
       if(!typesRes.ok||!formatsRes.ok)throw new Error('No se pudieron consultar los formatos actuales.');
       const types=await typesRes.json();
@@ -1923,6 +1933,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     const n={kilos:'Kilos',units:'Piezas enteras',portions:'Porciones',portions_box:'Porciones caja',small_box:'Caja pequeña',large_box:'Caja grande',custom:'Formato personalizado'};
     let x=n[f.type]||f.label||'Formato personalizado';
     if(f.weight)x+=' · '+Number(f.weight).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg aprox.';
+    if(f.boxUnits)x+=' · '+Number(f.boxUnits).toLocaleString('es-ES')+' uds./caja';
     if(f.descripcion)x+=' · '+String(f.descripcion).trim();
     return x;
   }
@@ -4153,14 +4164,14 @@ window.mbSaveListStatusV110=save;
     const masterName=String(tf?.nombre||f.nombre||'Formato personalizado');
     const type=code?'mf_'+code:'custom';
     const display=(code?code+' · ':'')+masterName;
-    return {id:f.id||null,tipoFormatoId:f.tipo_formato_id||null,code,type,weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),label:display,nombre:display,descripcion:f.descripcion||'',active:f.activo!==false};
+    return {id:f.id||null,tipoFormatoId:f.tipo_formato_id||null,code,type,weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),label:display,nombre:display,descripcion:f.descripcion||'',active:f.activo!==false};
   }
   function toDb(f,articleId,index){
     const tf=(window.mbFormatTypes||[]).find(t=>String(t.id)===String(f.tipoFormatoId));
     const code=tf?.codigo?String(tf.codigo):String(f.code||'');
     const masterName=tf?.nombre?String(tf.nombre):String(f.nombre||f.label||'Formato personalizado');
     const name=(code?code+' · ':'')+masterName;
-    return {articulo_id:articleId,tipo_formato_id:f.tipoFormatoId||null,nombre:name,descripcion:f.descripcion||null,peso_aproximado:Number.isFinite(Number(f.weight))?Number(f.weight):null,cantidad_defecto:Number.isFinite(Number(f.defaultQty))&&Number(f.defaultQty)>0?Math.max(1,Math.floor(Number(f.defaultQty))):1,orden:index+1,activo:f.active!==false};
+    return {articulo_id:articleId,tipo_formato_id:f.tipoFormatoId||null,nombre:name,descripcion:f.descripcion||null,peso_aproximado:Number.isFinite(Number(f.weight))?Number(f.weight):null,cantidad_defecto:Number.isFinite(Number(f.defaultQty))&&Number(f.defaultQty)>0?Math.max(1,Math.floor(Number(f.defaultQty))):1,unidades_caja:Number.isFinite(Number(f.boxUnits))&&Number(f.boxUnits)>0?Math.max(1,Math.floor(Number(f.boxUnits))):null,orden:index+1,activo:f.active!==false};
   }
   function installFormatMasterTypes(){
     const list=Array.isArray(window.mbFormatTypes)?window.mbFormatTypes.filter(t=>t.activo!==false):[];
@@ -4174,7 +4185,7 @@ window.mbSaveListStatusV110=save;
     installFormatMasterTypes();
     const [arts,formats]=await Promise.all([
       req('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo,imagen_url,destacado,oferta&order=referencia.asc'),
-      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc')
+      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc')
     ]);
     const byArticle=new Map((Array.isArray(formats)?formats:[]).map(f=>[String(f.articulo_id),f]));
     const mapped=(Array.isArray(arts)?arts:[]).map(a=>{
@@ -4331,7 +4342,7 @@ window.mbSaveListStatusV110=save;
   async function reqF(path,opt={}){const c=cfg();if(!c.url||!c.key)throw new Error('Supabase no está configurado.');const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{apikey:c.key,Authorization:'Bearer '+c.key,'Content-Type':'application/json',...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error((d&&d.message)||t||('HTTP '+r.status));return d;}
   let fmTypes=[];
   async function loadFmTypes(){fmTypes=Array.isArray(window.mbFormatTypes)&&window.mbFormatTypes.length?window.mbFormatTypes:await reqF('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
-  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,label:'',nombre:'',descripcion:'',active:true};}
+  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,boxUnits:null,label:'',nombre:'',descripcion:'',active:true};}
   let draft=[];
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
   function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
@@ -4349,15 +4360,19 @@ window.mbSaveListStatusV110=save;
           </div>
           <div class="fm-field">
             <label>Cantidad por defecto</label>
-            <div class="fm-input-unit"><input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad que se propondrá al crear un pedido"><span>${escF(unit)}</span></div>
+            <div class="fm-input-unit"><input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad que se propondrá al crear un pedido"></div>
+          </div>
+          <div class="fm-field">
+            <label>Uds. por caja</label>
+            <div class="fm-input-unit"><input class="fm-box" data-i="${i}" type="number" min="1" step="1" value="${f.boxUnits??''}" placeholder="Opcional"><span>uds.</span></div>
           </div>
           <div class="fm-order">
-            <label>Orden</label>
+            <label>&nbsp;</label>
             <div><button class="mini fm-up" data-i="${i}" type="button" title="Subir">↑</button><button class="mini fm-down" data-i="${i}" type="button" title="Bajar">↓</button></div>
           </div>
           <div class="fm-delete">
             <label>&nbsp;</label>
-            <button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
+            <button class="mini remove fm-del" data-i="${i}" type="button" title="Eliminar formato" aria-label="Eliminar formato">🗑</button>
           </div>
         </div>
         <div class="fm-desc-field">
@@ -4370,19 +4385,20 @@ window.mbSaveListStatusV110=save;
     box.querySelectorAll('.fm-weight').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].weight=el.value===''?null:Number(el.value);});
     box.querySelectorAll('.fm-desc').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].descripcion=el.value;});
     box.querySelectorAll('.fm-qty').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].defaultQty=el.value===''?1:Math.max(1,Math.floor(Number(el.value)||1));});
+    box.querySelectorAll('.fm-box').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].boxUnits=el.value===''?null:Math.max(1,Math.floor(Number(el.value)||1));});
     box.querySelectorAll('.fm-up').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i>0){[draft[i-1],draft[i]]=[draft[i],draft[i-1]];render();}});
     box.querySelectorAll('.fm-down').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i<draft.length-1){[draft[i+1],draft[i]]=[draft[i],draft[i+1]];render();}});
     box.querySelectorAll('.fm-del').forEach(el=>el.onclick=()=>{draft.splice(+el.dataset.i,1);render();});
   }
-  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
+  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,boxUnits:f.boxUnits==null?null:Number(f.boxUnits)||null,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
   window.addProductFormat=async function(){await loadFmTypes();draft.push(blankFormat());render();};
   window.removeProductFormat=function(i){draft.splice(i,1);render();};
   window.moveProductFormat=function(i,d){const j=i+d;if(j>=0&&j<draft.length){[draft[i],draft[j]]=[draft[j],draft[i]];render();}};
-  window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
+  window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,boxUnits:Number.isFinite(Number(f.boxUnits))?Math.max(1,Math.floor(Number(f.boxUnits))):null,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
   window.updateProductFormat=function(i,key,value){if(!draft[i])return;if(key==='weight')draft[i].weight=value===''?null:Number(value);else draft[i][key]=value;render();};
   window.newProduct=async function(){editingProductSku=null;productImageData=null;document.querySelector('#productModalTitle').textContent='Nuevo producto';document.querySelector('#productSku').value='';document.querySelector('#productName').value='';document.querySelector('#productDescription').value='';document.querySelector('#productCategory').value='Sin clasificar';await window.setProductFormats([]);document.querySelector('#productPrice').value='';document.querySelector('#productBoxUnits').value='';document.querySelector('#productMinQty').value='1';document.querySelector('#productActive').checked=true;document.querySelector('#productFeatured').checked=false;document.querySelector('#productOffer').checked=false;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML='Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
-  window.editProduct=async function(sku){const p=productCatalog.find(x=>x.sku===sku);if(!p)return;editingProductSku=sku;productImageData=p.image||null;document.querySelector('#productModalTitle').textContent='Editar producto · '+p.sku;document.querySelector('#productSku').value=p.sku;document.querySelector('#productName').value=p.name;document.querySelector('#productDescription').value=p.description||'';document.querySelector('#productCategory').value=p.category||'Sin clasificar';await window.setProductFormats(p.formats||[]);document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productBoxUnits').value=p.boxUnits||'';document.querySelector('#productMinQty').value=p.minQty??1;document.querySelector('#productActive').checked=p.active!==false;document.querySelector('#productFeatured').checked=p.featured===true;document.querySelector('#productOffer').checked=p.offer===true;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML=p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:contain">`:'Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
-  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),boxUnits=document.querySelector('#productBoxUnits').value.trim(),minQty=parseFloat(document.querySelector('#productMinQty').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');if(!Number.isFinite(minQty)||minQty<=0)throw new Error('La cantidad mínima debe ser mayor que 0.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
+  window.editProduct=async function(sku){const p=productCatalog.find(x=>x.sku===sku);if(!p)return;editingProductSku=sku;productImageData=p.image||null;document.querySelector('#productModalTitle').textContent='Editar producto · '+p.sku;document.querySelector('#productSku').value=p.sku;document.querySelector('#productName').value=p.name;document.querySelector('#productDescription').value=p.description||'';document.querySelector('#productCategory').value=p.category||'Sin clasificar';await window.setProductFormats(p.formats||[]);document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productMinQty').value=p.minQty??1;document.querySelector('#productActive').checked=p.active!==false;document.querySelector('#productFeatured').checked=p.featured===true;document.querySelector('#productOffer').checked=p.offer===true;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML=p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:contain">`:'Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
+  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),minQty=parseFloat(document.querySelector('#productMinQty').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');if(!Number.isFinite(minQty)||minQty<=0)throw new Error('La cantidad mínima debe ser mayor que 0.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,minQty,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,minQty,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
   window.addEventListener('load',()=>setTimeout(()=>loadFmTypes().catch(()=>{}),1100));
 })();
 </script>
@@ -4422,7 +4438,7 @@ window.mbSaveListStatusV110=save;
       const arts=await ar.json();
       const a=Array.isArray(arts)?arts[0]:null;
       if(!a)return [];
-      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
+      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
       if(!fr.ok)return [];
       const formats=await fr.json();
       const tr=await fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo&activo=eq.true&order=orden.asc,codigo.asc',{headers:H});
@@ -4436,6 +4452,7 @@ window.mbSaveListStatusV110=save;
         let text=(code?code+' · ':'')+name;
         if(f.peso_aproximado!=null && Number.isFinite(Number(f.peso_aproximado)))
           text+=' · '+Number(f.peso_aproximado).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg aprox.';
+        if(f.unidades_caja) text+=' · '+Number(f.unidades_caja).toLocaleString('es-ES')+' uds./caja';
         if(f.descripcion) text+=' · '+String(f.descripcion);
         return {id:f.id,text};
       });
@@ -4912,7 +4929,7 @@ window.mbSaveListStatusV110=save;
       const a=arts[0];
       const [tr,fr]=await Promise.all([
         fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
-        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
+        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
       ]);
       if(!tr.ok) throw new Error('No se pudieron cargar los tipos de formato. HTTP '+tr.status);
       if(!fr.ok) throw new Error('No se pudieron cargar los formatos del artículo. HTTP '+fr.status);
@@ -4930,6 +4947,7 @@ window.mbSaveListStatusV110=save;
           type:'master',
           weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),
           defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto)||1,
+          boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),
           label:display,
           nombre:display,
           descripcion:f.descripcion||'',
@@ -5702,7 +5720,7 @@ window.mbSaveListStatusV110=save;
       // No usamos el catálogo local para evitar que una representación antigua
       // vuelva a convertir el peso aproximado en 1.
       const fr=await api(
-        "formatos?select=id,nombre,descripcion,peso_aproximado,cantidad_defecto,activo,orden&articulo_id=eq."+
+        "formatos?select=id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,activo,orden&articulo_id=eq."+
         encodeURIComponent(String(a.id))+"&activo=eq.true&order=orden.asc"
       );
       const dbFormats=Array.isArray(fr)?fr:[];
@@ -6452,3 +6470,180 @@ window.mbSaveListStatusV110=save;
   else start();
 })();
 </script>
+<style>#productFormatsBuilder .fm-order .mini,#productFormatsBuilder .fm-delete .mini{font-size:16px;font-weight:700;padding:0}#productFormatsBuilder .fm-delete .mini{font-size:15px}</style>
+
+
+<style id="format-editor-final-layout">
+/* REHECHO: editor de formatos, distribución limpia y estable */
+#productFormatsBuilder .format-builder{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+}
+#productFormatsBuilder .format-row{
+  display:block!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  background:#f6f8fa!important;
+  border:1px solid #d8e1e7!important;
+  border-radius:10px!important;
+  padding:9px!important;
+  margin:0!important;
+}
+#productFormatsBuilder .fm-main{
+  display:grid!important;
+  grid-template-columns:minmax(185px,2.2fr) minmax(115px,1.15fr) minmax(125px,1.25fr) minmax(115px,1.15fr) 76px 52px!important;
+  gap:7px!important;
+  align-items:stretch!important;
+  width:100%!important;
+}
+#productFormatsBuilder .fm-field,
+#productFormatsBuilder .fm-order,
+#productFormatsBuilder .fm-delete{
+  min-width:0!important;
+  min-height:68px!important;
+  height:68px!important;
+  padding:7px!important;
+  box-sizing:border-box!important;
+  background:#fff!important;
+  border:1px solid #d9e2e8!important;
+  border-radius:8px!important;
+}
+#productFormatsBuilder .fm-field label,
+#productFormatsBuilder .fm-order label,
+#productFormatsBuilder .fm-delete label{
+  display:block!important;
+  height:14px!important;
+  min-height:14px!important;
+  line-height:14px!important;
+  margin:0 0 4px!important;
+  overflow:hidden!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  letter-spacing:.03em!important;
+  color:#6f7e89!important;
+  box-sizing:border-box!important;
+}
+#productFormatsBuilder .fm-field>select,
+#productFormatsBuilder .fm-field>.fm-input-unit{
+  width:100%!important;
+  height:36px!important;
+  min-height:36px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+#productFormatsBuilder .fm-field select,
+#productFormatsBuilder .fm-field input{
+  height:36px!important;
+  min-height:36px!important;
+  box-sizing:border-box!important;
+}
+#productFormatsBuilder .fm-input-unit{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+}
+#productFormatsBuilder .fm-input-unit input{
+  flex:1 1 auto!important;
+  width:1%!important;
+  min-width:0!important;
+}
+#productFormatsBuilder .fm-input-unit span{
+  flex:0 0 auto!important;
+  min-width:22px!important;
+  width:auto!important;
+  white-space:nowrap!important;
+  line-height:36px!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+#productFormatsBuilder .fm-order{
+  display:flex!important;
+  flex-direction:column!important;
+}
+#productFormatsBuilder .fm-order label{font-size:0!important;}
+#productFormatsBuilder .fm-order>div{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  width:100%!important;
+  height:36px!important;
+  min-height:36px!important;
+  margin:0!important;
+}
+#productFormatsBuilder .fm-order .mini{
+  flex:1 1 0!important;
+  width:auto!important;
+  height:36px!important;
+  min-height:36px!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #cbd8e0!important;
+  border-radius:6px!important;
+  background:#fff!important;
+  font-size:15px!important;
+  line-height:34px!important;
+  box-sizing:border-box!important;
+}
+#productFormatsBuilder .fm-delete{
+  display:flex!important;
+  flex-direction:column!important;
+}
+#productFormatsBuilder .fm-delete label{font-size:0!important;}
+#productFormatsBuilder .fm-delete .mini{
+  width:100%!important;
+  height:36px!important;
+  min-height:36px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #cbd8e0!important;
+  border-radius:6px!important;
+  background:#fff!important;
+  font-size:14px!important;
+  line-height:34px!important;
+  box-sizing:border-box!important;
+}
+#productFormatsBuilder .fm-desc-field{
+  width:100%!important;
+  margin-top:7px!important;
+  padding:7px 8px!important;
+  box-sizing:border-box!important;
+  background:#fff!important;
+  border:1px solid #d9e2e8!important;
+  border-radius:8px!important;
+}
+#productFormatsBuilder .fm-desc-field label{
+  display:flex!important;
+  align-items:center!important;
+  height:14px!important;
+  min-height:14px!important;
+  margin:0 0 4px!important;
+  font-size:10px!important;
+}
+#productFormatsBuilder .fm-desc-field input{
+  width:100%!important;
+  height:36px!important;
+  min-height:36px!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:900px){
+  #productFormatsBuilder .fm-main{
+    grid-template-columns:minmax(170px,2fr) minmax(105px,1.1fr) minmax(115px,1.15fr) minmax(105px,1.05fr) 72px 50px!important;
+  }
+}
+@media(max-width:650px){
+  #productFormatsBuilder .fm-main{
+    grid-template-columns:1fr 1fr!important;
+  }
+  #productFormatsBuilder .fm-type-field{grid-column:1/-1!important;}
+  #productFormatsBuilder .fm-order,
+  #productFormatsBuilder .fm-delete{min-height:68px!important;}
+}
+@media(max-width:420px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr!important;}
+  #productFormatsBuilder .fm-type-field{grid-column:auto!important;}
+}
+</style>
