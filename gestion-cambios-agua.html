@@ -286,7 +286,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <div class="panelHead" style="margin-top:18px"><div><h3 style="margin:0">Artículos de la cuba</h3><div class="meta">Selecciona el artículo; se cargarán automáticamente sus kilos por defecto y se propondrá el último lote utilizado.</div></div><button class="secondary" onclick="addLine()">+ Añadir artículo</button></div>
 <div class="rows" id="prodRows"></div>
 <div class="loadCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>Carga total</b><b id="loadTotal">0,000 kg</b></div><div class="capacity"><span id="capBar" style="width:0%"></span></div><div class="meta">Todos los artículos de una misma cuba deben utilizar la misma receta activa.</div></div>
-<div class="prodActions"><span class="meta">Revisa receta, lote y kilos antes de iniciar.</span><button class="primary" onclick="startProduction()">Iniciar proceso</button></div>
+<div class="prodActions"><span class="meta">Revisa receta, lote y kilos antes de iniciar.</span><button class="secondary" type="button" onclick="simulateProductionEnd()">Simular finalización</button><button class="primary" onclick="startProduction()">Iniciar proceso</button></div>
 </div>
 <div class="card compactPanel" style="margin-top:15px"><details open><summary><strong>Recetas de los artículos cargados</strong></summary><div id="prodRecipeInfo" class="recipeInfo"></div></details></div>
 <h3 style="margin-top:24px">Cubas en proceso</h3><div class="subtitle">Al iniciar un proceso aparece aquí inmediatamente, con sus artículos, receta y operaciones.</div>
@@ -622,6 +622,31 @@ async function sbSaveProductionBundle(c, linesData, recipe, startDateTime){
   }
 }
 
+function productionEndInfo(){
+  const fecha=document.getElementById('fecha')?.value;
+  const hora=document.getElementById('hora')?.value;
+  if(!fecha||!hora)return null;
+  const r=recipeForArticle(lines[0]?.desc);
+  if(!r||!Array.isArray(r.steps)||!r.steps.length)return null;
+  const totalHours=r.steps.reduce((sum,st)=>sum+Number(st.hours||0),0);
+  const start=new Date(fecha+'T'+hora);
+  if(!Number.isFinite(start.getTime()))return null;
+  const end=new Date(start.getTime()+totalHours*3600000);
+  return {start,end,totalHours,recipe:r};
+}
+function formatProductionEnd(end){
+  return end.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'})+' a las '+end.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+function isWeekendEnd(end){
+  const day=end.getDay();
+  return day===0 || (day===6 && end.getHours()>=14);
+}
+function simulateProductionEnd(){
+  if(!lines.length){alert('Añade al menos un artículo para poder simular la finalización.');return;}
+  const info=productionEndInfo();
+  if(!info){alert('Selecciona fecha, hora y un artículo con receta activa.');return;}
+  alert('El proceso completo terminaría el '+formatProductionEnd(info.end)+'.');
+}
 async function startProduction(){
   const missing=[];const cubaId=document.getElementById('cubaSel').value;
   if(!cubaId)missing.push('cuba');if(!document.getElementById('operario').value)missing.push('operario');if(!document.getElementById('hora').value)missing.push('hora de inicio');if(!document.getElementById('fecha').value)missing.push('fecha de inicio');if(!lines.length)missing.push('artículo');if(lines.some(x=>!(Number(x.kg)>0)))missing.push('kilos');
@@ -635,9 +660,14 @@ async function startProduction(){
   if(numberError) throw numberError;
   c.process=String(numberData);
   const ops=(r.steps||[]).map((st,i)=>{const t=new Date(d);let elapsed=0;for(let j=0;j<=i;j++)elapsed+=Number(r.steps[j].hours||0);t.setTime(t.getTime()+elapsed*3600000);return[st.process,localIsoMinute(t)]});
+  const plannedEnd=new Date(ops[ops.length-1][1]);
+  if(isWeekendEnd(plannedEnd)){
+    const answer=confirm('ATENCIÓN: el proceso completo terminaría el '+formatProductionEnd(plannedEnd)+'. Es sábado por la tarde o domingo. ¿Quieres iniciar de todos modos?');
+    if(!answer)return;
+  }
   try{
     const saved=await sbSaveProductionBundle(c,lines,r,d);
-    c.busy=true;c.operator=document.getElementById('operario').value;c.start=d;c.lines=lines.map(x=>({...x}));c.recipe=r.code;c.recipeDesc=r.desc;c.done=0;c.ops=ops;c.actualOps=[];c._sbIdProd=saved.id;if(typeof renderLots==='function')renderLots();lines=[];ok.style.display='block';ok.textContent='PROCESO INICIADO Y GUARDADO EN SUPABASE. '+c.id+' pasa a EN PROCESO.';e.style.display='none';renderCubaSelect();renderLines();renderAllCubaViews();renderCubaMaster();
+    c.busy=true;c.operator=document.getElementById('operario').value;c.start=d;c.lines=lines.map(x=>({...x}));c.recipe=r.code;c.recipeDesc=r.desc;c.done=0;c.ops=ops;c.actualOps=[];c._sbIdProd=saved.id;if(typeof renderLots==='function')renderLots();lines=[];ok.style.display='block';ok.textContent='PROCESO INICIADO Y GUARDADO EN SUPABASE. '+c.id+' pasa a EN PROCESO. Finalización prevista: '+formatProductionEnd(plannedEnd);e.style.display='none';renderCubaSelect();renderLines();renderAllCubaViews();renderCubaMaster();
   }catch(err){
     e.style.display='block';e.textContent='NO SE PUDO GUARDAR LA PRODUCCIÓN EN SUPABASE. No se ha iniciado localmente.\n\n'+(err?.message||err);ok.style.display='none';console.error('Error guardando producción:',err);
   }
