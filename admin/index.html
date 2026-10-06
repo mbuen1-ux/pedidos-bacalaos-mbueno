@@ -343,10 +343,14 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 <div class="card client-list-card">
   <div class="toolbar">
     <input class="search" id="clientSearch" placeholder="Buscar por código o nombre..." oninput="renderClients()">
+    <button class="btn light" type="button" onclick="selectAllClientsVisible()">☑ Seleccionar todos</button>
+    <button class="btn light" type="button" onclick="deselectAllClients()">☐ Desmarcar todos</button>
+    <button class="btn danger" type="button" id="deleteSelectedClientsBtn" onclick="deleteSelectedClients()" disabled>🗑 Eliminar seleccionados</button>
+    <span id="selectedClientsCount" class="sub">0 seleccionados</span>
   </div>
   <div class="tablewrap">
     <table class="client-clean-table">
-      <thead><tr><th>Código</th><th>Cliente</th><th>Tarifa</th><th>Estado</th><th>Editar</th><th>Pedido</th></tr></thead>
+      <thead><tr><th style="width:42px">✓</th><th>Código</th><th>Cliente</th><th>Tarifa</th><th>Estado</th><th>Editar</th><th>Pedido</th></tr></thead>
       <tbody id="clientsTable"></tbody>
     </table>
   </div>
@@ -1317,6 +1321,7 @@ function renderClients(){
  .map(c=>{
    const tariff=(tariffs.find(t=>String(t.id)===String(c.tariffId))||tariffs.find(t=>String(t.code)===String(c.tariffId).replace(/^ERP-/i,'')));
    return `<tr>
+   <td><input type="checkbox" class="client-select-check" data-client-code="${String(c.code||'').replace(/"/g,'&quot;')}" onchange="updateClientSelectionUI()"></td>
    <td><strong>${c.code||''}</strong></td>
    <td><div class="client">${c.name||''}</div></td>
    <td>${tariff?.name||'Sin tarifa'}</td>
@@ -1325,9 +1330,70 @@ function renderClients(){
    <td><button type="button" class="btn client-action create-order-v33" data-client-id="${c.id||c.code}">Crear pedido</button></td>
    </tr>`;
  }).join('');
- document.querySelector('#clientsTable').innerHTML=rows||'<tr><td colspan="6" class="empty-row">No hay clientes que coincidan.</td></tr>';
+ document.querySelector('#clientsTable').innerHTML=rows||'<tr><td colspan="7" class="empty-row">No hay clientes que coincidan.</td></tr>';
+ updateClientSelectionUI();
 }
 
+function getVisibleClientCodes(){
+  return [...document.querySelectorAll('#clientsTable .client-select-check')].map(x=>String(x.dataset.clientCode||'')).filter(Boolean);
+}
+function updateClientSelectionUI(){
+  const checks=[...document.querySelectorAll('#clientsTable .client-select-check')];
+  const selected=checks.filter(x=>x.checked);
+  const btn=document.getElementById('deleteSelectedClientsBtn');
+  const count=document.getElementById('selectedClientsCount');
+  if(btn){btn.disabled=selected.length===0;btn.textContent=selected.length?'🗑 Eliminar seleccionados ('+selected.length+')':'🗑 Eliminar seleccionados';}
+  if(count)count.textContent=selected.length+' seleccionados';
+}
+function selectAllClientsVisible(){
+  document.querySelectorAll('#clientsTable .client-select-check').forEach(x=>x.checked=true);
+  updateClientSelectionUI();
+}
+function deselectAllClients(){
+  document.querySelectorAll('#clientsTable .client-select-check').forEach(x=>x.checked=false);
+  updateClientSelectionUI();
+}
+async function deleteSelectedClients(){
+  const codes=[...document.querySelectorAll('#clientsTable .client-select-check:checked')].map(x=>String(x.dataset.clientCode||'')).filter(Boolean);
+  if(!codes.length)return;
+  const names=codes.map(code=>clients.find(c=>String(c.code)===code)?.name||code);
+  if(!confirm('Vas a eliminar definitivamente '+codes.length+' cliente'+(codes.length===1?'':'s')+' de la administración y de Supabase.\\n\\nEsta acción no se puede deshacer.\\n\\n¿Continuar?'))return;
+  const btn=document.getElementById('deleteSelectedClientsBtn');
+  if(btn){btn.disabled=true;btn.textContent='Eliminando…';}
+  try{
+    if(typeof window.mbSupabaseFetch!=='function')throw new Error('La conexión con Supabase no está disponible.');
+    const selected=clients.filter(c=>codes.includes(String(c.code)));
+    const ids=selected.map(c=>String(c.id||'')).filter(Boolean);
+    if(ids.length!==codes.length)throw new Error('Uno o más clientes no tienen ID de Supabase. No se ha eliminado nada.');
+    const inFilter='('+ids.map(id=>id.replace(/[^0-9a-fA-F-]/g,'')).join(',')+')';
+    const orders=await window.mbSupabaseFetch('pedidos?select=id,numero,cliente_id&cliente_id=in.'+encodeURIComponent(inFilter),{method:'GET'});
+    const blockedIds=new Set((Array.isArray(orders)?orders:[]).map(o=>String(o.cliente_id)));
+    const safeIds=ids.filter(id=>!blockedIds.has(id));
+    if(!safeIds.length){
+      const linked=(Array.isArray(orders)?orders:[]).map(o=>o.numero||o.id).join(', ');
+      throw new Error('No se ha eliminado ningún cliente porque todos tienen pedidos asociados: '+linked);
+    }
+    const safeCodes=selected.filter(c=>safeIds.includes(String(c.id))).map(c=>String(c.code));
+    const safeFilter='('+safeIds.join(',')+')';
+    const deleted=await window.mbSupabaseFetch('clientes?id=in.'+encodeURIComponent(safeFilter),{
+      method:'DELETE',
+      headers:{'Prefer':'return=representation'}
+    });
+    const deletedIds=new Set((Array.isArray(deleted)?deleted:[]).map(c=>String(c.id)));
+    if(!deletedIds.size)throw new Error('Supabase no confirmó ningún borrado. No se ha eliminado ningún cliente de la lista local.');
+    const deletedCodes=new Set(selected.filter(c=>deletedIds.has(String(c.id))).map(c=>String(c.code)));
+    for(let i=clients.length-1;i>=0;i--)if(deletedCodes.has(String(clients[i].code)))clients.splice(i,1);
+    saveClients();
+    renderClients();
+    const blockedCodes=selected.filter(c=>blockedIds.has(String(c.id))).map(c=>String(c.code));
+    let msg='Clientes eliminados correctamente: '+deletedCodes.size+'.';
+    if(blockedCodes.length)msg+='\\n\\nNo se eliminaron '+blockedCodes.length+' porque tienen pedidos asociados: '+blockedCodes.join(', ')+'.';
+    alert(msg);
+  }catch(e){
+    console.error('No se pudieron eliminar los clientes',e);
+    alert('No se ha podido completar el borrado.\\n\\n'+(e?.message||e));
+  }finally{updateClientSelectionUI();}
+}
 function populateClientTariffs(selected){
  const sel=document.querySelector('#clientTariff'); if(!sel)return;
  sel.innerHTML='<option value="">Sin tarifa</option>'+tariffs.filter(t=>t.active).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
