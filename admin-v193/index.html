@@ -599,8 +599,24 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 </div></div>
 
 <div class="detail-overlay" id="formatTypesOverlay" onclick="if(event.target===this)window.mbCloseFormatTypes()">
-<div class="detail-modal" style="max-width:850px">
-<div class="detail-head"><div><h2>Tipos de formato</h2><div class="detail-sub">Maestro común a todos los artículos. El código identifica el tipo y puede editarse.</div></div><button class="close" type="button" onclick="window.mbCloseFormatTypes()">×</button></div>
+<div class="detail-modal" style="max-width:980px">
+<div class="detail-head"><div><h2>Tipos de formato</h2><div class="detail-sub">Maestro común a todos los artículos. Aquí definimos el tipo y si se trabaja por kilos o por unidades.</div></div><button class="close" type="button" onclick="window.mbCloseFormatTypes()">×</button></div>
+<div class="detail-body">
+  <div class="edit-note" style="margin-bottom:12px">El tipo de formato define únicamente la naturaleza de la medida: <b>Kilos</b> o <b>Unidades</b>. El peso aproximado, la cantidad por defecto y las unidades por caja se definirán posteriormente en cada formato del artículo.</div>
+  <div class="tablewrap"><table style="min-width:820px"><thead><tr><th>Código</th><th>Nombre</th><th>Medida</th><th>Orden</th><th>Activo</th><th></th></tr></thead><tbody id="formatTypesTable"></tbody></table></div>
+  <div style="margin-top:15px;padding:14px;background:#f7f9fb;border:1px solid var(--line);border-radius:10px">
+    <div style="font-weight:700;margin-bottom:10px">Nuevo tipo de formato</div>
+    <div style="display:grid;grid-template-columns:110px 1fr 135px 90px auto;gap:8px;align-items:end">
+      <div class="field"><label>Código</label><input id="newFormatTypeCode" maxlength="10" placeholder="04"></div>
+      <div class="field"><label>Nombre</label><input id="newFormatTypeName" placeholder="Nombre del formato"></div>
+      <div class="field"><label>Medida</label><select id="newFormatTypeUnit"><option value="kg">Kilos</option><option value="unidades">Unidades</option></select></div>
+      <div class="field"><label>Orden</label><input id="newFormatTypeOrder" type="number" value="40"></div>
+      <button class="btn" type="button" onclick="window.mbCreateFormatType()">Añadir</button>
+    </div>
+  </div>
+</div>
+<div class="detail-footer"><button class="btn light" type="button" onclick="window.mbCloseFormatTypes()">Cerrar</button></div>
+</div></div><button class="close" type="button" onclick="window.mbCloseFormatTypes()">×</button></div>
 <div class="detail-body">
   <div class="edit-note" style="margin-bottom:12px">El mismo tipo de formato puede utilizarse varias veces en un artículo con distintos pesos base. Por ejemplo, el código 03 puede aparecer dos veces en el 10110 con 0,550 kg y 0,700 kg.</div>
   <div class="tablewrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>Orden</th><th>Activo</th><th></th></tr></thead><tbody id="formatTypesTable"></tbody></table></div>
@@ -4285,52 +4301,20 @@ window.mbSaveListStatusV110=save;
 })();
 </script>
 
-<script id="format-types-v121">
+<script id="format-types-v122">
 (function(){
   const CFG=()=>{try{const w=window.MB_SUPABASE||{}; if(w.url&&w.key)return w; if(typeof getSupabaseConfig==='function'){const c=getSupabaseConfig()||{}; if(c.url&&c.key)return c;} return JSON.parse(localStorage.getItem('mb_supabase_config')||'{}')}catch(e){return window.MB_SUPABASE||{}}};
-  const H=()=>{const c=CFG();return {'apikey':c.key||'', 'Authorization':'Bearer '+(c.key||''), 'Content-Type':'application/json'};};
+  const H=()=>{const c=CFG();return {'apikey':c.key||'','Authorization':'Bearer '+(c.key||''),'Content-Type':'application/json'};};
   async function req(path,opt={}){const c=CFG();if(!c.url||!c.key)throw new Error('Supabase no está configurado.');const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{...H(),...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error((d&&d.message)||t||('HTTP '+r.status));return d;}
+  const escLocal=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let types=[];
-  const labels=()=>types.reduce((m,t)=>(m[t.id]=t,m),{});
-  async function loadTypes(){types=await req('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc')||[];window.mbFormatTypes=types;renderTypes();return types;}
-  function renderTypes(){const b=document.getElementById('formatTypesTable');if(!b)return;b.innerHTML=types.map(t=>`<tr><td><input class="select mb-ft-code" data-id="${t.id}" value="${esc(String(t.codigo||''))}" style="width:90px"></td><td><input class="select mb-ft-name" data-id="${t.id}" value="${esc(String(t.nombre||''))}"></td><td><input class="select mb-ft-order" data-id="${t.id}" type="number" value="${Number(t.orden||0)}" style="width:80px"></td><td><label class="active-toggle"><input class="mb-ft-active" data-id="${t.id}" type="checkbox" ${t.activo!==false?'checked':''}><span class="toggle-track"></span><span class="active-label">${t.activo!==false?'Activo':'Inactivo'}</span></label></td><td><button class="btn light mb-ft-save" data-id="${t.id}" type="button">Guardar</button></td></tr>`).join('')||'<tr><td colspan="5">No hay tipos de formato.</td></tr>';
-    b.querySelectorAll('.mb-ft-save').forEach(btn=>btn.onclick=()=>saveType(btn.dataset.id));}
-  async function saveType(id){try{const row={codigo:String(document.querySelector(`.mb-ft-code[data-id="${id}"]`).value||'').trim(),nombre:String(document.querySelector(`.mb-ft-name[data-id="${id}"]`).value||'').trim(),orden:Number(document.querySelector(`.mb-ft-order[data-id="${id}"]`).value||0),activo:document.querySelector(`.mb-ft-active[data-id="${id}"]`).checked};if(!row.codigo||!row.nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)});await loadTypes();alert('Tipo de formato guardado.');}catch(e){alert('No se pudo guardar el tipo de formato.\n\n'+e.message)}}
-  window.mbCreateFormatType=async function(){try{const codigo=String(document.getElementById('newFormatTypeCode').value||'').trim(),nombre=String(document.getElementById('newFormatTypeName').value||'').trim(),orden=Number(document.getElementById('newFormatTypeOrder').value||0);if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({codigo,nombre,orden,activo:true})});document.getElementById('newFormatTypeCode').value='';document.getElementById('newFormatTypeName').value='';await loadTypes();}catch(e){alert('No se pudo crear el tipo de formato.\n\n'+e.message)}};
+  async function loadTypes(){types=await req('tipos_formato?select=id,codigo,nombre,unidad,activo,orden&order=orden.asc,codigo.asc')||[];window.mbFormatTypes=types;renderTypes();return types;}
+  function renderTypes(){const b=document.getElementById('formatTypesTable');if(!b)return;b.innerHTML=types.map(t=>`<tr><td><input class="select mb-ft-code" data-id="${t.id}" value="${escLocal(t.codigo)}" style="width:90px"></td><td><input class="select mb-ft-name" data-id="${t.id}" value="${escLocal(t.nombre)}"></td><td><select class="select mb-ft-unit" data-id="${t.id}" style="width:125px"><option value="kg" ${String(t.unidad||'kg')==='kg'?'selected':''}>Kilos</option><option value="unidades" ${String(t.unidad||'kg')==='unidades'?'selected':''}>Unidades</option></select></td><td><input class="select mb-ft-order" data-id="${t.id}" type="number" value="${Number(t.orden||0)}" style="width:80px"></td><td><label class="active-toggle"><input class="mb-ft-active" data-id="${t.id}" type="checkbox" ${t.activo!==false?'checked':''}><span class="toggle-track"></span><span class="active-label">${t.activo!==false?'Activo':'Inactivo'}</span></label></td><td><button class="btn light mb-ft-save" data-id="${t.id}" type="button">Guardar</button></td></tr>`).join('')||'<tr><td colspan="6">No hay tipos de formato.</td></tr>';b.querySelectorAll('.mb-ft-save').forEach(btn=>btn.onclick=()=>saveType(btn.dataset.id));}
+  async function saveType(id){try{const row={codigo:String(document.querySelector(`.mb-ft-code[data-id="${id}"]`)?.value||'').trim(),nombre:String(document.querySelector(`.mb-ft-name[data-id="${id}"]`)?.value||'').trim(),unidad:String(document.querySelector(`.mb-ft-unit[data-id="${id}"]`)?.value||'kg'),orden:Number(document.querySelector(`.mb-ft-order[data-id="${id}"]`)?.value||0),activo:!!document.querySelector(`.mb-ft-active[data-id="${id}"]`)?.checked};if(!row.codigo||!row.nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)});await loadTypes();alert('Tipo de formato guardado.');}catch(e){alert('No se pudo guardar el tipo de formato.\n\n'+e.message)}}
+  window.mbCreateFormatType=async function(){try{const codigo=String(document.getElementById('newFormatTypeCode')?.value||'').trim(),nombre=String(document.getElementById('newFormatTypeName')?.value||'').trim(),unidad=String(document.getElementById('newFormatTypeUnit')?.value||'kg'),orden=Number(document.getElementById('newFormatTypeOrder')?.value||0);if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({codigo,nombre,unidad,orden,activo:true})});document.getElementById('newFormatTypeCode').value='';document.getElementById('newFormatTypeName').value='';await loadTypes();}catch(e){alert('No se pudo crear el tipo de formato.\n\n'+e.message)}};
   window.mbCloseFormatTypes=()=>document.getElementById('formatTypesOverlay').style.display='none';
   window.mbOpenFormatTypes=async()=>{document.getElementById('formatTypesOverlay').style.display='flex';try{await loadTypes()}catch(e){alert('No se pudieron cargar los tipos de formato.\n\n'+e.message)}};
   document.getElementById('npOpenFormatTypes')?.addEventListener('click',window.mbOpenFormatTypes);
-
-  function typeById(id){return types.find(t=>String(t.id)===String(id));}
-  function typeByCode(code){return types.find(t=>String(t.codigo)===String(code));}
-  function ensureType(f){return typeById(f?.tipoFormatoId)||typeByCode(f?.code)||typeByCode(f?.codigo)||types.find(t=>String(t.nombre).toLowerCase()===String(f?.nombre||'').toLowerCase())||null;}
-  function readRows(){
-    return [...document.querySelectorAll('#npesFormats .npes-format')].map((row,i)=>{
-      const old=window.productCatalog?.find(p=>p.sku===window.mbCurrentEditSku)?.formats?.[i]||{};
-      const sel=row.querySelector('.mb-ft-type');const wt=row.querySelector('.npes-weight');const qty=row.querySelector('.npes-default-qty');const desc=row.querySelector('.mb-ft-desc');
-      const t=typeById(sel?.value);return {id:old.id||null,tipoFormatoId:t?.id||null,code:t?.codigo||'',type:old.type||'custom',weight:wt&&wt.value!==''?Number(wt.value):null,label:t?.nombre||old.label||'',nombre:t?.nombre||old.nombre||'',descripcion:desc?.value||old.descripcion||'',defaultQty:qty&&qty.value!==''?Math.max(1,Math.floor(Number(qty.value)||1)):1,active:old.active!==false};
-    });
-  }
-  function enhanceEditor(){
-    const rows=[...document.querySelectorAll('#npesFormats .npes-format')];
-    const p=window.productCatalog?.find(x=>x.sku===window.mbCurrentEditSku);const fs=Array.isArray(p?.formats)?p.formats:[];
-    rows.forEach((row,i)=>{
-      const f=fs[i]||{};const t=ensureType(f);const first=row.querySelector('.npes-type');if(first){const sel=document.createElement('select');sel.className='mb-ft-type';sel.style.minWidth='180px';sel.innerHTML=types.map(x=>`<option value="${x.id}" ${t&&String(x.id)===String(t.id)?'selected':''}>${esc(x.codigo)} · ${esc(x.nombre)}</option>`).join('');first.replaceWith(sel);}
-      const d=document.createElement('input');d.className='mb-ft-desc';d.placeholder='Descripción personalizada (opcional)';d.value=f.descripcion||'';d.title='Descripción que se mostrará en los pedidos cuando esté informada';d.style.cssText='grid-column:1/-1;width:100%;min-height:40px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px';row.appendChild(d);
-    });
-  }
-  // Intercept opening so the existing editor is enriched with master format types.
-  document.addEventListener('click',e=>{if(e.target.closest('#npNewProduct')||e.target.closest('.np-edit'))setTimeout(async()=>{try{if(!types.length)await loadTypes();window.mbCurrentEditSku=document.getElementById('npesSku')?.value||null;enhanceEditor()}catch(err){console.warn('v121 tipos formato',err)}},0)},true);
-  // Intercept save: persist article + formats, including duplicate codes with different weights.
-  document.addEventListener('click',e=>{if(!e.target.closest('#npesSave'))return;e.preventDefault();e.stopImmediatePropagation();(async()=>{try{
-    const sku=document.getElementById('npesSku').value.trim(),name=document.getElementById('npesName').value.trim();if(!sku||!name)throw new Error('Referencia y nombre son obligatorios.');
-    const oldSku=window.mbCurrentEditSku||null;const p=window.productCatalog.find(x=>x.sku===oldSku)||{sku};
-    p.sku=sku;p.name=name;p.category=document.getElementById('npesCategory').value;p.description=document.getElementById('npesDesc').value.trim();p.price=Math.max(0,Number(document.getElementById('npesPrice').value)||0);p.boxUnits=document.getElementById('npesBox').value;p.minQty=Math.max(0,Number(document.getElementById('npesMin').value)||0);p.active=document.getElementById('npesActive').checked;p.formats=readRows();
-    if(!window.productCatalog.includes(p))window.productCatalog.push(p);
-    await window.mbSaveProductToSupabase(p,oldSku);alert('Artículo y formatos guardados en Supabase.');location.reload();
-  }catch(err){console.error(err);alert('No se pudo guardar el artículo y sus formatos.\n\n'+err.message)}})();},true);
-
-  // Replace format rendering for the legacy product modal with the same master model.
   window.mbFormatTypes=types;
   window.addEventListener('load',()=>setTimeout(()=>loadTypes().catch(()=>{}),900));
 })();
