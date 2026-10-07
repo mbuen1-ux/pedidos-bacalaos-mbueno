@@ -4331,16 +4331,27 @@ window.mbSaveListStatusV110=save;
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
   function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
     if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
-    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{const t=typeFor(f);const unit=t?.nombre||'';
+    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{
+      const t=typeFor(f);
+      const measure=(t?.unidad||'kg')==='units'?'Unidades':'Kilos';
+      const measureShort=measure==='Unidades'?'UD.':'KG';
       return `<div class="format-row" data-fi="${i}">
+        <div class="fm-card-head">
+          <div class="fm-card-title"><span class="fm-order-number">${String(i+1).padStart(2,'0')}</span><strong>${escF(t?.nombre||'Nuevo formato')}</strong><span class="fm-code">${escF(t?.codigo||'')}</span></div>
+          <div class="fm-card-measure"><span class="fm-measure-dot"></span>${measure}</div>
+        </div>
         <div class="fm-main">
           <div class="fm-field fm-type-field">
-            <label>Formato</label>
+            <label>Tipo de formato</label>
             <select class="fm-type" data-i="${i}"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
           </div>
           <div class="fm-field">
+            <label>Medida</label>
+            <div class="fm-readonly">${measure}<span>${measureShort}</span></div>
+          </div>
+          <div class="fm-field">
             <label>Peso aproximado</label>
-            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="0,00"><span>kg</span></div>
+            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="0,000"><span>kg</span></div>
           </div>
           <div class="fm-field">
             <label>Cantidad por defecto</label>
@@ -4350,13 +4361,10 @@ window.mbSaveListStatusV110=save;
             <label>Uds. por caja</label>
             <div class="fm-input-unit"><input class="fm-box" data-i="${i}" type="number" min="1" step="1" value="${f.boxUnits??''}" placeholder="Opcional"><span>uds.</span></div>
           </div>
-          <div class="fm-order">
-            <label>&nbsp;</label>
-            <div><button class="mini fm-up" data-i="${i}" type="button" title="Subir">↑</button><button class="mini fm-down" data-i="${i}" type="button" title="Bajar">↓</button></div>
-          </div>
-          <div class="fm-delete">
-            <label>&nbsp;</label>
-            <button class="mini remove fm-del" data-i="${i}" type="button" title="Eliminar formato" aria-label="Eliminar formato">🗑</button>
+          <div class="fm-actions">
+            <button class="mini fm-up" data-i="${i}" type="button" title="Subir">↑</button>
+            <button class="mini fm-down" data-i="${i}" type="button" title="Bajar">↓</button>
+            <button class="mini fm-del" data-i="${i}" type="button" title="Eliminar formato" aria-label="Eliminar formato">🗑</button>
           </div>
         </div>
         <div class="fm-desc-field">
@@ -6648,5 +6656,33 @@ window.mbSaveListStatusV110=save;
 @media(max-width:420px){
   #productFormatsBuilder .fm-main{grid-template-columns:1fr!important;}
   #productFormatsBuilder .fm-type-field{grid-column:auto!important;}
+}
+</style>
+
+<style id="format-editor-clean-v202">
+#productFormatsBuilder .format-builder{gap:12px!important}
+#productFormatsBuilder .format-row{background:#f7f9fb!important;border:1px solid #d5e0e7!important;border-radius:12px!important;padding:12px!important;box-shadow:0 1px 3px rgba(20,45,65,.04)!important}
+#productFormatsBuilder .fm-card-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:2px 2px 10px!important}
+#productFormatsBuilder .fm-card-title{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+#productFormatsBuilder .fm-card-title strong{font-size:14px!important;color:#183044!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#productFormatsBuilder .fm-order-number{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:30px!important;height:24px!important;border-radius:6px!important;background:#e9f0f5!important;color:#174e78!important;font-size:11px!important;font-weight:800!important}
+#productFormatsBuilder .fm-code{font-size:11px!important;font-weight:700!important;color:#71808c!important;background:#fff!important;border:1px solid #dfe6eb!important;border-radius:5px!important;padding:3px 6px!important}
+#productFormatsBuilder .fm-card-measure{display:flex!important;align-items:center!important;gap:6px!important;color:#526675!important;font-size:11px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.03em!important}
+#productFormatsBuilder .fm-measure-dot{width:8px!important;height:8px!important;border-radius:50%!important;background:#174e78!important}
+#productFormatsBuilder .fm-main{grid-template-columns:minmax(185px,1.8fr) minmax(115px,1fr) minmax(120px,1fr) minmax(120px,1fr) minmax(115px,1fr) 106px!important;gap:8px!important}
+#productFormatsBuilder .fm-field{min-height:68px!important;height:68px!important}
+#productFormatsBuilder .fm-readonly{height:36px!important;min-height:36px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 9px!important;background:#f4f7f9!important;border:1px solid #d5e0e7!important;border-radius:6px!important;color:#334b5d!important;font-size:13px!important;font-weight:700!important;box-sizing:border-box!important}
+#productFormatsBuilder .fm-readonly span{font-size:10px!important;color:#71808c!important;font-weight:800!important}
+#productFormatsBuilder .fm-actions{display:flex!important;align-items:flex-end!important;gap:4px!important;height:68px!important}
+#productFormatsBuilder .fm-actions .mini{flex:1 1 0!important;width:0!important;height:36px!important;min-height:36px!important;padding:0!important;border:1px solid #cbd8e0!important;border-radius:6px!important;background:#fff!important;font-size:15px!important;font-weight:700!important;box-sizing:border-box!important}
+#productFormatsBuilder .fm-actions .fm-del{color:#9a4545!important}
+#productFormatsBuilder .fm-desc-field{margin-top:8px!important;background:#fff!important}
+@media(max-width:1050px){
+ #productFormatsBuilder .fm-main{grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 96px!important}
+}
+@media(max-width:800px){
+ #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr!important}
+ #productFormatsBuilder .fm-type-field{grid-column:1/-1!important}
+ #productFormatsBuilder .fm-actions{height:68px!important}
 }
 </style>
