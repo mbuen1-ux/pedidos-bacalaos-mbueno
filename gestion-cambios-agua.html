@@ -234,6 +234,11 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 .inicioCubaMini .miniLineLabel{display:block;font-size:9px;font-weight:900;letter-spacing:.35px;text-transform:uppercase;color:#71808c;margin-bottom:2px}
 .inicioCubaMini .miniNextLine .miniLineLabel{color:#174d76}
 .inicioCubaMini .miniLineTime{font-size:9px;font-weight:800;color:#71808c;margin-top:2px}
+
+/* Ajuste visual: acciones a ancho completo y temporizador sin fondo */
+#cubaList>.card.process:not(.detail-open) .actions,#prodCubaList>.card.process:not(.detail-open) .actions{left:14px!important;right:14px!important;width:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+#cubaList>.card.process:not(.detail-open) .actions button,#prodCubaList>.card.process:not(.detail-open) .actions button{width:100%!important;min-width:0!important}
+#cubaList .cubaCountdown .nextTimerBox,#prodCubaList .cubaCountdown .nextTimerBox{background:transparent!important;border:2px solid currentColor!important;box-shadow:none!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
