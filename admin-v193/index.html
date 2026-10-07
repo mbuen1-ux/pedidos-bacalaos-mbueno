@@ -4325,7 +4325,7 @@ window.mbSaveListStatusV110=save;
   const cfg=()=>{try{const w=window.MB_SUPABASE||{}; if(w.url&&w.key)return w; if(typeof getSupabaseConfig==='function'){const c=getSupabaseConfig()||{}; if(c.url&&c.key)return c;} return JSON.parse(localStorage.getItem('mb_supabase_config')||'{}')}catch(e){return window.MB_SUPABASE||{}}};
   async function reqF(path,opt={}){const c=cfg();if(!c.url||!c.key)throw new Error('Supabase no está configurado.');const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{apikey:c.key,Authorization:'Bearer '+c.key,'Content-Type':'application/json',...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error((d&&d.message)||t||('HTTP '+r.status));return d;}
   let fmTypes=[];
-  async function loadFmTypes(){fmTypes=Array.isArray(window.mbFormatTypes)&&window.mbFormatTypes.length?window.mbFormatTypes:await reqF('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
+  async function loadFmTypes(){fmTypes=await reqF('tipos_formato?select=id,codigo,nombre,unidad,activo,orden&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
   function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,boxUnits:null,label:'',nombre:'',descripcion:'',active:true};}
   let draft=[];
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
@@ -4333,7 +4333,7 @@ window.mbSaveListStatusV110=save;
     if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
     box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{
       const t=typeFor(f);
-      const measure=(t?.unidad||'kg')==='units'?'Unidades':'Kilos';
+      const measure=String(t?.unidad||'kg').toLowerCase()==='unidades'?'Unidades':'Kilos';
       const measureShort=measure==='Unidades'?'UD.':'KG';
       return `<div class="format-row" data-fi="${i}">
         <div class="fm-card-head">
