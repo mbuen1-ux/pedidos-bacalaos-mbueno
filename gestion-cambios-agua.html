@@ -812,7 +812,7 @@ function updateCubaCountdowns(){
    const box=el.closest('.nextTimerBox');
    if(box){
      box.style.color=color;
-     box.style.borderColor=color;
+     box.style.setProperty('border-color',color,'important');
      box.style.background='transparent';
      box.style.boxShadow='none';
    }
