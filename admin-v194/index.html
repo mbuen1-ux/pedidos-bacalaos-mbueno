@@ -4252,10 +4252,65 @@ window.mbSaveListStatusV110=save;
   async function loadTypes(){types=await req('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc')||[];window.mbFormatTypes=types;renderTypes();return types;}
   function renderTypes(){const b=document.getElementById('formatTypesTable');if(!b)return;b.innerHTML=types.map(t=>`<tr><td><input class="select mb-ft-code" data-id="${t.id}" value="${esc(String(t.codigo||''))}" style="width:90px"></td><td><input class="select mb-ft-name" data-id="${t.id}" value="${esc(String(t.nombre||''))}"></td><td><input class="select mb-ft-order" data-id="${t.id}" type="number" value="${Number(t.orden||0)}" style="width:80px"></td><td><label class="active-toggle"><input class="mb-ft-active" data-id="${t.id}" type="checkbox" ${t.activo!==false?'checked':''}><span class="toggle-track"></span><span class="active-label">${t.activo!==false?'Activo':'Inactivo'}</span></label></td><td><button class="btn light mb-ft-save" data-id="${t.id}" type="button">Guardar</button></td></tr>`).join('')||'<tr><td colspan="5">No hay tipos de formato.</td></tr>';
     b.querySelectorAll('.mb-ft-save').forEach(btn=>btn.onclick=()=>saveType(btn.dataset.id));}
-  async function saveType(id){try{const row={codigo:String(document.querySelector(`.mb-ft-code[data-id="${id}"]`).value||'').trim(),nombre:String(document.querySelector(`.mb-ft-name[data-id="${id}"]`).value||'').trim(),orden:Number(document.querySelector(`.mb-ft-order[data-id="${id}"]`).value||0),activo:document.querySelector(`.mb-ft-active[data-id="${id}"]`).checked};if(!row.codigo||!row.nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)});await loadTypes();alert('Tipo de formato guardado.');}catch(e){alert('No se pudo guardar el tipo de formato.\n\n'+e.message)}}
-  window.mbCreateFormatType=async function(){try{const codigo=String(document.getElementById('newFormatTypeCode').value||'').trim(),nombre=String(document.getElementById('newFormatTypeName').value||'').trim(),orden=Number(document.getElementById('newFormatTypeOrder').value||0);if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');await req('tipos_formato',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({codigo,nombre,orden,activo:true})});document.getElementById('newFormatTypeCode').value='';document.getElementById('newFormatTypeName').value='';await loadTypes();}catch(e){alert('No se pudo crear el tipo de formato.\n\n'+e.message)}};
-  window.mbCloseFormatTypes=()=>document.getElementById('formatTypesOverlay').style.display='none';
-  window.mbOpenFormatTypes=async()=>{document.getElementById('formatTypesOverlay').style.display='flex';try{await loadTypes()}catch(e){alert('No se pudieron cargar los tipos de formato.\n\n'+e.message)}};
+  let mbFormatAdminPassword='';
+  async function mbFormatAdminCall(action,data={}){
+    const cfg=CFG();
+    if(!cfg.url)throw new Error('Supabase no está configurado.');
+    const endpoint=cfg.url+'/functions/v1/admin-format-types';
+    async function call(password){
+      const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password,action,data})});
+      const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}
+      if(!r.ok)throw new Error((d&&d.error)||t||('HTTP '+r.status));
+      return d;
+    }
+    if(!mbFormatAdminPassword){
+      const p=prompt('Contraseña del Maestro de Tipos de Formato:');
+      if(p===null)throw new Error('Acceso cancelado.');
+      mbFormatAdminPassword=p;
+    }
+    try{return await call(mbFormatAdminPassword)}
+    catch(e){
+      if(String(e.message||'').toLowerCase().includes('contraseña incorrecta'))mbFormatAdminPassword='';
+      throw e;
+    }
+  }
+  async function ensureFormatAdminAccess(){
+    try{await mbFormatAdminCall('check');return true}
+    catch(e){alert(e.message);return false}
+  }
+  async function saveType(id){
+    try{
+      const row={
+        id,
+        codigo:String(document.querySelector(`.mb-ft-code[data-id="${id}"]`).value||'').trim(),
+        nombre:String(document.querySelector(`.mb-ft-name[data-id="${id}"]`).value||'').trim(),
+        orden:Number(document.querySelector(`.mb-ft-order[data-id="${id}"]`).value||0),
+        activo:document.querySelector(`.mb-ft-active[data-id="${id}"]`).checked
+      };
+      if(!row.codigo||!row.nombre)throw new Error('Código y nombre son obligatorios.');
+      await mbFormatAdminCall('update',row);
+      await loadTypes();
+      alert('Tipo de formato guardado.');
+    }catch(e){alert('No se pudo guardar el tipo de formato.\\n\\n'+e.message)}
+  }
+  window.mbCreateFormatType=async function(){
+    try{
+      const codigo=String(document.getElementById('newFormatTypeCode').value||'').trim(),
+            nombre=String(document.getElementById('newFormatTypeName').value||'').trim(),
+            orden=Number(document.getElementById('newFormatTypeOrder').value||0);
+      if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');
+      await mbFormatAdminCall('create',{codigo,nombre,orden,activo:true});
+      document.getElementById('newFormatTypeCode').value='';
+      document.getElementById('newFormatTypeName').value='';
+      await loadTypes();
+    }catch(e){alert('No se pudo crear el tipo de formato.\\n\\n'+e.message)}
+  };
+  window.mbCloseFormatTypes=()=>{document.getElementById('formatTypesOverlay').style.display='none';mbFormatAdminPassword='';};
+  window.mbOpenFormatTypes=async()=>{
+    if(!(await ensureFormatAdminAccess()))return;
+    document.getElementById('formatTypesOverlay').style.display='flex';
+    try{await loadTypes()}catch(e){alert('No se pudieron cargar los tipos de formato.\\n\\n'+e.message)}
+  };
   document.getElementById('npOpenFormatTypes')?.addEventListener('click',window.mbOpenFormatTypes);
 
   function typeById(id){return types.find(t=>String(t.id)===String(id));}
