@@ -6142,8 +6142,13 @@ window.mbSaveListStatusV110=save;
         (Array.isArray(window.orders)?window.orders:[]));
       // El ERP solo debe recibir pedidos abiertos: Nuevo y En preparación.
       // Enviado y Cancelado quedan fuera de la exportación.
-      const selectedStatuses=[...document.querySelectorAll("#o47-status-filters .o47-status-check:checked")].map(x=>x.value);
-      const orders=allOrders.filter(o=>o && selectedStatuses.includes(String(o.status||"")));
+      const selectedStatuses=[...document.querySelectorAll("#o47-status-filters .o47-status-check:checked")].map(x=>String(x.value||"").trim());
+      // Solo se exportan pedidos abiertos. Enviado y Cancelado quedan fuera siempre.
+      const exportableStatuses=new Set(["Nuevo","En preparación"]);
+      const orders=allOrders.filter(o=>{
+        const status=String(o?.status||"").trim();
+        return exportableStatuses.has(status) && selectedStatuses.includes(status);
+      });
       const headers={apikey:c.key,Authorization:'Bearer '+c.key,Accept:'application/json'};
       const cr=await fetch(c.url+'/rest/v1/clientes?select=id,codigo,nombre,email,telefono&limit=10000',{headers});
       const ct=await cr.text();
