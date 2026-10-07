@@ -96,7 +96,7 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 #cubaList .cubaCountdown strong:last-child,#prodCubaList .cubaCountdown strong:last-child{font-size:13px!important}
 #cubaList .cubaCountdown,#prodCubaList .cubaCountdown{display:grid!important;grid-template-columns:2fr 1fr!important;gap:8px!important}
 #cubaList .cubaCountdown .nextProcessBox,#prodCubaList .cubaCountdown .nextProcessBox{display:flex;align-items:center;justify-content:flex-start;min-width:0;padding:9px 12px;border-radius:6px!important;font-size:16px;font-weight:900}
-#cubaList .cubaCountdown .nextTimerBox,#prodCubaList .cubaCountdown .nextTimerBox{display:flex;align-items:center;justify-content:center;min-width:0;padding:9px 8px;border-radius:6px!important;background:#fff;border:2px solid currentColor;box-shadow:0 1px 4px rgba(23,77,118,.12)}
+#cubaList .cubaCountdown .nextTimerBox,#prodCubaList .cubaCountdown .nextTimerBox{display:flex;align-items:center;justify-content:center;min-width:0;padding:9px 8px;border-radius:6px!important;background:transparent!important;border:2px solid currentColor;box-shadow:none!important}
 #cubaList .cubaCountdown .nextTimerBox strong,#prodCubaList .cubaCountdown .nextTimerBox strong{font-size:18px!important;white-space:nowrap}
 #cubaList>.card.process .finalProcessBox,#prodCubaList>.card.process .finalProcessBox{margin:0 0 8px!important;padding:7px 8px;border-radius:6px}
 #cubaList .cubaCountdown>div:nth-child(3),#prodCubaList .cubaCountdown>div:nth-child(3){grid-column:1 / -1}
@@ -806,12 +806,15 @@ function updateCubaCountdowns(){
    const diff=t-Date.now();
    const st=el.dataset.cubaCountdownStatus||'future';
    el.textContent=diff>0?formatCountdown(diff):'00:00:00';
-   if(st==='late'){
-     el.style.color='#b91c1c';el.style.background='#fee2e2';
-   }else if(st==='ready'){
-     el.style.color='#8a6500';el.style.background='#fff3cd';
-   }else{
-     el.style.color='#0b5cab';el.style.background='#e8f1ff';
+   const color=st==='late'?'#b91c1c':st==='ready'?'#8a6500':'#0b5cab';
+   el.style.color=color;
+   el.style.background='transparent';
+   const box=el.closest('.nextTimerBox');
+   if(box){
+     box.style.color=color;
+     box.style.borderColor=color;
+     box.style.background='transparent';
+     box.style.boxShadow='none';
    }
  });
 }
