@@ -6098,8 +6098,16 @@ window.mbSaveListStatusV110=save;
     if(!m)return String(v||'');
     return String(m[1]).padStart(2,'0')+'/'+String(m[2]).padStart(2,'0')+'/'+m[3];
   }
-  function lineRows(order,client){
-    return (order.lines||[]).map(l=>({
+  function lineRows(order,client,formatMap){
+    return (order.lines||[]).map(l=>{
+      const fm=formatMap?.get(String(l.formatId||''))||null;
+      const rawFormat=String(fm?.nombre||l.format||'').trim();
+      const formatName=rawFormat.replace(/^\s*\d+\s*[·.]\s*/,'').trim();
+      const approx=Number(fm?.peso_aproximado);
+      const qty=Number(l.requested);
+      const approxUnit=Number.isFinite(approx)&&approx>0?approx:(Number(l.peso_aproximado)>0&&qty>0?Number(l.peso_aproximado)/qty:0);
+      const formato=approxUnit>0?formatName+' · '+fmtWeight(approxUnit)+' kg':formatName;
+      return ({
       Pedido:order.id||'',
       Fecha:dateShort(order.date)+(order.time?', '+String(order.time).slice(0,5):''),
       Estado:order.status||'Nuevo',
@@ -6109,7 +6117,7 @@ window.mbSaveListStatusV110=save;
       'Teléfono':client?.telefono||'',
       Referencia:l.articleRef||'',
       Producto:l.name||'',
-      Formato:(/^01\s*[·.]?\s*UD\.?$/i.test(String(l.format||''))?'':(l.format||'')),
+      Formato:formato,
       'Uds/Caja':'',
       Cantidad:fmtQty(l.requested),
       'Peso real (kg)':fmtWeight(l.actual),
@@ -6119,7 +6127,8 @@ window.mbSaveListStatusV110=save;
       Entrega:dateLong(order.date),
       'Fecha deseada':dateLong(order.date),
       Observaciones:''
-    }));
+      });
+    });
   }
   async function exportERP(){
     const c=cfg();
@@ -6141,11 +6150,16 @@ window.mbSaveListStatusV110=save;
       if(!cr.ok)throw new Error(ct||('HTTP '+cr.status));
       const clients=ct?JSON.parse(ct):[];
       const cm=new Map((Array.isArray(clients)?clients:[]).map(x=>[String(x.id),x]));
+      const fr=await fetch(c.url+'/rest/v1/formatos?select=id,nombre,peso_aproximado&activo=eq.true&limit=10000',{headers});
+      const ft=await fr.text();
+      if(!fr.ok)throw new Error(ft||('HTTP '+fr.status));
+      const formats=ft?JSON.parse(ft):[];
+      const fm=new Map((Array.isArray(formats)?formats:[]).map(x=>[String(x.id),x]));
       const cols=['Pedido','Fecha','Estado','Empresa','Contacto','Email','Teléfono','Referencia','Producto','Formato','Uds/Caja','Cantidad','Peso real (kg)','Base del precio','Precio','Importe','Entrega','Fecha deseada','Observaciones'];
       const rows=[];
       orders.forEach(o=>{
         const client=cm.get(String(o.clientId||''))||{};
-        rows.push(...lineRows(o,client));
+        rows.push(...lineRows(o,client,fm));
       });
       const csv=[cols.map(escCsv).join(';'),...rows.map(r=>cols.map(k=>escCsv(r[k])).join(';'))].join('\r\n');
       const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
