@@ -1621,7 +1621,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     try{
       const H={apikey:cfg.key,Authorization:'Bearer '+cfg.key,Accept:'application/json'};
       const [typesRes,formatsRes]=await Promise.all([
-        fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
+        fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc',{headers:H}),
         fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc',{headers:H})
       ]);
       if(!typesRes.ok||!formatsRes.ok)throw new Error('No se pudieron consultar los formatos actuales.');
@@ -4364,7 +4364,7 @@ window.mbSaveListStatusV110=save;
       <input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="Peso base">
       <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Descripción / opción">
       <input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad por defecto">
-      <span style="font-size:12px;color:#667">${t?escF(t.nombre):''}</span>
+      <span style="font-size:12px;color:#667;font-weight:700">${t?escF(t.unidad||''):''}</span>
       <button class="mini fm-up" data-i="${i}" type="button">↑</button><button class="mini fm-down" data-i="${i}" type="button">↓</button><button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
     </div>`}).join('');
     box.querySelectorAll('.fm-type').forEach(el=>el.onchange=()=>{const i=+el.dataset.i,t=fmTypes.find(x=>String(x.id)===String(el.value));draft[i].tipoFormatoId=t?.id||null;draft[i].code=t?.codigo||'';draft[i].type='master';draft[i].label=t?.nombre||'';draft[i].nombre=t?.nombre||'';render();});
