@@ -2516,27 +2516,28 @@ function openOrder(id){
    </table>
   </div>
   ${editable?`
-   <div style="margin-top:18px;padding:15px;border:1px solid #e2e8f0;border-radius:10px">
-    <strong>Añadir artículo</strong>
-    <div class="o49-add-layout">
-     <div class="o49-add-fields">
-      <div class="o49-add-field"><label>Artículo</label><select id="o49-add-product" class="select"><option value="">Selecciona un artículo</option>${productOptions()}</select></div>
-      <div class="o49-add-field"><label>Formato</label><select id="o49-add-format" class="select">
-       <option value="Kilos">Kilos</option>
-       <option value="Piezas enteras">Piezas enteras</option>
-       <option value="Porciones">Porciones</option>
-       <option value="Porciones caja">Porciones caja</option>
-       <option value="Caja pequeña">Caja pequeña</option>
-       <option value="Caja grande">Caja grande</option>
-       <option value="Formato personalizado">Formato personalizado</option>
-      </select></div>
+   <div style="margin-top:18px;border:1px solid #dce5ec;border-radius:12px;padding:14px;background:#f8fafc">
+    <div style="font-size:12px;font-weight:700;color:#687a8a;margin-bottom:8px">Añadir artículo al pedido</div>
+    <div style="display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr) 110px 120px;gap:10px;align-items:end;min-width:0">
+     <div style="min-width:0">
+      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Artículo</label>
+      <select id="o49-add-product" class="select" style="width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+       <option value="">Seleccionar artículo...</option>${productOptions()}
+      </select>
      </div>
-     <div class="o49-add-side">
-      <div class="o49-add-field"><label>Cantidad</label><input id="o49-add-qty" class="input" type="number" min="0" step="0.001" placeholder="Cantidad"></div>
-      <button class="btn o49-add-button" id="o49-add-line">＋ Añadir artículo</button>
+     <div style="min-width:0">
+      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Formato</label>
+      <select id="o49-add-format" class="select" style="width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap" disabled>
+       <option value="">Seleccionar formato...</option>
+      </select>
      </div>
+     <div style="min-width:0">
+      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Cantidad</label>
+      <input id="o49-add-qty" type="number" min="1" step="1" value="" placeholder="Cantidad" class="select" style="width:100%;min-width:0">
+     </div>
+     <button type="button" class="btn" id="o49-add-line" style="width:100%;white-space:nowrap">Añadir</button>
     </div>
-   </div>
+   </div>   </div>
    <div class="o47-bottom">
     <button class="btn o47-danger" id="o47-delete-lines">🗑 Borrar líneas seleccionadas</button>
     <button class="btn" id="o47-save">Guardar cambios</button>
