@@ -4858,6 +4858,62 @@ window.mbSaveListStatusV110=save;
  },true);
 })();
 </script>
+<script id="main-nav-recovery-v9">
+(function(){
+  'use strict';
+  function initMainNavigation(){
+    const aside=document.querySelector('aside');
+    if(!aside)return false;
+    const buttons=[...aside.querySelectorAll('.nav[data-panel]')];
+    if(!buttons.length)return false;
+
+    function activate(id){
+      const panel=document.getElementById(String(id||''));
+      if(!panel)return;
+      document.querySelectorAll('.panel').forEach(function(p){
+        p.classList.toggle('active',p===panel);
+      });
+      buttons.forEach(function(b){
+        b.classList.toggle('active',String(b.dataset.panel||'')===String(id||''));
+      });
+      try{
+        if(String(id)==='orders' && typeof window.renderOrders==='function') window.renderOrders();
+        if(String(id)==='products' && typeof window.mbLoadArticlesFromSupabase==='function') window.mbLoadArticlesFromSupabase();
+        if(String(id)==='clients' && typeof window.renderClients==='function') window.renderClients();
+        if(String(id)==='prices' && typeof window.renderTariffs==='function') window.renderTariffs();
+      }catch(e){ console.warn('Error al refrescar el módulo '+id,e); }
+    }
+
+    buttons.forEach(function(b){
+      b.onclick=null;
+      b.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        activate(b.dataset.panel);
+      },false);
+    });
+
+    const current=document.querySelector('.panel.active')?.id || buttons[0].dataset.panel;
+    activate(current);
+    window.mbActivateMainPanel=activate;
+    return true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      if(!initMainNavigation()){
+        setTimeout(initMainNavigation,300);
+        setTimeout(initMainNavigation,1000);
+      }
+    });
+  }else{
+    if(!initMainNavigation()){
+      setTimeout(initMainNavigation,300);
+      setTimeout(initMainNavigation,1000);
+    }
+  }
+})();
+</script>
 </body>
 
 <!-- orders-lines-supabase-v135 desactivado en v139: sustituido por el sincronizador único v138. -->
