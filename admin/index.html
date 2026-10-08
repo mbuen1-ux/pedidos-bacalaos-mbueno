@@ -4843,7 +4843,7 @@ window.mbSaveListStatusV110=save;
   await api("pedidos?id=eq."+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({estado:v})});
   await window.mbLoadOrdersFromSupabase();
   const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
-  if(fresh)window.openOrder(fresh.id);
+  if(fresh && typeof window.__mbOpenOrderFromSupabase==="function")window.__mbOpenOrderFromSupabase(fresh.id);
  }
  document.addEventListener("change",function(e){
   if(e.target?.id==="v4-add-product")window.v4LoadFormats();
