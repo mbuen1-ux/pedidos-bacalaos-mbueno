@@ -423,6 +423,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" type="button" id="npNewProduct">+ Nuevo artículo</button>
       <button class="btn light" type="button" id="npOpenFormatTypes">Tipos de formato</button>
+      <button class="btn light" type="button" id="npOpenCategories">Maestro de categorías</button>
       <button class="btn light" type="button" id="npOpenImport">Importar artículos Excel</button>
     </div>
   </div>
@@ -642,7 +643,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
     <div class="npes-card"><h3>Datos básicos</h3><div class="npes-grid">
       <div class="npes-field"><label>Referencia / SKU *</label><input id="npesSku"></div>
       <div class="npes-field"><label>Nombre del artículo *</label><input id="npesName"></div>
-      <div class="npes-field"><label>Categoría</label><select id="npesCategory"><option>Sin clasificar</option><option>Lingotes</option><option>Lomos</option><option>Supremas</option><option>Imperial</option><option>Cocochas</option><option>Otros</option></select></div>
+      <div class="npes-field"><label>Categoría</label><select id="npesCategory"><option value="Sin clasificar">Sin clasificar</option></select></div>
       <div class="npes-field"><label>Precio base (€/kg)</label><input id="npesPrice" type="number" min="0" step="0.01"></div>
     </div>
     <div class="npes-field" style="margin-top:16px"><label>Descripción</label><textarea id="npesDesc" rows="4" placeholder="Descripción que verá el cliente"></textarea></div>
@@ -666,7 +667,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
     <div class="field"><label>Referencia / SKU</label><input id="productSku" placeholder="Ej. 10112"></div>
     <div class="field"><label>Nombre</label><input id="productName" placeholder="Nombre del producto"></div>
     <div class="field"><label>Categoría</label>
-      <select id="productCategory"><option>Sin clasificar</option><option>Lingotes</option><option>Lomos</option><option>Supremas</option><option>Imperial</option><option>Cocochas</option><option>Otros</option></select>
+      <select id="productCategory"><option value="Sin clasificar">Sin clasificar</option></select>
     </div>
   </div>
 
@@ -5116,6 +5117,111 @@ window.mbSaveListStatusV110=save;
     try{await syncClients();}catch(e){console.warn('v12 sync clientes',e);}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+<script id="categorias-maestro-v1">
+(function(){
+  'use strict';
+  const cfg=()=>window.MB_SUPABASE||{};
+  const headers=()=>({apikey:cfg().key,Authorization:'Bearer '+cfg().key,Accept:'application/json','Content-Type':'application/json',Prefer:'return=representation'});
+  async function api(path,opt={}){
+    const c=cfg(); if(!c.url||!c.key)throw new Error('Supabase no está configurado.');
+    const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{...headers(),...(opt.headers||{})}});
+    const raw=await r.text(); let d=null; try{d=raw?JSON.parse(raw):null}catch(_){}
+    if(!r.ok)throw new Error((d&&d.message)||raw||('HTTP '+r.status));
+    return d;
+  }
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  let cats=[];
+  async function loadCategories(){
+    cats=await api('categorias?select=id,nombre,activo&order=nombre.asc');
+    cats=Array.isArray(cats)?cats:[];
+    populateSelect('npesCategory');
+    populateSelect('productCategory');
+    populateCategoryFilter();
+    renderCategoryMaster();
+    return cats;
+  }
+  function populateSelect(id){
+    const s=document.getElementById(id); if(!s)return;
+    const current=s.value;
+    s.innerHTML='<option value="Sin clasificar">Sin clasificar</option>'+cats.filter(x=>x.activo!==false).map(x=>'<option value="'+esc(x.nombre)+'">'+esc(x.nombre)+'</option>').join('');
+    if(current && [...s.options].some(o=>o.value===current))s.value=current;
+  }
+  function populateCategoryFilter(){
+    const s=document.getElementById('npCategory'); if(!s)return;
+    const current=s.value;
+    s.innerHTML='<option value="all">Todas las categorías</option>'+cats.filter(x=>x.activo!==false).map(x=>'<option value="'+esc(x.nombre)+'">'+esc(x.nombre)+'</option>').join('');
+    if([...s.options].some(o=>o.value===current))s.value=current; else s.value='all';
+  }
+  function ensureModal(){
+    if(document.getElementById('categoriesMasterOverlay'))return;
+    const d=document.createElement('div');
+    d.id='categoriesMasterOverlay';
+    d.className='detail-overlay';
+    d.innerHTML='<div class="detail-modal" style="max-width:720px">'+
+      '<div class="detail-head"><div><h2>Maestro de categorías</h2><div class="detail-sub">Categorías almacenadas directamente en Supabase</div></div><button class="close" type="button" id="catClose">×</button></div>'+
+      '<div class="detail-body">'+
+      '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-bottom:18px">'+
+      '<div class="field"><label>Nombre de la categoría</label><input id="catNewName" placeholder="Ej. Lomos"></div><button class="btn" type="button" id="catAdd">+ Añadir</button></div>'+
+      '<div class="tablewrap"><table style="width:100%"><thead><tr><th>Categoría</th><th>Estado</th><th style="width:190px"></th></tr></thead><tbody id="catMasterBody"></tbody></table></div>'+
+      '</div><div class="detail-footer"><button class="btn light" type="button" id="catClose2">Cerrar</button></div></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{if(e.target===d)d.classList.remove('open')});
+    d.querySelector('#catClose').onclick=()=>d.classList.remove('open');
+    d.querySelector('#catClose2').onclick=()=>d.classList.remove('open');
+    d.querySelector('#catAdd').onclick=addCategory;
+    d.querySelector('#catNewName').addEventListener('keydown',e=>{if(e.key==='Enter')addCategory()});
+    d.querySelector('#catMasterBody').addEventListener('click',categoryAction);
+  }
+  function renderCategoryMaster(){
+    const body=document.getElementById('catMasterBody'); if(!body)return;
+    body.innerHTML=cats.map(x=>'<tr data-id="'+x.id+'"><td><input class="cat-edit-name" value="'+esc(x.nombre)+'" style="width:100%"></td><td><label style="display:flex;gap:6px;align-items:center"><input class="cat-active" type="checkbox" '+(x.activo!==false?'checked':'')+'> Activa</label></td><td style="text-align:right"><button class="btn light cat-save" type="button">Guardar</button> <button class="btn light cat-delete" type="button">Eliminar</button></td></tr>').join('');
+  }
+  async function addCategory(){
+    const input=document.getElementById('catNewName'); const name=String(input?.value||'').trim();
+    if(!name){alert('Introduce un nombre.');return}
+    try{
+      await api('categorias',{method:'POST',body:JSON.stringify({nombre:name,activo:true})});
+      input.value=''; await loadCategories();
+    }catch(e){alert('No se ha podido crear la categoría.\n\n'+(e.message||e))}
+  }
+  async function categoryAction(e){
+    const row=e.target.closest('tr'); if(!row)return;
+    const id=row.dataset.id;
+    try{
+      if(e.target.closest('.cat-save')){
+        const name=String(row.querySelector('.cat-edit-name')?.value||'').trim();
+        const old=cats.find(x=>String(x.id)===String(id));
+        if(!name){alert('El nombre no puede estar vacío.');return}
+        if(!old)return;
+        await api('categorias?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({nombre:name,activo:!!row.querySelector('.cat-active')?.checked,updated_at:new Date().toISOString()})});
+        if(old.nombre!==name){
+          await api('articulos?categoria=eq.'+encodeURIComponent(old.nombre),{method:'PATCH',body:JSON.stringify({categoria:name,updated_at:new Date().toISOString()}),headers:{Prefer:'return=minimal'}});
+        }
+        await loadCategories();
+        if(typeof window.mbLoadArticlesFromSupabase==='function')await window.mbLoadArticlesFromSupabase();
+        else if(typeof window.loadProductsDirect==='function')await window.loadProductsDirect();
+      }else if(e.target.closest('.cat-delete')){
+        const used=await api('articulos?select=id&categoria=eq.'+encodeURIComponent(cats.find(x=>String(x.id)===String(id))?.nombre||'')+'&limit=1');
+        if(used?.length){alert('No se puede eliminar esta categoría porque está utilizada por uno o más artículos.\n\nPuedes desactivarla.');return}
+        if(!confirm('¿Eliminar esta categoría de Supabase?'))return;
+        await api('categorias?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+        await loadCategories();
+      }
+    }catch(err){alert('No se ha podido guardar la categoría.\n\n'+(err.message||err))}
+  }
+  function openMaster(){
+    ensureModal();
+    const d=document.getElementById('categoriesMasterOverlay');
+    d.classList.add('open');
+    loadCategories().catch(e=>alert('No se pudieron cargar las categorías.\n\n'+(e.message||e)));
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('npOpenCategories')?.addEventListener('click',openMaster);
+    loadCategories().catch(()=>{});
+  });
+  window.mbLoadCategoriesFromSupabase=loadCategories;
 })();
 </script>
 </body>
