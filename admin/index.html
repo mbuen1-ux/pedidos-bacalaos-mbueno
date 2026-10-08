@@ -4209,7 +4209,7 @@ window.mbSaveListStatusV110=save;
     const masterName=String(tf?.nombre||f.nombre||'Formato personalizado');
     const type=code?'mf_'+code:'custom';
     const display=(code?code+' · ':'')+masterName;
-    return {id:f.id||null,tipoFormatoId:f.tipo_formato_id||null,code,type,weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),label:display,nombre:display,descripcion:f.descripcion||'',active:f.activo!==false};
+    return {id:f.id||null,tipoFormatoId:f.tipo_formato_id||null,code,type,weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),label:display,nombre:display,descripcion:f.descripcion||'',active:f.activo!==false};
   }
   function toDb(f,articleId,index){
     const tf=(window.mbFormatTypes||[]).find(t=>String(t.id)===String(f.tipoFormatoId));
@@ -4230,7 +4230,7 @@ window.mbSaveListStatusV110=save;
     installFormatMasterTypes();
     const [arts,formats]=await Promise.all([
       req('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo,imagen_url,destacado,oferta&order=referencia.asc'),
-      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc')
+      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc')
     ]);
     const byArticle=new Map((Array.isArray(formats)?formats:[]).map(f=>[String(f.articulo_id),f]));
     const mapped=(Array.isArray(arts)?arts:[]).map(a=>{
