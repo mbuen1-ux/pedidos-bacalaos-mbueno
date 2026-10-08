@@ -160,6 +160,33 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
   }
 }
 </style>
+<style id="admin-pedidos-v4-from-zero">
+.v4-order-editor{font-size:14px}
+.v4-order-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.v4-order-toolbar label{display:flex;align-items:center;gap:10px}
+.v4-order-total{display:flex;align-items:center;gap:12px;font-size:16px}
+.v4-lines-wrap{overflow:auto}
+.v4-lines{width:100%;border-collapse:collapse;min-width:760px}
+.v4-lines th,.v4-lines td{padding:12px 10px;border-bottom:1px solid #dfe5ea;text-align:left}
+.v4-lines th{font-size:11px;color:#71808c;text-transform:uppercase;letter-spacing:.04em}
+.v4-check-col{width:42px}
+.v4-article-cell,.v4-format-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v4-weight{width:110px;padding:8px;border:1px solid #cbd7e0;border-radius:8px;text-align:right}
+.v4-add-card{margin-top:18px;border:1px solid #dce5ec;border-radius:12px;padding:14px;background:#f8fafc}
+.v4-add-title{font-size:12px;font-weight:700;color:#687a8a;margin-bottom:9px}
+.v4-add-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr) 110px 120px;gap:10px;align-items:end}
+.v4-add-field{min-width:0}
+.v4-add-field label{display:block;font-size:12px;color:#687a8a;margin-bottom:5px}
+.v4-add-field select,.v4-add-field input{width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.v4-add-action button{width:100%;white-space:nowrap}
+.v4-footer-actions{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.v4-delete{background:#fff!important;color:#a33a3a!important;border:1px solid #e1bcbc!important}
+@media(max-width:760px){
+ .v4-add-grid{grid-template-columns:1fr}
+ .v4-footer-actions{flex-direction:column}
+ .v4-add-action button{width:100%}
+}
+</style>
 </head>
 <body>
 <script id="orders-visible-dom-refresh-v156">
@@ -2462,91 +2489,113 @@ function productOptions(){
 }
 
 function openOrder(id){
- const o=state.orders.find(x=>x.id===id); if(!o)return;
- // Normalizar las líneas: los pedidos recién creados pueden conservarlas
- // como arrays [artículo, formato, peso, precio, cantidad].
+ const o=state.orders.find(x=>String(x.id)===String(id)); if(!o)return;
  o.lines=(Array.isArray(o.lines)?o.lines:[]).map(l=>{
-   if(Array.isArray(l)){
-     return {
-       name:l[0]||"Artículo",
-       format:l[1]||"",
-       actual:Number(l[2]||0),
-       price:Number(l[3]||0),
-       requested:Number(l[4]??l[2]??0),
-       dbLineId:l.dbLineId||l.lineId||null,articleId:l.articleId||null,articleRef:l.articleRef||null
-     };
-   }
+   if(Array.isArray(l)) return {
+     name:l[0]||"Artículo",format:l[1]||"",actual:Number(l[2]||0),price:Number(l[3]||0),
+     requested:Number(l[4]??l[2]??0),dbLineId:l.dbLineId||l.lineId||null,
+     articleId:l.articleId||null,articleRef:l.articleRef||null
+   };
    return {
-     name:l?.name||"Artículo",
-     format:l?.format||"",
-     actual:Number(l?.actual??l?.kg??0),
-     price:Number(l?.price??0),
-     requested:Number(l?.requested??l?.qty??l?.actual??0),
-     dbLineId:l?.dbLineId||l?.lineId||l?.id||null,articleId:l?.articleId||l?.articulo_id||null,articleRef:l?.articleRef||l?.article_referencia||l?.articulo_referencia||l?.referencia||null
+     name:l?.name||"Artículo",format:l?.format||"",actual:Number(l?.actual??l?.kg??0),
+     price:Number(l?.price??0),requested:Number(l?.requested??l?.qty??l?.actual??0),
+     dbLineId:l?.dbLineId||l?.lineId||l?.id||null,
+     articleId:l?.articleId||l?.articulo_id||null,
+     articleRef:l?.articleRef||l?.article_referencia||l?.articulo_referencia||l?.referencia||null
    };
  });
  const editable=o.status==="En preparación";
  $("o47-title").textContent="Pedido "+o.id;
  $("o47-subtitle").textContent=o.client+" · "+o.date+" "+o.time;
  $("o47-body").innerHTML=`
-  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-   <label><strong>Estado:</strong>
-    <select id="o49-status" class="select" style="min-width:180px">
-     ${["Nuevo","En preparación","Enviado","Cancelado"].map(st=>`<option ${o.status===st?"selected":""}>${st}</option>`).join("")}
-    </select>
-   </label>
-   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <div><strong>Total:</strong> <span id="o47-total">${money(total(o))}</span></div>
-    <button type="button" class="btn" id="o49-save-status">Guardar estado</button>
+  <div class="v4-order-editor">
+   <div class="v4-order-toolbar">
+    <label><strong>Estado</strong>
+     <select id="v4-order-status" class="select">
+      ${["Nuevo","En preparación","Enviado","Cancelado"].map(st=>`<option value="${esc(st)}" ${o.status===st?"selected":""}>${esc(st)}</option>`).join("")}
+     </select>
+    </label>
+    <div class="v4-order-total"><strong>Total:</strong> <span id="v4-order-total">${money(total(o))}</span><button type="button" class="btn" id="v4-save-status">Guardar estado</button></div>
    </div>
-  </div>
-  <div class="tablewrap">
-   <table class="o47-line-table">
-    <thead><tr>${editable?"<th style='width:45px'>✓</th>":""}
-     <th>Artículo</th><th>Formato</th><th>Solicitado</th><th>Modificado</th><th>€/kg</th><th>Importe</th>
-    </tr></thead>
-    <tbody>${o.lines.map((l,i)=>`
-     <tr>
-      ${editable?`<td><input class="o47-check o47-line-check" type="checkbox" data-index="${i}" data-line-id="${esc(l.dbLineId||"")}"></td>`:""}
-      <td>${esc(l.name)}</td><td>${esc(l.format)}</td><td>${qty(l.requested)}</td>
-      <td>${editable?`<input class="o47-weight" type="number" min="0" step="0.001" data-index="${i}" value="${Number(l.actual||0).toFixed(3)}">`:qty(l.actual)}</td>
-      <td>${Number(l.price||0).toFixed(2)}</td>
-      <td class="o47-line-amount" data-index="${i}">${money(Number(l.actual||0)*Number(l.price||0))}</td>
-     </tr>`).join("")}</tbody>
-   </table>
-  </div>
-  ${editable?`
-   <div style="margin-top:18px;border:1px solid #dce5ec;border-radius:12px;padding:14px;background:#f8fafc">
-    <div style="font-size:12px;font-weight:700;color:#687a8a;margin-bottom:8px">Añadir artículo al pedido</div>
-    <div style="display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr) 110px 120px;gap:10px;align-items:end;min-width:0">
-     <div style="min-width:0">
-      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Artículo</label>
-      <select id="o49-add-product" class="select" style="width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-       <option value="">Seleccionar artículo...</option>${productOptions()}
-      </select>
+
+   <div class="v4-lines-wrap">
+    <table class="v4-lines">
+     <thead><tr>
+      ${editable?"<th class='v4-check-col'>✓</th>":""}
+      <th>Artículo</th><th>Formato</th><th>Solicitado</th><th>Modificado</th><th>€/kg</th><th>Importe</th>
+     </tr></thead>
+     <tbody>
+      ${o.lines.map((l,i)=>`<tr>
+       ${editable?`<td><input type="checkbox" class="v4-line-check" data-index="${i}" data-line-id="${esc(l.dbLineId||"")}"></td>`: ""}
+       <td class="v4-article-cell">${esc(l.name)}</td>
+       <td class="v4-format-cell">${esc(l.format)}</td>
+       <td>${qty(l.requested)}</td>
+       <td>${editable?`<input class="v4-weight" type="number" min="0" step="0.001" data-index="${i}" value="${Number(l.actual||0).toFixed(3)}">`:qty(l.actual)}</td>
+       <td>${Number(l.price||0).toFixed(2)}</td>
+       <td class="v4-line-amount">${money(Number(l.actual||0)*Number(l.price||0))}</td>
+      </tr>`).join("")}
+     </tbody>
+    </table>
+   </div>
+
+   ${editable?`
+   <section class="v4-add-card">
+    <div class="v4-add-title">Añadir artículo al pedido</div>
+    <div class="v4-add-grid">
+     <div class="v4-add-field v4-add-article">
+      <label>Artículo</label>
+      <select id="v4-add-product" class="select"><option value="">Seleccionar artículo...</option>${productOptions()}</select>
      </div>
-     <div style="min-width:0">
-      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Formato</label>
-      <select id="o49-add-format" class="select" style="width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap" disabled>
-       <option value="">Seleccionar formato...</option>
-      </select>
+     <div class="v4-add-field v4-add-format">
+      <label>Formato</label>
+      <select id="v4-add-format" class="select" disabled><option value="">Seleccionar formato...</option></select>
      </div>
-     <div style="min-width:0">
-      <label style="font-size:12px;color:#687a8a;display:block;margin-bottom:5px">Cantidad</label>
-      <input id="o49-add-qty" type="number" min="1" step="1" value="" placeholder="Cantidad" class="select" style="width:100%;min-width:0">
+     <div class="v4-add-field v4-add-qty">
+      <label>Cantidad</label>
+      <input id="v4-add-qty" type="number" min="1" step="1" placeholder="Cantidad" class="select">
      </div>
-     <button type="button" class="btn" id="o49-add-line" style="width:100%;white-space:nowrap">Añadir</button>
+     <div class="v4-add-action"><button type="button" class="btn" id="v4-add-line">Añadir artículo</button></div>
     </div>
-   </div>   </div>
-   <div class="o47-bottom">
-    <button class="btn o47-danger" id="o47-delete-lines">🗑 Borrar líneas seleccionadas</button>
-    <button class="btn" id="o47-save">Guardar cambios</button>
-   </div>`:`
-   <div style="margin-top:16px;text-align:right"></div>`}
- `;
+   </section>
+   <div class="v4-footer-actions">
+    <button type="button" class="btn v4-delete" id="v4-delete-lines">Borrar líneas seleccionadas</button>
+    <button type="button" class="btn" id="v4-save-lines">Guardar cambios</button>
+   </div>`:""}
+  </div>`;
  $("o47-modal").classList.add("open");
+ if(editable) window.v4LoadFormats();
 }
 
+window.v4LoadFormats=async function(){
+ const ps=document.getElementById("v4-add-product"),fs=document.getElementById("v4-add-format");
+ if(!ps||!fs)return;
+ const ref=ps.value;
+ if(!ref){fs.innerHTML='<option value="">Seleccionar formato...</option>';fs.disabled=true;return;}
+ const cfg=window.MB_SUPABASE||{};
+ try{
+  const H={apikey:cfg.key,Authorization:"Bearer "+cfg.key,Accept:"application/json"};
+  const ar=await fetch(cfg.url+"/rest/v1/articulos?select=id&referencia=eq."+encodeURIComponent(ref)+"&limit=1",{headers:H});
+  const arts=await ar.json(); const art=arts?.[0];
+  if(!art){fs.innerHTML='<option value="">Artículo no encontrado</option>';fs.disabled=true;return;}
+  const fr=await fetch(cfg.url+"/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden&articulo_id=eq."+encodeURIComponent(art.id)+"&activo=eq.true&order=orden.asc",{headers:H});
+  const formats=await fr.json();
+  const tr=await fetch(cfg.url+"/rest/v1/tipos_formato?select=id,codigo,nombre&activo=eq.true&order=orden.asc,codigo.asc",{headers:H});
+  const types=await tr.json();
+  const tm=new Map((Array.isArray(types)?types:[]).map(x=>[String(x.id),x]));
+  fs.innerHTML=(Array.isArray(formats)?formats:[]).map(f=>{
+    const t=tm.get(String(f.tipo_formato_id));
+    let label=(t?.codigo?String(t.codigo)+" · ":"")+String(t?.nombre||f.nombre||"Formato");
+    if(f.peso_aproximado!=null) label+=" · "+Number(f.peso_aproximado).toLocaleString("es-ES",{maximumFractionDigits:3})+" kg aprox.";
+    if(f.descripcion) label+=" · "+String(f.descripcion);
+    return '<option value="'+esc(f.id)+'">'+esc(label)+'</option>';
+  }).join("");
+  if(!fs.options.length)fs.innerHTML='<option value="">Este artículo no tiene formatos</option>';
+  fs.disabled=!fs.options.length;
+ }catch(err){
+  console.error("V4 formatos",err);
+  fs.innerHTML='<option value="">No se pudieron cargar los formatos</option>';fs.disabled=true;
+ }
+};
 window.o52DeleteOrder=function(id){
   id=String(id||"");
   if(state.filter!=="Cancelado"){
@@ -4564,6 +4613,111 @@ window.mbSaveListStatusV110=save;
     if(!sel)return;
     setTimeout(refreshSummaryFromSupabase,500);
   },true);
+})();
+</script>
+<script id="admin-pedidos-v4-authoritative">
+(function(){
+ "use strict";
+ const cfg=()=>window.MB_SUPABASE||{};
+ const H=()=>({apikey:cfg().key,Authorization:"Bearer "+cfg().key,Accept:"application/json","Content-Type":"application/json",Prefer:"return=representation"});
+ const num=v=>{const n=Number(String(v??"").replace(",","."));return Number.isFinite(n)?n:0};
+ async function api(path,opt={}){
+  const c=cfg(); const r=await fetch(c.url+"/rest/v1/"+path,{...opt,headers:{...H(),...(opt.headers||{})}});
+  const raw=await r.text(); let d=null; try{d=raw?JSON.parse(raw):null}catch(_){}
+  if(!r.ok)throw new Error(d?.message||raw||("HTTP "+r.status)); return d;
+ }
+ function orderId(){return String(document.getElementById("o47-title")?.textContent||"").replace(/^Pedido\s+/i,"").trim()}
+ async function pedidoByNumber(n){return (await api("pedidos?select=id,cliente_id,estado,total_estimado,total_final&numero=eq."+encodeURIComponent(n)+"&limit=1"))?.[0]}
+ async function articleByRef(ref){return (await api("articulos?select=id,referencia,nombre,precio_base&referencia=eq."+encodeURIComponent(ref)+"&limit=1"))?.[0]}
+ async function priceFor(clienteId,articleId,fallback){
+  const cli=(await api("clientes?select=tarifa_codigo&id=eq."+encodeURIComponent(clienteId)+"&limit=1"))?.[0];
+  const code=String(cli?.tarifa_codigo||"").replace(/^ERP-/i,""); if(!code)return fallback;
+  const t=(await api("tarifas?select=id&codigo=eq."+encodeURIComponent(code)+"&limit=1"))?.[0]; if(!t)return fallback;
+  const p=(await api("tarifa_articulos?select=precio_kg&tarifa_id=eq."+encodeURIComponent(t.id)+"&articulo_id=eq."+encodeURIComponent(articleId)+"&limit=1"))?.[0];
+  return p?num(p.precio_kg):fallback;
+ }
+ async function recalcTotal(pid){
+  const rows=await api("pedido_lineas?select=peso_real,precio_kg&pedido_id=eq."+encodeURIComponent(pid));
+  const total=Number((rows||[]).reduce((s,l)=>s+num(l.peso_real)*num(l.precio_kg),0).toFixed(2));
+  await api("pedidos?id=eq."+encodeURIComponent(pid),{method:"PATCH",body:JSON.stringify({total_estimado:total,total_final:total})});
+  return total;
+ }
+ async function addLine(){
+  const n=orderId(),p=await pedidoByNumber(n);
+  const ps=document.getElementById("v4-add-product"),fs=document.getElementById("v4-add-format"),qs=document.getElementById("v4-add-qty");
+  if(!p||!ps?.value||!fs?.value)throw new Error("Selecciona artículo y formato.");
+  const q=num(qs?.value); if(q<=0)throw new Error("Introduce una cantidad mayor que 0.");
+  const art=await articleByRef(ps.value); if(!art)throw new Error("No se ha encontrado el artículo en Supabase.");
+  const fmt=(await api("formatos?select=id,articulo_id,nombre,descripcion,peso_aproximado&activo=eq.true&id=eq."+encodeURIComponent(fs.value)+"&limit=1"))?.[0];
+  if(!fmt||String(fmt.articulo_id)!==String(art.id))throw new Error("El formato seleccionado no pertenece al artículo.");
+  const price=await priceFor(p.cliente_id,art.id,num(art.precio_base));
+  const peso=Number((num(fmt.peso_aproximado)*q).toFixed(3));
+  const importe=Number((peso*price).toFixed(2));
+  await api("pedido_lineas",{method:"POST",body:JSON.stringify({
+   id:crypto.randomUUID(),pedido_id:p.id,articulo_id:art.id,formato_id:fmt.id,
+   articulo_referencia:String(art.referencia),articulo_nombre:String(art.nombre||""),
+   formato_nombre:String(fmt.nombre||""),cantidad_solicitada:q,peso_aproximado:peso,
+   peso_real:peso,precio_kg:price,importe_estimado:importe,importe_final:importe
+  })});
+  await recalcTotal(p.id);
+  await window.mbLoadOrdersFromSupabase();
+  const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
+  if(!fresh)throw new Error("El pedido no se pudo recuperar después de guardar.");
+  window.openOrder(fresh.id);
+ }
+ async function saveLines(){
+  const n=orderId(),p=await pedidoByNumber(n); if(!p)throw new Error("No se ha encontrado el pedido.");
+  const freshLines=await api("pedido_lineas?select=id,peso_real,precio_kg&pedido_id=eq."+encodeURIComponent(p.id)+"&order=id.asc");
+  const inputs=[...document.querySelectorAll("#v4-order-editor .v4-weight")];
+  for(const input of inputs){
+   const i=Number(input.dataset.index),line=freshLines?.[i]; if(!line)continue;
+   const w=num(input.value); if(w<=0)throw new Error("Introduce un peso válido mayor que 0.");
+   const amount=Number((w*num(line.precio_kg)).toFixed(2));
+   await api("pedido_lineas?id=eq."+encodeURIComponent(line.id),{method:"PATCH",body:JSON.stringify({peso_real:w,importe_estimado:amount,importe_final:amount})});
+  }
+  await recalcTotal(p.id);
+  await window.mbLoadOrdersFromSupabase();
+  const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
+  if(fresh)window.openOrder(fresh.id);
+  alert("Cambios guardados en Supabase.");
+ }
+ async function deleteLines(){
+  const n=orderId(),p=await pedidoByNumber(n); if(!p)throw new Error("No se ha encontrado el pedido.");
+  const checks=[...document.querySelectorAll("#v4-order-editor .v4-line-check:checked")];
+  const all=[...document.querySelectorAll("#v4-order-editor .v4-line-check")];
+  if(!checks.length)throw new Error("Selecciona al menos una línea.");
+  if(checks.length>=all.length)throw new Error("El pedido debe conservar al menos una línea.");
+  for(const ch of checks){
+   if(!ch.dataset.lineId)throw new Error("La línea seleccionada no tiene identificador de Supabase.");
+   await api("pedido_lineas?id=eq."+encodeURIComponent(ch.dataset.lineId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+  }
+  await recalcTotal(p.id);
+  await window.mbLoadOrdersFromSupabase();
+  const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
+  if(fresh)window.openOrder(fresh.id);
+ }
+ async function saveStatus(){
+  const n=orderId(),p=await pedidoByNumber(n),v=document.getElementById("v4-order-status")?.value;
+  if(!p||!v)return;
+  await api("pedidos?id=eq."+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({estado:v})});
+  await window.mbLoadOrdersFromSupabase();
+  const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
+  if(fresh)window.openOrder(fresh.id);
+ }
+ document.addEventListener("change",function(e){
+  if(e.target?.id==="v4-add-product")window.v4LoadFormats();
+ },true);
+ document.addEventListener("click",async function(e){
+  const b=e.target?.closest?.("#v4-add-line,#v4-save-lines,#v4-delete-lines,#v4-save-status");
+  if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  try{
+   if(b.id==="v4-add-line")await addLine();
+   else if(b.id==="v4-save-lines")await saveLines();
+   else if(b.id==="v4-delete-lines")await deleteLines();
+   else await saveStatus();
+  }catch(err){alert(err.message||String(err));}
+ },true);
 })();
 </script>
 </body>
