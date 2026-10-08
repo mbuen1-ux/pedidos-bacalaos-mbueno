@@ -4376,8 +4376,12 @@ window.mbSaveListStatusV110=save;
             <div class="fm-readonly">${measure}<span>${measureShort}</span></div>
           </div>
           <div class="fm-field">
-            <label>Peso aproximado</label>
-            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="0,000"><span>kg</span></div>
+            <label>Unidad</label>
+            <div class="fm-readonly fm-unit-readonly">${measure}<span>${measureShort}</span></div>
+          </div>
+          <div class="fm-field">
+            <label>${measure==='Unidades'?'Peso aproximado (referencia)':'Peso aproximado'}</label>
+            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="${measure==='Unidades'?'Opcional':'0,000'}"><span>kg</span></div>
           </div>
           <div class="fm-field">
             <label>Cantidad por defecto</label>
@@ -6723,6 +6727,29 @@ window.mbSaveListStatusV110=save;
  #productFormatsBuilder .fm-main{grid-template-columns:1fr!important}
  #productFormatsBuilder .fm-type-field{grid-column:auto!important}
  #productFormatsBuilder .fm-actions{height:50px!important}
+}
+</style>
+<style id="format-editor-clean-v205">
+#productFormatsBuilder .fm-main{grid-template-columns:minmax(230px,2fr) minmax(105px,.8fr) minmax(150px,1.15fr) minmax(155px,1.15fr) minmax(145px,1.1fr) 116px!important;gap:10px!important;align-items:stretch!important}
+#productFormatsBuilder .fm-field{min-width:0!important;width:100%!important}
+#productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input,#productFormatsBuilder .fm-readonly{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+#productFormatsBuilder .fm-unit-readonly{font-weight:800!important;color:#174e78!important;background:#f4f8fb!important}
+#productFormatsBuilder .fm-input-unit input{min-width:0!important}
+#productFormatsBuilder .fm-actions{min-width:0!important;width:116px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:1050px){
+#productFormatsBuilder .fm-main{grid-template-columns:minmax(210px,1.8fr) minmax(105px,.8fr) minmax(145px,1.1fr) minmax(145px,1.1fr)!important}
+#productFormatsBuilder .fm-type-field{grid-column:1/-1!important}
+#productFormatsBuilder .fm-actions{grid-column:1/-1!important;width:auto!important;height:40px!important;display:flex!important;justify-content:flex-end!important}
+#productFormatsBuilder .fm-actions .mini{width:48px!important;flex:0 0 48px!important}
+}
+@media(max-width:720px){
+#productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr!important}
+#productFormatsBuilder .fm-type-field{grid-column:1/-1!important}
+#productFormatsBuilder .fm-actions{grid-column:1/-1!important;justify-content:flex-start!important}
+}
+@media(max-width:430px){
+#productFormatsBuilder .fm-main{grid-template-columns:1fr!important}
+#productFormatsBuilder .fm-type-field{grid-column:auto!important}
 }
 </style>
 <style id="format-editor-clean-v204">
