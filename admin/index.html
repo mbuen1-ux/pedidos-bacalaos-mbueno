@@ -1142,14 +1142,7 @@ window.confirmTariffImport=function(){
 
 const productCatalog = window.productCatalog = [];
 // Formatos estándar que estarán disponibles por defecto en todos los artículos.
-const DEFAULT_PRODUCT_FORMATS=[
- {type:'kilos',weight:null},
- {type:'units',weight:null},
- {type:'portions',weight:null},
- {type:'portions_box',weight:null},
- {type:'small_box',weight:null},
- {type:'large_box',weight:null}
-];
+const DEFAULT_PRODUCT_FORMATS=[];
 function ensureDefaultProductFormats(){
  productCatalog.forEach(p=>{
    const existing=normalizeProductFormats(p.formats);
@@ -1662,9 +1655,13 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
           type:code?'mf_'+code:'custom',
           weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),
           defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),
+          boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),
+          unidad:String(t?.unidad||''),
           label:display,
           nombre:display,
           descripcion:f.descripcion||'',
+          boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),
+          unidad:String(t?.unidad||''),
           active:f.activo!==false
         };
         if(!byArticle.has(String(f.articulo_id)))byArticle.set(String(f.articulo_id),[]);
@@ -2563,9 +2560,9 @@ window.v4LoadFormats=async function(){
   const ar=await fetch(cfg.url+"/rest/v1/articulos?select=id&referencia=eq."+encodeURIComponent(ref)+"&limit=1",{headers:H});
   const arts=await ar.json(); const art=arts?.[0];
   if(!art){fs.innerHTML='<option value="">Artículo no encontrado</option>';fs.disabled=true;return;}
-  const fr=await fetch(cfg.url+"/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden&articulo_id=eq."+encodeURIComponent(art.id)+"&activo=eq.true&order=orden.asc",{headers:H});
+  const fr=await fetch(cfg.url+"/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq."+encodeURIComponent(art.id)+"&activo=eq.true&order=orden.asc",{headers:H});
   const formats=await fr.json();
-  const tr=await fetch(cfg.url+"/rest/v1/tipos_formato?select=id,codigo,nombre&activo=eq.true&order=orden.asc,codigo.asc",{headers:H});
+  const tr=await fetch(cfg.url+"/rest/v1/tipos_formato?select=id,codigo,nombre,unidad&activo=eq.true&order=orden.asc,codigo.asc",{headers:H});
   const types=await tr.json();
   const tm=new Map((Array.isArray(types)?types:[]).map(x=>[String(x.id),x]));
   fs.innerHTML=(Array.isArray(formats)?formats:[]).map(f=>{
@@ -2985,7 +2982,7 @@ window.mbSyncClientsFromSupabase=async function(){
     return Array.isArray(data)?data:[];
   };
   function mapServer(a){
-    return {sku:String(a.referencia||a.codigo||a.sku||''),name:String(a.nombre||a.descripcion||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:Array.isArray(a.formatos)?a.formatos:[{type:'kilos',weight:null},{type:'units',weight:null},{type:'portions',weight:null},{type:'portions_box',weight:null},{type:'small_box',weight:null},{type:'large_box',weight:null}],price:Number(a.precio_kg||a.precio||0),boxUnits:a.unidades_caja||'',minQty:Number(a.cantidad_minima||1),active:a.activo!==false,image:a.imagen||null};
+    return {id:a.id||null,sku:String(a.referencia||a.codigo||a.sku||''),name:String(a.nombre||a.descripcion||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:Array.isArray(a.formatos)?a.formatos:[],price:Number(a.precio_kg||a.precio||0),active:a.activo!==false,image:a.imagen||null};
   }
   async function load(){
     if(!sb())return;
@@ -4564,10 +4561,10 @@ window.mbSaveListStatusV110=save;
       const arts=await ar.json();
       const a=Array.isArray(arts)?arts[0]:null;
       if(!a)return [];
-      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
+      const fr=await fetch(cfg.url+'/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(a.id)+'&activo=eq.true&order=orden.asc',{headers:H});
       if(!fr.ok)return [];
       const formats=await fr.json();
-      const tr=await fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo&activo=eq.true&order=orden.asc,codigo.asc',{headers:H});
+      const tr=await fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,unidad&activo=eq.true&order=orden.asc,codigo.asc',{headers:H});
       if(!tr.ok)return formats;
       const types=await tr.json();
       const tm=new Map((Array.isArray(types)?types:[]).map(t=>[String(t.id),t]));
@@ -5262,7 +5259,7 @@ window.mbSaveListStatusV110=save;
       }
       const a=arts[0];
       const [tr,fr]=await Promise.all([
-        fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
+        fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc',{headers:H}),
         fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
       ]);
       if(!tr.ok) throw new Error('No se pudieron cargar los tipos de formato. HTTP '+tr.status);
