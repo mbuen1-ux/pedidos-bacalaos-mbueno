@@ -4226,7 +4226,23 @@ window.mbSaveListStatusV110=save;
         const created=await req('formatos',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)}); const c=Array.isArray(created)?created[0]:created; if(c?.id){f.id=c.id;keep.push(String(c.id));}
       }
     }
-    for(const stale of ids){await req('formatos?id=eq.'+encodeURIComponent(stale),{method:'DELETE',headers:{Prefer:'return=minimal'}});}
+    for(const stale of ids){
+      /* Un formato que ya aparece en pedido_lineas forma parte del histórico
+         y no puede eliminarse por la FK. En ese caso lo conservamos inactivo. */
+      const used=await req('pedido_lineas?select=id&formato_id=eq.'+encodeURIComponent(stale)+'&limit=1');
+      if(Array.isArray(used)&&used.length){
+        await req('formatos?id=eq.'+encodeURIComponent(stale),{
+          method:'PATCH',
+          headers:{Prefer:'return=minimal'},
+          body:JSON.stringify({activo:false})
+        });
+      }else{
+        await req('formatos?id=eq.'+encodeURIComponent(stale),{
+          method:'DELETE',
+          headers:{Prefer:'return=minimal'}
+        });
+      }
+    }
   }
   async function syncAll(){
     const rows=Array.isArray(window.productCatalog)?window.productCatalog:[];
