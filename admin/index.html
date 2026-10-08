@@ -98,7 +98,7 @@ aside{padding:20px 12px}
 .add-line-panel{border:1px solid #dce5ec;border-radius:12px;padding:14px;background:#f8fafc}
 .add-line-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 120px auto;gap:9px;align-items:end;min-width:0}.add-line-grid>div{min-width:0;overflow:hidden}.add-line-grid select,.add-line-grid input{width:100%;min-width:0;max-width:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.add-line-grid select{display:block}.add-line-grid button{white-space:nowrap;flex:0 0 auto}
 .add-line-grid label{font-size:12px;font-weight:700;color:#617383;display:block;margin-bottom:5px}
-.status-cancelled{background:#f5e5e5;color:#8d2525}
+.status-cancelled{background:#f5e5e5;color:#8d2525}.o49-add-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;align-items:stretch}.o49-add-fields{display:grid;grid-template-rows:1fr 1fr;gap:9px;min-width:0}.o49-add-side{display:grid;grid-template-rows:1fr 1fr;gap:9px;min-width:0}.o49-add-field{min-width:0}.o49-add-field label{font-size:12px;color:#687a8a;display:block;margin-bottom:5px;font-weight:700}.o49-add-field .select,.o49-add-field .input{width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.o49-add-button{width:100%;height:100%;white-space:nowrap}@media(max-width:760px){.o49-add-layout{grid-template-columns:1fr}.o49-add-side{grid-template-columns:1fr 1fr;grid-template-rows:auto}.o49-add-button{height:100%}}
 @media(max-width:760px){.add-line-grid{grid-template-columns:1fr}.order-weight-input{width:100%}.order-format-select{width:100%}}
 </style>
 
@@ -2481,19 +2481,23 @@ function openOrder(id){
   ${editable?`
    <div style="margin-top:18px;padding:15px;border:1px solid #e2e8f0;border-radius:10px">
     <strong>Añadir artículo</strong>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-top:10px">
-     <select id="o49-add-product" class="select"><option value="">Selecciona un artículo</option>${productOptions()}</select>
-     <select id="o49-add-format" class="select">
-      <option value="Kilos">Kilos</option>
-      <option value="Piezas enteras">Piezas enteras</option>
-      <option value="Porciones">Porciones</option>
-      <option value="Porciones caja">Porciones caja</option>
-      <option value="Caja pequeña">Caja pequeña</option>
-      <option value="Caja grande">Caja grande</option>
-      <option value="Formato personalizado">Formato personalizado</option>
-    </select>
-     <input id="o49-add-qty" class="input" type="number" min="0" step="0.001" placeholder="Cantidad">
-     <button class="btn" id="o49-add-line">＋ Añadir línea</button>
+    <div class="o49-add-layout">
+     <div class="o49-add-fields">
+      <div class="o49-add-field"><label>Artículo</label><select id="o49-add-product" class="select"><option value="">Selecciona un artículo</option>${productOptions()}</select></div>
+      <div class="o49-add-field"><label>Formato</label><select id="o49-add-format" class="select">
+       <option value="Kilos">Kilos</option>
+       <option value="Piezas enteras">Piezas enteras</option>
+       <option value="Porciones">Porciones</option>
+       <option value="Porciones caja">Porciones caja</option>
+       <option value="Caja pequeña">Caja pequeña</option>
+       <option value="Caja grande">Caja grande</option>
+       <option value="Formato personalizado">Formato personalizado</option>
+      </select></div>
+     </div>
+     <div class="o49-add-side">
+      <div class="o49-add-field"><label>Cantidad</label><input id="o49-add-qty" class="input" type="number" min="0" step="0.001" placeholder="Cantidad"></div>
+      <button class="btn o49-add-button" id="o49-add-line">＋ Añadir artículo</button>
+     </div>
     </div>
    </div>
    <div class="o47-bottom">
