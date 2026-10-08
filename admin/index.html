@@ -4351,9 +4351,9 @@ window.mbSaveListStatusV110=save;
     const name=document.querySelector('#productName')?.value.trim();
     const description=document.querySelector('#productDescription')?.value.trim()||'';
     const category=document.querySelector('#productCategory')?.value||'Sin clasificar';
-    const formats=typeof collectProductFormats==='function'?collectProductFormats():[];
+    const formats=typeof window.collectProductFormats==='function'?window.collectProductFormats():[];
     const price=parseFloat(document.querySelector('#productPrice')?.value);
-    const boxUnits=const minQty=parseFloat(const active=!!document.querySelector('#productActive')?.checked;
+    const active=!!document.querySelector('#productActive')?.checked;
     if(!sku||!name){alert('La referencia / SKU y el nombre son obligatorios.');return;}
     if(!Number.isFinite(price)||price<0){alert('Introduce un precio válido.');return;}const oldSku=(typeof editingProductSku!=='undefined'&&editingProductSku)?editingProductSku:null;
     let p=Array.isArray(window.productCatalog)?window.productCatalog.find(x=>x.sku===oldSku):null;
