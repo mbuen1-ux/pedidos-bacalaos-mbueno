@@ -2549,6 +2549,11 @@ function openOrder(id){
  if(editable) window.v4LoadFormats();
 }
 
+// Compatibilidad: algunas rutas antiguas del módulo llaman a window.openOrder().
+// El editor actual usa __mbOpenOrderFromSupabase, pero mantenemos el alias global
+// para que ninguna ruta de borrado/actualización falle por función inexistente.
+window.openOrder=openOrder;
+
 window.v4LoadFormats=async function(){
  const ps=document.getElementById("v4-add-product"),fs=document.getElementById("v4-add-format"),qs=document.getElementById("v4-add-qty");
  if(!ps||!fs)return;
