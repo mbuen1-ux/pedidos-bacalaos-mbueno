@@ -2550,7 +2550,7 @@ function openOrder(id){
 }
 
 window.v4LoadFormats=async function(){
- const ps=document.getElementById("v4-add-product"),fs=document.getElementById("v4-add-format");
+ const ps=document.getElementById("v4-add-product"),fs=document.getElementById("v4-add-format"),qs=document.getElementById("v4-add-qty");
  if(!ps||!fs)return;
  const ref=ps.value;
  if(!ref){fs.innerHTML='<option value="">Seleccionar formato...</option>';fs.disabled=true;return;}
@@ -2565,6 +2565,7 @@ window.v4LoadFormats=async function(){
   const tr=await fetch(cfg.url+"/rest/v1/tipos_formato?select=id,codigo,nombre,unidad&activo=eq.true&order=orden.asc,codigo.asc",{headers:H});
   const types=await tr.json();
   const tm=new Map((Array.isArray(types)?types:[]).map(x=>[String(x.id),x]));
+  window.__v4Formats=(Array.isArray(formats)?formats:[]);window.__v4FormatTypes=tm;
   fs.innerHTML=(Array.isArray(formats)?formats:[]).map(f=>{
     const t=tm.get(String(f.tipo_formato_id));
     let label=(t?.codigo?String(t.codigo)+" · ":"")+String(t?.nombre||f.nombre||"Formato");
@@ -2574,6 +2575,7 @@ window.v4LoadFormats=async function(){
   }).join("");
   if(!fs.options.length)fs.innerHTML='<option value="">Este artículo no tiene formatos</option>';
   fs.disabled=!fs.options.length;
+  if(fs.options.length&&qs){const f=window.__v4Formats.find(x=>String(x.id)===String(fs.value)),t=f?tm.get(String(f.tipo_formato_id)):null,unit=String(t?.unidad||'kg').toLowerCase();qs.value=f?.cantidad_defecto!=null?String(f.cantidad_defecto):'';qs.step=unit==='unidades'?'1':'0.001';qs.min=unit==='unidades'?'1':'0';qs.dataset.unit=unit;}
  }catch(err){
   console.error("V4 formatos",err);
   fs.innerHTML='<option value="">No se pudieron cargar los formatos</option>';fs.disabled=true;
@@ -4786,7 +4788,7 @@ window.mbSaveListStatusV110=save;
   if(!p||!ps?.value||!fs?.value)throw new Error("Selecciona artículo y formato.");
   const q=num(qs?.value); if(q<=0)throw new Error("Introduce una cantidad mayor que 0.");
   const art=await articleByRef(ps.value); if(!art)throw new Error("No se ha encontrado el artículo en Supabase.");
-  const fmt=(await api("formatos?select=id,articulo_id,nombre,descripcion,peso_aproximado&activo=eq.true&id=eq."+encodeURIComponent(fs.value)+"&limit=1"))?.[0];
+  const fmt=(await api("formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja&activo=eq.true&id=eq."+encodeURIComponent(fs.value)+"&limit=1"))?.[0];
   if(!fmt||String(fmt.articulo_id)!==String(art.id))throw new Error("El formato seleccionado no pertenece al artículo.");
   const price=await priceFor(p.cliente_id,art.id,num(art.precio_base));
   const peso=Number((num(fmt.peso_aproximado)*q).toFixed(3));
@@ -4844,6 +4846,7 @@ window.mbSaveListStatusV110=save;
  }
  document.addEventListener("change",function(e){
   if(e.target?.id==="v4-add-product")window.v4LoadFormats();
+ if(e.target?.id==="v4-add-format"){const fs=e.target,qs=document.getElementById("v4-add-qty"),f=(window.__v4Formats||[]).find(x=>String(x.id)===String(fs.value)),t=f&&window.__v4FormatTypes?window.__v4FormatTypes.get(String(f.tipo_formato_id)):null,unit=String(t?.unidad||'kg').toLowerCase();if(qs){qs.value=f?.cantidad_defecto!=null?String(f.cantidad_defecto):'';qs.step=unit==='unidades'?'1':'0.001';qs.min=unit==='unidades'?'1':'0';qs.dataset.unit=unit;}}
  },true);
  document.addEventListener("click",async function(e){
   const b=e.target?.closest?.("#v4-add-line,#v4-save-lines,#v4-delete-lines,#v4-save-status");
@@ -6354,7 +6357,7 @@ window.mbSaveListStatusV110=save;
     if(!pedido)throw new Error('No se ha encontrado el pedido en Supabase.');
     const art=(await api('articulos?select=id,referencia,nombre,precio_base&referencia=eq.'+encodeURIComponent(ps.value)+'&limit=1'))?.[0];
     if(!art)throw new Error('No se ha encontrado el artículo en Supabase.');
-    const fmt=(await api('formatos?select=id,articulo_id,nombre,peso_aproximado&activo=eq.true&id=eq.'+encodeURIComponent(fs.value)+'&limit=1'))?.[0];
+    const fmt=(await api('formatos?select=id,articulo_id,tipo_formato_id,nombre,peso_aproximado,cantidad_defecto,unidades_caja&activo=eq.true&id=eq.'+encodeURIComponent(fs.value)+'&limit=1'))?.[0];
     if(!fmt||String(fmt.articulo_id)!==String(art.id))throw new Error('No se ha encontrado el formato seleccionado en Supabase.');
     const cli=(await api('clientes?select=tarifa_codigo&id=eq.'+encodeURIComponent(String(pedido.cliente_id))+'&limit=1'))?.[0];
     let price=Number(art.precio_base||0); const tc=String(cli?.tarifa_codigo||'').replace(/^ERP-/i,'');
