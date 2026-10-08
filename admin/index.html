@@ -3798,7 +3798,7 @@ async function remove(){
     }
     const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(orderNo));
     if(!fresh)throw new Error("Las líneas se eliminaron en Supabase pero no se pudo recuperar el pedido.");
-    if(typeof window.openOrder==="function") window.openOrder(fresh.id);
+    if(typeof window.__mbOpenOrderFromSupabase==="function") window.__mbOpenOrderFromSupabase(fresh.id);
     alert(ids.length===1 ? "Línea eliminada correctamente." : ids.length+" líneas eliminadas correctamente.");
   }catch(e){
     alert("No se ha podido borrar la línea.\n\n"+(e?.message||e));
@@ -4819,7 +4819,7 @@ window.mbSaveListStatusV110=save;
   await recalcTotal(p.id);
   await window.mbLoadOrdersFromSupabase();
   const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
-  if(fresh)window.openOrder(fresh.id);
+  if(fresh && typeof window.__mbOpenOrderFromSupabase==="function")window.__mbOpenOrderFromSupabase(fresh.id);
   alert("Cambios guardados en Supabase.");
  }
  async function deleteLines(){
@@ -5229,7 +5229,7 @@ window.mbSaveListStatusV110=save;
         if(aq)aq.value='';
         // Reabrimos exactamente el mismo pedido con el estado ya actualizado.
         if(typeof render==='function') render();
-        if(typeof window.openOrder==='function') window.openOrder(fresh.id);
+        if(typeof window.__mbOpenOrderFromSupabase==='function') window.__mbOpenOrderFromSupabase(fresh.id);
         else if(typeof openOrder==='function') openOrder(fresh.id);
         alert('Línea añadida y sincronizada con Supabase.');
       }catch(err){alert('No se ha podido sincronizar la nueva línea con Supabase.\n\n'+(err.message||err));}
@@ -6301,7 +6301,7 @@ window.mbSaveListStatusV110=save;
 
     // Pintar de nuevo el mismo pedido con las líneas recién leídas de Supabase.
     if(typeof openOrder==='function')openOrder(fresh.id);
-    else if(typeof window.openOrder==='function')window.openOrder(fresh.id);
+    else if(typeof window.__mbOpenOrderFromSupabase==='function')window.__mbOpenOrderFromSupabase(fresh.id);
 
     const ap=document.getElementById('o49-add-product');
     const af=document.getElementById('o49-add-format');
@@ -6341,8 +6341,8 @@ window.mbSaveListStatusV110=save;
     // Forzamos el mismo controlador que construye el HTML del editor.
     if(typeof window.__mbOpenOrderFromSupabase==='function'){
       window.__mbOpenOrderFromSupabase(fresh.id);
-    }else if(typeof window.openOrder==='function'){
-      window.openOrder(fresh.id);
+    }else if(typeof window.__mbOpenOrderFromSupabase==='function'){
+      window.__mbOpenOrderFromSupabase(fresh.id);
     }
     // Segundo repintado en el siguiente ciclo: evita que otro listener antiguo
     // vuelva a pintar el modal con la copia anterior.
