@@ -1326,7 +1326,7 @@ function saveProduct(){
  const category=document.querySelector('#productCategory').value;
  const formats=collectProductFormats();
  const price=parseFloat(document.querySelector('#productPrice').value);
- const boxUnits=const minQty=parseFloat(const active=document.querySelector('#productActive').checked;
+ const active=document.querySelector('#productActive').checked;
  if(!sku||!name){alert('La referencia / SKU y el nombre son obligatorios.');return;}
  if(!formats.length){alert('Introduce al menos un formato.');return;}
  if(!Number.isFinite(price)||price<0){ if(!editingProductSku) { /* precio pendiente */ } else {alert('Introduce un precio válido.');return;} }if(editingProductSku){
