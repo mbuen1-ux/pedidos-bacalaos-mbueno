@@ -1261,7 +1261,7 @@ function updateProductFormat(i,key,value){
  else productFormatDraft[i][key]=value;
  renderProductFormatBuilder();
 }
-function collectProductFormats(){return productFormatDraft.map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||null,type:f.type,weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,label:f.label||null,nombre:f.nombre||null,descripcion:f.descripcion||'',active:f.active!==false}));}
+function collectProductFormats(){return productFormatDraft.map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||null,type:f.type,weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,boxUnits:Number.isFinite(Number(f.boxUnits))?Number(f.boxUnits):null,label:f.label||null,nombre:f.nombre||null,descripcion:f.descripcion||'',active:f.active!==false,unidades_caja:f.unidades_caja??f.boxUnits??null}));}
 function renderProductFormatBuilder(){
  const box=document.querySelector('#productFormatsBuilder');if(!box)return;
  if(!productFormatDraft.length){box.innerHTML='<div class="format-empty">No hay formatos. Añade al menos uno.</div>';return;}
@@ -1651,7 +1651,7 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
       const H={apikey:cfg.key,Authorization:'Bearer '+cfg.key,Accept:'application/json'};
       const [typesRes,formatsRes]=await Promise.all([
         fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc',{headers:H}),
-        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&order=articulo_id.asc,orden.asc',{headers:H})
+        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc',{headers:H})
       ]);
       if(!typesRes.ok||!formatsRes.ok)throw new Error('No se pudieron consultar los formatos actuales.');
       const types=await typesRes.json();
@@ -4211,7 +4211,7 @@ window.mbSaveListStatusV110=save;
     const code=tf?.codigo?String(tf.codigo):String(f.code||'');
     const masterName=tf?.nombre?String(tf.nombre):String(f.nombre||f.label||'Formato personalizado');
     const name=(code?code+' · ':'')+masterName;
-    return {articulo_id:articleId,tipo_formato_id:f.tipoFormatoId||null,nombre:name,descripcion:f.descripcion||null,peso_aproximado:Number.isFinite(Number(f.weight))?Number(f.weight):null,cantidad_defecto:Number.isFinite(Number(f.defaultQty))&&Number(f.defaultQty)>0?Math.max(1,Math.floor(Number(f.defaultQty))):1,orden:index+1,activo:f.active!==false};
+    return {articulo_id:articleId,tipo_formato_id:f.tipoFormatoId||null,nombre:name,descripcion:f.descripcion||null,peso_aproximado:Number.isFinite(Number(f.weight))?Number(f.weight):null,cantidad_defecto:Number.isFinite(Number(f.defaultQty))&&Number(f.defaultQty)>0?Math.max(1,Math.floor(Number(f.defaultQty))):1,orden:index+1,unidades_caja:Number.isFinite(Number(f.boxUnits))?Math.max(1,Math.floor(Number(f.boxUnits))):null,activo:f.active!==false};
   }
   function installFormatMasterTypes(){
     const list=Array.isArray(window.mbFormatTypes)?window.mbFormatTypes.filter(t=>t.activo!==false):[];
