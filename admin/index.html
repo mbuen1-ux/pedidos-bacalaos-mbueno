@@ -4411,9 +4411,8 @@ window.mbSaveListStatusV110=save;
       if(!ov){ov=document.createElement('div');ov.id='formatPickerOverlay';ov.className='detail-overlay';document.body.appendChild(ov);}
       const current=editIndex==null?null:draft[editIndex];
       ov.innerHTML=`<div class="format-picker">
-        <div class="format-picker-head"><div><h3>${current?'Editar formato':'Añadir formato'}</h3><div class="format-picker-sub">Selecciona un formato existente o crea uno nuevo.</div></div><button type="button" class="format-picker-close">×</button></div>
+        <div class="format-picker-head"><div><h3>${current?'Editar formato':'Añadir formato'}</h3><div class="format-picker-sub">Selecciona uno de los formatos de tipo disponibles.</div></div><button type="button" class="format-picker-close">×</button></div>
         <div class="format-picker-table"><div class="fp-head"><span>Código</span><span>Formato</span><span>Unidad</span><span></span></div>${fmTypes.map(t=>`<button type="button" class="fp-item" data-id="${t.id}"><b>${escF(t.codigo)}</b><span>${escF(t.nombre)}</span><strong>${escF(t.unidad||'—')}</strong><span>Seleccionar</span></button>`).join('')}</div>
-        <div class="fp-new"><b>Crear nuevo formato</b><div class="fp-new-grid"><input id="fpCode" placeholder="Código"><input id="fpName" placeholder="Nombre del formato"><select id="fpUnit"><option value="kg">kg</option><option value="unidades">unidades</option></select><button type="button" id="fpCreate">Crear y seleccionar</button></div></div>
       </div>`;
       ov.style.display='flex';
       ov.querySelector('.format-picker-close').onclick=()=>ov.remove();
@@ -4424,15 +4423,7 @@ window.mbSaveListStatusV110=save;
         else {draft[editIndex].tipoFormatoId=t.id;draft[editIndex].code=t.codigo;draft[editIndex].label=t.nombre;draft[editIndex].nombre=t.nombre;}
         ov.remove();render();
       });
-      ov.querySelector('#fpCreate').onclick=async()=>{
-        try{const codigo=ov.querySelector('#fpCode').value.trim(),nombre=ov.querySelector('#fpName').value.trim(),unidad=ov.querySelector('#fpUnit').value;if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');
-          const created=await reqF('tipos_formato',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({codigo,nombre,unidad,orden:(fmTypes.length+1)*10,activo:true})});
-          const t=Array.isArray(created)?created[0]:created;if(!t?.id)throw new Error('Supabase no devolvió el nuevo formato.');
-          fmTypes.push(t);window.mbFormatTypes=fmTypes;
-          if(editIndex==null)draft.push({id:null,tipoFormatoId:t.id,code:t.codigo,type:'master',weight:null,defaultQty:1,boxUnits:null,label:t.nombre,nombre:t.nombre,descripcion:'',active:true});else{draft[editIndex].tipoFormatoId=t.id;draft[editIndex].code=t.codigo;draft[editIndex].label=t.nombre;draft[editIndex].nombre=t.nombre;}
-          ov.remove();render();
-        }catch(err){alert('No se pudo crear el formato.\\n\\n'+(err.message||err));}
-      };
+
     });
   }
   window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,boxUnits:f.boxUnits??f.unidades_caja??null,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
