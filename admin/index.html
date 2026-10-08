@@ -682,7 +682,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
   </div>
 
   <div class="formgrid" style="margin-top:14px">
-    <div class="field"><label>Precio (€/kg)</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="0,00"><div class="edit-note">El precio siempre se expresa por kilo.</div></div>
+    <div class="field"><label>Precio tarifa general 010 (€/kg)</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="0,00" readonly><div class="edit-note">Precio tomado de Tarifas · código 010. Para modificarlo, hazlo en la tarifa general.</div></div>
 
   </div>
 
@@ -1972,6 +1972,8 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     const tc=String(tariff(c)||'').replace(/^ERP-/i,'');
     const online=onlinePriceCache.get(tc+'|'+String(p.sku));
     if(online!=null)return online;
+    const generalOnline=onlinePriceCache.get('010|'+String(p.sku));
+    if(generalOnline!=null)return generalOnline;
     if(typeof tariffs!=='undefined'){
       const t=tariffs.find(x=>String(x.id)===String(tariff(c))||x.name===tariff(c));
       if(t?.prices?.[p.sku]!=null)return Number(t.prices[p.sku]);
@@ -4215,14 +4217,23 @@ window.mbSaveListStatusV110=save;
   async function loadFormats(){
     if(!Array.isArray(window.mbFormatTypes)||!window.mbFormatTypes.length){try{window.mbFormatTypes=await req('tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc')}catch(_){} }
     installFormatMasterTypes();
-    const [arts,formats]=await Promise.all([
+    const [arts,formats,generalTariffs,generalLinks]=await Promise.all([
       req('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo,imagen_url,destacado,oferta&order=referencia.asc'),
-      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc')
+      req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&order=articulo_id.asc,orden.asc'),
+      req('tarifas?select=id,codigo&codigo=eq.010&limit=1'),
+      req('tarifa_articulos?select=articulo_id,precio_kg&limit=10000')
     ]);
+    const generalTariffId=Array.isArray(generalTariffs)&&generalTariffs[0]?.id;
+    const generalPriceByArticle=new Map(
+      (Array.isArray(generalLinks)?generalLinks:[])
+        .filter(r=>!generalTariffId || String(r.tarifa_id)===String(generalTariffId))
+        .map(r=>[String(r.articulo_id),Number(r.precio_kg)])
+        .filter(r=>Number.isFinite(r[1]))
+    );
     const byArticle=new Map((Array.isArray(formats)?formats:[]).map(f=>[String(f.articulo_id),f]));
     const mapped=(Array.isArray(arts)?arts:[]).map(a=>{
       const fs=(Array.isArray(formats)?formats:[]).filter(f=>String(f.articulo_id)===String(a.id)).sort((x,y)=>Number(x.orden||0)-Number(y.orden||0));
-      return {id:a.id,sku:String(a.referencia||''),name:String(a.nombre||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:fs.map(toLocal),price:Number(a.precio_base||0),boxUnits:'',minQty:1,active:a.activo!==false,image:a.imagen_url||null,featured:a.destacado===true,offer:a.oferta===true};
+      return {id:a.id,sku:String(a.referencia||''),name:String(a.nombre||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:fs.map(toLocal),price:(generalPriceByArticle.get(String(a.id)) ?? Number(a.precio_base||0)),boxUnits:'',minQty:1,active:a.activo!==false,image:a.imagen_url||null,featured:a.destacado===true,offer:a.oferta===true};
     }).filter(x=>x.sku);
     window.productCatalog.splice(0,window.productCatalog.length,...mapped);
     if(typeof renderProducts==='function')renderProducts();
@@ -4748,10 +4759,20 @@ window.mbSaveListStatusV110=save;
  async function articleByRef(ref){return (await api("articulos?select=id,referencia,nombre,precio_base&referencia=eq."+encodeURIComponent(ref)+"&limit=1"))?.[0]}
  async function priceFor(clienteId,articleId,fallback){
   const cli=(await api("clientes?select=tarifa_codigo&id=eq."+encodeURIComponent(clienteId)+"&limit=1"))?.[0];
-  const code=String(cli?.tarifa_codigo||"").replace(/^ERP-/i,""); if(!code)return fallback;
-  const t=(await api("tarifas?select=id&codigo=eq."+encodeURIComponent(code)+"&limit=1"))?.[0]; if(!t)return fallback;
-  const p=(await api("tarifa_articulos?select=precio_kg&tarifa_id=eq."+encodeURIComponent(t.id)+"&articulo_id=eq."+encodeURIComponent(articleId)+"&limit=1"))?.[0];
-  return p?num(p.precio_kg):fallback;
+  const code=String(cli?.tarifa_codigo||"").replace(/^ERP-/i,"");
+  if(code){
+    const t=(await api("tarifas?select=id&codigo=eq."+encodeURIComponent(code)+"&limit=1"))?.[0];
+    if(t){
+      const p=(await api("tarifa_articulos?select=precio_kg&tarifa_id=eq."+encodeURIComponent(t.id)+"&articulo_id=eq."+encodeURIComponent(articleId)+"&limit=1"))?.[0];
+      if(p)return num(p.precio_kg);
+    }
+  }
+  const general=(await api("tarifas?select=id&codigo=eq.010&limit=1"))?.[0];
+  if(general){
+    const gp=(await api("tarifa_articulos?select=precio_kg&tarifa_id=eq."+encodeURIComponent(general.id)+"&articulo_id=eq."+encodeURIComponent(articleId)+"&limit=1"))?.[0];
+    if(gp)return num(gp.precio_kg);
+  }
+  return fallback;
  }
  async function recalcTotal(pid){
   const rows=await api("pedido_lineas?select=peso_real,precio_kg&pedido_id=eq."+encodeURIComponent(pid));
