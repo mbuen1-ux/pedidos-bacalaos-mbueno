@@ -423,7 +423,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" type="button" id="npNewProduct">+ Nuevo artículo</button>
       <button class="btn light" type="button" id="npOpenFormatTypes">Tipos de formato</button>
-      <button class="btn light" type="button" id="npOpenCategories">Maestro de categorías</button>
+      <button class="btn light" type="button" id="npOpenCategories" onclick="window.mbOpenCategoriesMaster()">Maestro de categorías</button>
       <button class="btn light" type="button" id="npOpenImport">Importar artículos Excel</button>
     </div>
   </div>
@@ -5222,6 +5222,7 @@ window.mbSaveListStatusV110=save;
     loadCategories().catch(()=>{});
   });
   window.mbLoadCategoriesFromSupabase=loadCategories;
+  window.mbOpenCategoriesMaster=openMaster;
 })();
 </script>
 </body>
