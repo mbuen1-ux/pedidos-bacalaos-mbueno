@@ -4997,6 +4997,100 @@ window.mbSaveListStatusV110=save;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook);else hook();
 })();
 </script>
+
+<script id="supabase-edit-recovery-v12">
+(function(){
+  'use strict';
+  const cfg=()=>window.MB_SUPABASE||{};
+  async function api(path,opt={}){
+    const c=cfg();
+    const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{apikey:c.key,Authorization:'Bearer '+c.key,Accept:'application/json','Content-Type':'application/json',...(opt.headers||{})}});
+    const t=await r.text(); let d=null; try{d=t?JSON.parse(t):null;}catch(_){}
+    if(!r.ok) throw new Error((d&&d.message)||t||('HTTP '+r.status));
+    return d;
+  }
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function syncClients(){
+    const rows=await api('clientes?select=*&order=codigo.asc');
+    if(!Array.isArray(rows))return;
+    clients=rows.map(c=>({
+      id:c.id,code:c.codigo||'',name:c.nombre||'',cif:c.cif||'',contact:c.contacto||'',
+      phone:c.telefono||'',email:c.email||'',address:c.direccion||'',population:c.poblacion||'',
+      cp:c.cp||'',tariffId:c.tarifa_codigo||'',password:c.password||'',
+      active:c.activo!==false,notes:c.observaciones||''
+    }));
+    window.__directClients=clients;
+  }
+  async function openClientFromSupabase(code){
+    try{
+      await syncClients();
+      if(typeof window.editClient==='function') window.editClient(String(code));
+      else throw new Error('Editor de clientes no disponible.');
+    }catch(e){console.error(e);alert('No se ha podido abrir el cliente.\\n\\n'+(e.message||e));}
+  }
+  async function openNewClient(){
+    try{
+      if(typeof window.newClient==='function') window.newClient();
+      else throw new Error('Editor de clientes no disponible.');
+      if(typeof window.populateClientTariffs==='function') window.populateClientTariffs('');
+    }catch(e){console.error(e);alert('No se ha podido abrir Nuevo cliente.\\n\\n'+(e.message||e));}
+  }
+  async function openProductFromSupabase(sku){
+    try{
+      const arts=await api('articulos?select=*&referencia=eq.'+encodeURIComponent(String(sku))+'&limit=1');
+      if(!arts.length)throw new Error('No se ha encontrado el artículo '+sku+' en Supabase.');
+      const a=arts[0];
+      const fs=await api('formatos?select=*&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&order=orden.asc,id.asc');
+      const ts=await api('tarifas?select=id,codigo&codigo=eq.010&limit=1');
+      let price=Number(a.precio_base||0);
+      if(ts.length){
+        const ps=await api('tarifa_articulos?select=precio_kg&tarifa_id=eq.'+encodeURIComponent(String(ts[0].id))+'&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&limit=1');
+        if(ps.length&&Number.isFinite(Number(ps[0].precio_kg)))price=Number(ps[0].precio_kg);
+      }
+      const p={
+        id:a.id,sku:a.referencia||'',name:a.nombre||'',description:a.descripcion||'',
+        category:a.categoria||'',price,active:a.activo!==false,image:a.imagen||a.image||null,
+        formats:(Array.isArray(fs)?fs:[]).map(f=>({
+          id:f.id,tipoFormatoId:f.tipo_formato_id,code:f.codigo||f.code||null,
+          type:f.tipo||f.type||'custom',weight:f.peso_aproximado==null?null:Number(f.peso_aproximado),
+          defaultQty:f.cantidad_defecto==null?1:Number(f.cantidad_defecto),
+          label:f.nombre||f.label||null,nombre:f.nombre||'',descripcion:f.descripcion||'',
+          boxUnits:f.unidades_caja==null?null:Number(f.unidades_caja),active:f.activo!==false
+        }))
+      };
+      const old=productCatalog.findIndex(x=>String(x.sku)===String(p.sku));
+      if(old>=0)productCatalog[old]=p;else productCatalog.push(p);
+      if(typeof window.editProduct==='function') window.editProduct(p.sku);
+      else if(typeof window.showEditor==='function') window.showEditor(p.sku);
+      else throw new Error('Editor de artículos no disponible.');
+    }catch(e){console.error(e);alert('No se ha podido abrir el artículo.\\n\\n'+(e.message||e));}
+  }
+  async function openNewProduct(){
+    try{
+      if(typeof window.newProduct==='function') window.newProduct();
+      else if(typeof window.showEditor==='function') window.showEditor(null);
+      else throw new Error('Editor de artículos no disponible.');
+    }catch(e){console.error(e);alert('No se ha podido abrir Nuevo artículo.\\n\\n'+(e.message||e));}
+  }
+  document.addEventListener('click',function(e){
+    const cb=e.target.closest?.('#clients .head .btn[onclick*="newClient"]');
+    if(cb){e.preventDefault();e.stopImmediatePropagation();openNewClient();return;}
+    const ce=e.target.closest?.('#clientsTable .client-action');
+    if(ce && !ce.classList.contains('create-order-v33')){
+      const m=String(ce.getAttribute('onclick')||'').match(/editClient\(['"]([^'"]+)['"]\)/);
+      if(m){e.preventDefault();e.stopImmediatePropagation();openClientFromSupabase(m[1]);return;}
+    }
+    const pn=e.target.closest?.('#npNewProduct');
+    if(pn){e.preventDefault();e.stopImmediatePropagation();openNewProduct();return;}
+    const pe=e.target.closest?.('#npProductsTable .np-edit');
+    if(pe){e.preventDefault();e.stopImmediatePropagation();openProductFromSupabase(pe.dataset.sku);return;}
+  },true);
+  async function boot(){
+    try{await syncClients();}catch(e){console.warn('v12 sync clientes',e);}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
 </body>
 
 <!-- orders-lines-supabase-v135 desactivado en v139: sustituido por el sincronizador único v138. -->
