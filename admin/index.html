@@ -3723,7 +3723,11 @@ async function remove(){
     return;
   }
 
-  if(!confirm("¿Borrar las líneas seleccionadas?")) return;
+  const deletingLastLine=checks.length>=document.querySelectorAll("#o47-body .o47-line-check").length;
+  const confirmText=deletingLastLine
+    ? "Esta es la última línea del pedido.\n\nSi continúas, se eliminará la línea y también el pedido completo.\n\n¿Quieres continuar?"
+    : "¿Borrar las líneas seleccionadas?";
+  if(!confirm(confirmText)) return;
 
   const button=document.getElementById("o47-delete-lines");
   if(button){button.disabled=true;button.textContent="Borrando…";}
@@ -4832,7 +4836,7 @@ window.mbSaveListStatusV110=save;
   const checks=[...document.querySelectorAll("#v4-order-editor .v4-line-check:checked")];
   const all=[...document.querySelectorAll("#v4-order-editor .v4-line-check")];
   if(!checks.length)throw new Error("Selecciona al menos una línea.");
-  if(checks.length>=all.length)throw new Error("El pedido debe conservar al menos una línea.");
+  // Si se selecciona la última línea, se confirma arriba y se elimina también la cabecera del pedido.
   for(const ch of checks){
    if(!ch.dataset.lineId)throw new Error("La línea seleccionada no tiene identificador de Supabase.");
    await api("pedido_lineas?id=eq."+encodeURIComponent(ch.dataset.lineId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
@@ -6381,7 +6385,7 @@ window.mbSaveListStatusV110=save;
   async function deleteDirect(id){
     const checked=[...document.querySelectorAll('#o47-body .o47-line-check:checked')];
     if(!checked.length){alert('Selecciona al menos una línea.');return;}
-    if(checked.length>=document.querySelectorAll('#o47-body .o47-line-check').length){alert('El pedido debe conservar al menos una línea.');return;}
+    // La eliminación de la última línea también elimina la cabecera del pedido.
     const ids=checked.map(x=>x.dataset.lineId).filter(Boolean);
     if(ids.length!==checked.length)throw new Error('Hay una línea seleccionada sin identificador de Supabase.');
     for(const lineId of ids)await api('pedido_lineas?id=eq.'+encodeURIComponent(lineId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
