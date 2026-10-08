@@ -6898,6 +6898,67 @@ window.mbSaveListStatusV110=save;
     const lines=rows.map(r=>{const c=r.children;return `<tr><td>${esc(c[1]?.innerText||'')}</td><td>${esc(c[2]?.innerText||'')}</td><td style="text-align:right">${esc(c[3]?.querySelector('input')?.value||'0')} €/kg</td></tr>`}).join('');
     const w=window.open('','_blank'); if(!w){alert('El navegador ha bloqueado la ventana del PDF. Permite ventanas emergentes para este sitio.');return;}
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;color:#183044;margin:38px}h1{font-size:22px;margin:0 0 6px}p{color:#647686;margin:0 0 22px}table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid #dfe5ea;text-align:left}th{font-size:12px;color:#647686;text-transform:uppercase}footer{margin-top:30px;font-size:11px;color:#71808c}@media print{button{display:none}}</style></head><body><h1>BACALAOS M. BUENO</h1><p>${esc(title)}</p><table><thead><tr><th>Referencia</th><th>Artículo</th><th style="text-align:right">Precio €/kg</th></tr></thead><tbody>${lines}</tbody></table><footer>Tarifa de precios · ${new Date().toLocaleDateString('es-ES')}</footer><script>window.onload=function(){window.print()}<\/script>
+<script id="tariff-create-reference-v6">
+(function(){
+  "use strict";
+  const SB=window.mbSupabaseFetch;
+  const q=id=>document.getElementById(id);
+  const txt=v=>String(v??"").trim();
+  const esc=v=>txt(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  async function reloadTariffs(){
+    if(typeof window.mbLoadTariffsFromSupabase==="function"){await window.mbLoadTariffsFromSupabase();return;}
+    const ts=await SB("tarifas?select=*&order=codigo.asc");
+    window.__onlineTariffs=Array.isArray(ts)?ts:[];
+    if(typeof window.renderTariffs==="function")window.renderTariffs();
+  }
+  function addReferenceToolbar(){
+    const editor=q("tariffEditor"); if(!editor||editor.style.display==="none")return;
+    let bar=q("v6-tariff-reference-toolbar"); if(bar)return;
+    bar=document.createElement("div"); bar.id="v6-tariff-reference-toolbar";
+    bar.style.cssText="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;background:#f7f9fb;border:1px solid #dfe5ea;border-radius:9px";
+    bar.innerHTML='<span style="font-size:13px;font-weight:700;color:#526273">Copiar precios de:</span><select id="v6-tariff-reference-select" class="select" style="min-width:240px"><option value="">Selecciona una tarifa</option></select><button type="button" class="btn light" id="v6-tariff-reference-copy">Copiar precios</button><span class="sub">Los precios se cargan en pantalla y se guardan al pulsar «Guardar precios».</span>';
+    const table=editor.querySelector(".tablewrap"); if(table)editor.insertBefore(bar,table); else editor.insertBefore(bar,editor.firstChild);
+    const list=Array.isArray(window.__onlineTariffs)?window.__onlineTariffs:[]; const current=String(window.__v6CurrentTariffId||"");
+    q("v6-tariff-reference-select").innerHTML='<option value="">Selecciona una tarifa</option>'+list.filter(t=>String(t.id)!==current).map(t=>{const c=txt(t.codigo??t.code).replace(/^ERP-/i,"");return '<option value="'+esc(t.id)+'">'+esc(c+" · "+(t.nombre??t.name??""))+'</option>';}).join("");
+    q("v6-tariff-reference-copy").onclick=async function(){
+      const refId=q("v6-tariff-reference-select")?.value; if(!refId){alert("Selecciona una tarifa de referencia.");return;}
+      try{
+        const links=await SB("tarifa_articulos?select=articulo_id,precio_kg&tarifa_id=eq."+encodeURIComponent(refId)+"&limit=10000");
+        const articles=await SB("articulos?select=id,referencia&limit=10000");
+        const refByArticle=new Map((Array.isArray(links)?links:[]).map(x=>[String(x.articulo_id),Number(x.precio_kg??0)]));
+        const refByCode=new Map((Array.isArray(articles)?articles:[]).map(a=>[String(a.id),txt(a.referencia)]));
+        const priceByReference=new Map(); refByArticle.forEach((price,id)=>{const ref=refByCode.get(id);if(ref)priceByReference.set(ref,price);});
+        let matched=0;
+        document.querySelectorAll("#tariffPricesTable .tariff-price-input").forEach(input=>{const row=input.closest("tr");const reference=txt(row?.children?.[0]?.innerText);if(priceByReference.has(reference)){input.value=Number(priceByReference.get(reference)||0).toFixed(2);matched++;}});
+        const selected=q("v6-tariff-reference-select"); const label=selected?.selectedOptions?.[0]?.textContent||"la tarifa seleccionada";
+        alert("Precios copiados de "+label+"\n\nArtículos encontrados: "+matched+"\n\nPuedes modificarlos antes de guardar.");
+      }catch(e){alert("No se han podido copiar los precios de referencia: "+(e.message||e));}
+    };
+  }
+  const originalShow=window.showTariffPrices;
+  if(typeof originalShow==="function"){
+    window.showTariffPrices=async function(id){window.__v6CurrentTariffId=String(id);const result=await originalShow.apply(this,arguments);addReferenceToolbar();return result;};
+  }
+  window.saveTariff=async function(){
+    const code=txt(q("tariffCode")?.value),name=txt(q("tariffName")?.value),description=txt(q("tariffDescription")?.value);
+    if(!code||!name){alert("Código y nombre son obligatorios.");return;}
+    try{
+      if(window.editingTariffId){
+        await SB("tarifas?id=eq."+encodeURIComponent(window.editingTariffId),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({codigo:code,nombre:name,descripcion:description||null})});
+        await reloadTariffs(); q("tariffOverlay").style.display="none"; alert("Tarifa guardada correctamente en Supabase."); return;
+      }
+      const made=await SB("tarifas",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({codigo:code,nombre:name,descripcion:description||null})});
+      const tariff=Array.isArray(made)?made[0]:made; if(!tariff?.id)throw new Error("No se obtuvo el ID de la nueva tarifa.");
+      const articles=await SB("articulos?select=id&limit=10000");
+      const rows=(Array.isArray(articles)?articles:[]).map(a=>({tarifa_id:tariff.id,articulo_id:a.id,precio_kg:0}));
+      if(rows.length)await SB("tarifa_articulos",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(rows)});
+      await reloadTariffs(); q("tariffOverlay").style.display="none";
+      if(typeof window.showTariffPrices==="function")await window.showTariffPrices(tariff.id);
+      alert("Tarifa creada correctamente.\n\nSe han cargado "+rows.length+" artículos con precio 0,00 €/kg.\nPuedes introducir los precios o copiarlos de otra tarifa.");
+    }catch(e){alert("No se ha podido guardar la tarifa en Supabase: "+(e.message||e));}
+  };
+})();
+</script>
 </body></html>`);
     w.document.close();
   }
