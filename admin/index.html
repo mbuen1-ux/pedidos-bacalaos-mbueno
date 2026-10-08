@@ -2537,34 +2537,8 @@ document.addEventListener("click",e=>{
 
  
 
- if(e.target.id==="o47-delete-lines"){
-  const o=state.orders.find(x=>$("o47-title").textContent==="Pedido "+x.id); if(!o)return;
-  const indexes=[...$("o47-body").querySelectorAll(".o47-line-check:checked")].map(x=>+x.dataset.index).sort((a,b)=>b-a);
-  if(!indexes.length){alert("Selecciona al menos una línea.");return;}
-  if(indexes.length>=o.lines.length){alert("El pedido debe conservar al menos una línea.");return;}
-  indexes.forEach(i=>o.lines.splice(i,1)); render(); openOrder(o.id); return;
- }
-
- if(e.target.id==="o49-add-line"){
-  const o=state.orders.find(x=>$("o47-title").textContent==="Pedido "+x.id); if(!o)return;
-  const sel=$("o49-add-product"), opt=sel.options[sel.selectedIndex];
-  if(!sel.value||!opt){alert("Selecciona un artículo.");return;}
-  const amount=Math.max(0,Number($("o49-add-qty").value||0));
-  if(amount<=0){alert("Introduce una cantidad mayor que 0.");return;}
-  o.lines.push({name:opt.dataset.name||opt.textContent,format:$("o49-add-format").value||"Kilos",
-    requested:amount,actual:amount,price:Number(opt.dataset.price||0)});
-  render(); openOrder(o.id); return;
- }
-
- if(e.target.id==="o47-save"){
-  const o=state.orders.find(x=>$("o47-title").textContent==="Pedido "+x.id); if(!o)return;
-  $("o47-body").querySelectorAll(".o47-weight").forEach(inp=>{
-    o.lines[+inp.dataset.index].actual=Math.max(0,Number(inp.value||0));
-  });
-  render();
-  $("o47-modal").classList.remove("open");
-  return;
- }
+ // v4: altas, borrados y guardado de líneas los gestiona exclusivamente
+ // orders-hard-refresh-v154 contra Supabase. No mantener aquí los handlers legacy.
 
  if(e.target.id==="o49-save-status"){
   const o=state.orders.find(x=>$("o47-title").textContent==="Pedido "+x.id); if(!o)return;
