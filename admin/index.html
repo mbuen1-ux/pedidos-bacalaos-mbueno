@@ -164,6 +164,20 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 #npesFormats .mb-ft-unit strong{font-size:13px;color:var(--blue)}
 @media(max-width:900px){#npesFormats .npes-format{grid-template-columns:1fr 110px 90px 110px 44px 44px 72px}#npesFormats .mb-ft-unit{grid-column:auto}}
 </style>
+<style id="format-picker-v1">
+#productFormatsBuilder .format-list{width:100%;font-size:13px}
+#productFormatsBuilder .format-line{display:grid;grid-template-columns:70px 1.2fr 1.5fr 1.15fr 110px 90px 100px 70px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #e5eaee}
+#productFormatsBuilder .format-line:first-child{border-top:1px solid #e5eaee}
+#productFormatsBuilder .format-line input{border:0;border-bottom:1px solid #d8e0e6;border-radius:0;background:transparent;padding:5px 2px;width:100%;box-sizing:border-box}
+#productFormatsBuilder .format-line input:focus{outline:none;border-bottom-color:#2b6287}
+#productFormatsBuilder .fl-code b{font-weight:700;color:#173b57}.fl-name{font-weight:600;color:#243f52}.fl-desc{color:#66757f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fl-type{color:#385a70}.fl-weight,.fl-box{display:flex;align-items:center;gap:3px}.fl-weight span,.fl-box span{font-size:11px;color:#6d7a82}.fl-actions{display:flex;gap:4px;justify-content:flex-end}.fl-actions button{border:0;background:transparent;font-size:18px;cursor:pointer;color:#31566e}
+#formatPickerOverlay{z-index:10000;background:rgba(15,34,48,.38)}
+#formatPickerOverlay .format-picker{width:min(760px,calc(100vw - 30px));max-height:85vh;overflow:auto;background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 18px 55px rgba(0,0,0,.22)}
+.format-picker-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e3e8ec;padding-bottom:12px;margin-bottom:6px}.format-picker-head h3{margin:0 0 4px;color:#173b57}.format-picker-sub{font-size:12px;color:#687780}.format-picker-close{border:0;background:none;font-size:25px;cursor:pointer;color:#53636d}
+.fp-head,.fp-item{display:grid;grid-template-columns:90px 1fr 110px 90px;gap:12px;align-items:center}.fp-head{padding:9px 8px;font-size:10px;text-transform:uppercase;font-weight:700;color:#72818a}.fp-item{width:100%;border:0;border-bottom:1px solid #edf0f2;background:transparent;padding:11px 8px;text-align:left;cursor:pointer;color:#233f50}.fp-item:hover{background:#f4f8fb}.fp-item strong{font-weight:600;color:#31566e}.fp-item span:last-child{font-size:11px;color:#70808a;text-align:right}
+.fp-new{margin-top:15px;padding-top:14px;border-top:1px solid #e1e7eb}.fp-new-grid{display:grid;grid-template-columns:100px 1fr 120px 145px;gap:8px;margin-top:9px}.fp-new-grid input,.fp-new-grid select{border:1px solid #d5dee4;border-radius:6px;padding:8px}.fp-new-grid button{border:0;border-radius:6px;padding:8px 10px;background:#285a78;color:#fff;cursor:pointer}
+@media(max-width:900px){#productFormatsBuilder .format-line{grid-template-columns:60px 1fr 1fr 95px 80px 70px 55px}.fl-desc{grid-column:2/4}.fl-actions{grid-column:7}.fp-head,.fp-item{grid-template-columns:70px 1fr 90px 75px}.fp-new-grid{grid-template-columns:1fr 1fr}.fp-new-grid button{grid-column:1/-1}}
+</style>
 </head>
 <body>
 <script id="orders-visible-dom-refresh-v156">
@@ -4369,30 +4383,60 @@ window.mbSaveListStatusV110=save;
   const cfg=()=>{try{const w=window.MB_SUPABASE||{}; if(w.url&&w.key)return w; if(typeof getSupabaseConfig==='function'){const c=getSupabaseConfig()||{}; if(c.url&&c.key)return c;} return JSON.parse(localStorage.getItem('mb_supabase_config')||'{}')}catch(e){return window.MB_SUPABASE||{}}};
   async function reqF(path,opt={}){const c=cfg();if(!c.url||!c.key)throw new Error('Supabase no está configurado.');const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{apikey:c.key,Authorization:'Bearer '+c.key,'Content-Type':'application/json',...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error((d&&d.message)||t||('HTTP '+r.status));return d;}
   let fmTypes=[];
-  async function loadFmTypes(){fmTypes=Array.isArray(window.mbFormatTypes)&&window.mbFormatTypes.length?window.mbFormatTypes:await reqF('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
-  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,label:'',nombre:'',descripcion:'',active:true};}
-  let draft=[];
+  async function loadFmTypes(){fmTypes=Array.isArray(window.mbFormatTypes)&&window.mbFormatTypes.length?window.mbFormatTypes:await reqF('tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
+  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,boxUnits:null,label:'',nombre:'',descripcion:'',active:true};}
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
-  function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
-    if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
-    box.innerHTML=draft.map((f,i)=>{const t=typeFor(f);return `<div class="format-row" data-fi="${i}" style="display:grid;grid-template-columns:170px 125px 1fr 72px 92px 34px 34px 72px;gap:7px;align-items:center;margin-bottom:8px">
-      <select class="fm-type" data-i="${i}" style="min-width:0"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
-      <input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="Peso base">
-      <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Descripción / opción">
-      <input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad por defecto">
-      <div class="fm-unit-display"><span>Unidad</span><strong>${t?escF(t.unidad||''):'—'}</strong></div>
-      <button class="mini fm-up" data-i="${i}" type="button">↑</button><button class="mini fm-down" data-i="${i}" type="button">↓</button><button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
-    </div>`}).join('');
-    box.querySelectorAll('.fm-type').forEach(el=>el.onchange=()=>{const i=+el.dataset.i,t=fmTypes.find(x=>String(x.id)===String(el.value));draft[i].tipoFormatoId=t?.id||null;draft[i].code=t?.codigo||'';draft[i].type='master';draft[i].label=t?.nombre||'';draft[i].nombre=t?.nombre||'';render();});
-    box.querySelectorAll('.fm-weight').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].weight=el.value===''?null:Number(el.value);});
-    box.querySelectorAll('.fm-desc').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].descripcion=el.value;});
-    box.querySelectorAll('.fm-qty').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].defaultQty=el.value===''?1:Math.max(1,Math.floor(Number(el.value)||1));});
-    box.querySelectorAll('.fm-up').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i>0){[draft[i-1],draft[i]]=[draft[i],draft[i-1]];render();}});
-    box.querySelectorAll('.fm-down').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i<draft.length-1){[draft[i+1],draft[i]]=[draft[i],draft[i+1]];render();}});
+  function render(){
+    const box=document.getElementById('productFormatsBuilder');if(!box)return;
+    if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados. Pulsa «Añadir formato».</div>';return;}
+    box.innerHTML='<div class="format-list">'+draft.map((f,i)=>{const t=typeFor(f);return `<div class="format-line" data-i="${i}">
+      <div class="fl-code"><b>${escF(t?.codigo||f.code||'—')}</b></div>
+      <div class="fl-name">${escF(t?.nombre||f.nombre||'Formato')}</div>
+      <div class="fl-desc">${escF(f.descripcion||'—')}</div>
+      <div class="fl-type">${escF(t?.nombre||'—')}</div>
+      <div class="fl-weight"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="kg"><span>kg</span></div>
+      <div class="fl-qty"><input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}"></div>
+      <div class="fl-box"><input class="fm-box" data-i="${i}" type="number" min="1" step="1" value="${f.boxUnits??''}" placeholder="—"><span>uds.</span></div>
+      <div class="fl-actions"><button class="fm-edit" data-i="${i}" type="button" title="Editar">✎</button><button class="fm-del" data-i="${i}" type="button" title="Eliminar">×</button></div>
+    </div>`}).join('')+'</div>';
+    box.querySelectorAll('.fm-weight').forEach(el=>el.oninput=()=>draft[+el.dataset.i].weight=el.value===''?null:Number(el.value));
+    box.querySelectorAll('.fm-qty').forEach(el=>el.oninput=()=>draft[+el.dataset.i].defaultQty=el.value===''?1:Math.max(1,Math.floor(Number(el.value)||1)));
+    box.querySelectorAll('.fm-box').forEach(el=>el.oninput=()=>draft[+el.dataset.i].boxUnits=el.value===''?null:Math.max(1,Math.floor(Number(el.value)||1)));
     box.querySelectorAll('.fm-del').forEach(el=>el.onclick=()=>{draft.splice(+el.dataset.i,1);render();});
+    box.querySelectorAll('.fm-edit').forEach(el=>openFormatPicker(+el.dataset.i));
   }
-  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
-  window.addProductFormat=async function(){await loadFmTypes();draft.push(blankFormat());render();};
+  function openFormatPicker(editIndex=null){
+    loadFmTypes().then(()=>{
+      let ov=document.getElementById('formatPickerOverlay');
+      if(!ov){ov=document.createElement('div');ov.id='formatPickerOverlay';ov.className='detail-overlay';document.body.appendChild(ov);}
+      const current=editIndex==null?null:draft[editIndex];
+      ov.innerHTML=`<div class="format-picker">
+        <div class="format-picker-head"><div><h3>${current?'Editar formato':'Añadir formato'}</h3><div class="format-picker-sub">Selecciona un formato existente o crea uno nuevo.</div></div><button type="button" class="format-picker-close">×</button></div>
+        <div class="format-picker-table"><div class="fp-head"><span>Código</span><span>Formato</span><span>Unidad</span><span></span></div>${fmTypes.map(t=>`<button type="button" class="fp-item" data-id="${t.id}"><b>${escF(t.codigo)}</b><span>${escF(t.nombre)}</span><strong>${escF(t.unidad||'—')}</strong><span>Seleccionar</span></button>`).join('')}</div>
+        <div class="fp-new"><b>Crear nuevo formato</b><div class="fp-new-grid"><input id="fpCode" placeholder="Código"><input id="fpName" placeholder="Nombre del formato"><select id="fpUnit"><option value="kg">kg</option><option value="unidades">unidades</option></select><button type="button" id="fpCreate">Crear y seleccionar</button></div></div>
+      </div>`;
+      ov.style.display='flex';
+      ov.querySelector('.format-picker-close').onclick=()=>ov.remove();
+      ov.onclick=e=>{if(e.target===ov)ov.remove();};
+      ov.querySelectorAll('.fp-item').forEach(btn=>btn.onclick=()=>{
+        const t=fmTypes.find(x=>String(x.id)===String(btn.dataset.id));
+        if(editIndex==null){draft.push({id:null,tipoFormatoId:t.id,code:t.codigo,type:'master',weight:null,defaultQty:1,boxUnits:null,label:t.nombre,nombre:t.nombre,descripcion:'',active:true});}
+        else {draft[editIndex].tipoFormatoId=t.id;draft[editIndex].code=t.codigo;draft[editIndex].label=t.nombre;draft[editIndex].nombre=t.nombre;}
+        ov.remove();render();
+      });
+      ov.querySelector('#fpCreate').onclick=async()=>{
+        try{const codigo=ov.querySelector('#fpCode').value.trim(),nombre=ov.querySelector('#fpName').value.trim(),unidad=ov.querySelector('#fpUnit').value;if(!codigo||!nombre)throw new Error('Código y nombre son obligatorios.');
+          const created=await reqF('tipos_formato',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({codigo,nombre,unidad,orden:(fmTypes.length+1)*10,activo:true})});
+          const t=Array.isArray(created)?created[0]:created;if(!t?.id)throw new Error('Supabase no devolvió el nuevo formato.');
+          fmTypes.push(t);window.mbFormatTypes=fmTypes;
+          if(editIndex==null)draft.push({id:null,tipoFormatoId:t.id,code:t.codigo,type:'master',weight:null,defaultQty:1,boxUnits:null,label:t.nombre,nombre:t.nombre,descripcion:'',active:true});else{draft[editIndex].tipoFormatoId=t.id;draft[editIndex].code=t.codigo;draft[editIndex].label=t.nombre;draft[editIndex].nombre=t.nombre;}
+          ov.remove();render();
+        }catch(err){alert('No se pudo crear el formato.\\n\\n'+(err.message||err));}
+      };
+    });
+  }
+  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,boxUnits:f.boxUnits??f.unidades_caja??null,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
+  window.addProductFormat=async function(){openFormatPicker(null);};
   window.removeProductFormat=function(i){draft.splice(i,1);render();};
   window.moveProductFormat=function(i,d){const j=i+d;if(j>=0&&j<draft.length){[draft[i],draft[j]]=[draft[j],draft[i]];render();}};
   window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
