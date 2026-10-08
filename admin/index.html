@@ -4514,14 +4514,17 @@ window.mbSaveListStatusV110=save;
       }
     }catch(err){console.warn('No se pudieron recargar formatos desde Supabase:',err);}
     await window.setProductFormats(freshFormats);
-    document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productActive').checked=p.active!==false;
+    document.querySelector('#productPrice').value=p.price??0;
+    
+    
+    document.querySelector('#productActive').checked=p.active!==false;
     document.querySelector('#productFeatured').checked=p.featured===true;
     document.querySelector('#productOffer').checked=p.offer===true;
     document.querySelector('#productImageInput').value='';
     document.querySelector('#productImagePreview').innerHTML=p.image?'<img src="'+p.image+'" style="width:100%;height:100%;object-fit:contain">':'Sin imagen';
     document.querySelector('#productOverlay').style.display='flex';
   };
-  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),boxUnits=if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
+  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
   window.addEventListener('load',()=>setTimeout(()=>loadFmTypes().catch(()=>{}),1100));
 })();
 </script>
@@ -5260,7 +5263,7 @@ window.mbSaveListStatusV110=save;
       const a=arts[0];
       const [tr,fr]=await Promise.all([
         fetch(cfg.url+'/rest/v1/tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc',{headers:H}),
-        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
+        fetch(cfg.url+'/rest/v1/formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&articulo_id=eq.'+encodeURIComponent(String(a.id))+'&activo=eq.true&order=orden.asc',{headers:H})
       ]);
       if(!tr.ok) throw new Error('No se pudieron cargar los tipos de formato. HTTP '+tr.status);
       if(!fr.ok) throw new Error('No se pudieron cargar los formatos del artículo. HTTP '+fr.status);
