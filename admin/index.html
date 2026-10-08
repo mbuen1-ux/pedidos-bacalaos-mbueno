@@ -85,6 +85,48 @@ aside{padding:20px 12px}
 .btn{border-radius:7px}
 .search,.select,input,select,textarea{border-radius:7px}
 </style>
+<style id="format-editor-v194">
+/* v194 · editor de formatos: una fila clara + descripción en segunda línea */
+#productFormatsBuilder .format-builder{display:flex;flex-direction:column;gap:12px}
+#productFormatsBuilder .format-row{display:block!important;background:#f5f8fa;border:1px solid #d7e0e7;border-radius:12px;padding:10px!important;margin:0!important;box-shadow:0 1px 2px rgba(20,45,65,.04)}
+#productFormatsBuilder .fm-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(120px,1.15fr) minmax(130px,1.2fr) minmax(115px,1.1fr) 54px 54px;gap:7px;align-items:stretch;width:100%;box-sizing:border-box}
+#productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{background:#fff;border:1px solid #dfe6eb;border-radius:8px;padding:7px 8px;box-sizing:border-box;min-width:0}
+#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label,#productFormatsBuilder .fm-desc-field label{display:flex;align-items:center;min-height:14px;font-size:10px;text-transform:uppercase;letter-spacing:.035em;font-weight:800;color:#71808c;margin:0 0 4px}
+#productFormatsBuilder .fm-field select,#productFormatsBuilder .fm-field input{width:100%;min-width:0;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box;outline:none}
+#productFormatsBuilder .fm-field select:focus,#productFormatsBuilder .fm-field input:focus,#productFormatsBuilder .fm-desc-field input:focus{border-color:#7899b1;box-shadow:0 0 0 2px rgba(69,108,137,.08)}
+#productFormatsBuilder .fm-input-unit{display:flex;align-items:center;gap:5px;min-width:0}
+#productFormatsBuilder .fm-input-unit input{min-width:0}
+#productFormatsBuilder .fm-input-unit span{min-width:24px;color:#687887;font-size:10px;font-weight:800;text-align:left}
+#productFormatsBuilder .fm-order>div{display:flex;gap:4px;height:36px}
+#productFormatsBuilder .fm-order .mini{flex:1;width:0;padding:5px 0;min-height:36px;height:36px;border:1px solid #d1dce3;background:#fff;border-radius:6px}
+#productFormatsBuilder .fm-delete .mini{width:100%;min-width:0;min-height:36px;height:36px;padding:5px 4px;border-radius:6px;white-space:nowrap}
+/* Alineación limpia y compacta */
+#productFormatsBuilder .fm-main{align-items:start}
+#productFormatsBuilder .fm-field,#productFormatsBuilder .fm-order,#productFormatsBuilder .fm-delete{min-height:0}
+#productFormatsBuilder .fm-field label,#productFormatsBuilder .fm-order label,#productFormatsBuilder .fm-delete label{height:14px;min-height:14px;line-height:14px;box-sizing:border-box}
+#productFormatsBuilder .fm-field>select,#productFormatsBuilder .fm-field>.fm-input-unit,#productFormatsBuilder .fm-order>div,#productFormatsBuilder .fm-delete>.mini{margin-top:4px;height:36px;min-height:36px;box-sizing:border-box}
+#productFormatsBuilder .fm-input-unit{width:100%;display:flex;align-items:center;gap:5px}
+#productFormatsBuilder .fm-input-unit input{flex:1 1 auto;width:1%;min-width:0;height:36px;min-height:36px;box-sizing:border-box}
+#productFormatsBuilder .fm-input-unit span{flex:0 0 auto;min-width:24px;white-space:nowrap;line-height:36px}
+#productFormatsBuilder .fm-desc-field{margin-top:7px;background:#fff;border:1px solid #dfe6eb;border-radius:8px;padding:7px 8px}
+#productFormatsBuilder .fm-desc-field label span{font-weight:500;text-transform:none;letter-spacing:0;color:#8a98a3;margin-left:4px}
+#productFormatsBuilder .fm-desc-field input{width:100%;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box}
+@media(max-width:900px){
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,2fr) minmax(105px,1.1fr) minmax(115px,1.15fr) minmax(105px,1.05fr) 52px 48px;gap:6px}
+  #productFormatsBuilder .fm-order>div{gap:3px}
+  #productFormatsBuilder .fm-order .mini{padding:0;min-width:0}
+  #productFormatsBuilder .fm-delete .mini{padding:0;font-size:14px}
+}
+@media(max-width:650px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr}
+  #productFormatsBuilder .fm-type-field{grid-column:1/-1}
+  #productFormatsBuilder .fm-desc-field{margin-top:7px}
+}
+@media(max-width:420px){
+  #productFormatsBuilder .fm-main{grid-template-columns:1fr}
+  #productFormatsBuilder .fm-type-field{grid-column:auto}
+}
+</style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <style id="orders-v27-css">
@@ -4365,36 +4407,63 @@ window.mbSaveListStatusV110=save;
   async function reqF(path,opt={}){const c=cfg();if(!c.url||!c.key)throw new Error('Supabase no está configurado.');const r=await fetch(c.url+'/rest/v1/'+path,{...opt,headers:{apikey:c.key,Authorization:'Bearer '+c.key,'Content-Type':'application/json',...(opt.headers||{})}});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error((d&&d.message)||t||('HTTP '+r.status));return d;}
   let fmTypes=[];
   async function loadFmTypes(){fmTypes=Array.isArray(window.mbFormatTypes)&&window.mbFormatTypes.length?window.mbFormatTypes:await reqF('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc');fmTypes=(fmTypes||[]).filter(t=>t.activo!==false);window.mbFormatTypes=fmTypes;return fmTypes;}
-  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,label:'',nombre:'',descripcion:'',active:true};}
+  function blankFormat(){return {id:null,tipoFormatoId:null,code:'',type:'custom',weight:null,defaultQty:1,boxUnits:null,label:'',nombre:'',descripcion:'',active:true};}
   let draft=[];
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
   function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
     if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
-    box.innerHTML=draft.map((f,i)=>{const t=typeFor(f);return `<div class="format-row" data-fi="${i}" style="display:grid;grid-template-columns:170px 125px 1fr 72px 92px 34px 34px 72px;gap:7px;align-items:center;margin-bottom:8px">
-      <select class="fm-type" data-i="${i}" style="min-width:0"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
-      <input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="Peso base">
-      <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Descripción / opción">
-      <input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad por defecto">
-      <span style="font-size:12px;color:#667">${t?escF(t.nombre):''}</span>
-      <button class="mini fm-up" data-i="${i}" type="button">↑</button><button class="mini fm-down" data-i="${i}" type="button">↓</button><button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
-    </div>`}).join('');
+    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{const t=typeFor(f);const unit=t?.nombre||'';
+      return `<div class="format-row" data-fi="${i}">
+        <div class="fm-main">
+          <div class="fm-field fm-type-field">
+            <label>Formato</label>
+            <select class="fm-type" data-i="${i}"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
+          </div>
+          <div class="fm-field">
+            <label>Peso aproximado</label>
+            <div class="fm-input-unit"><input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="0,00"><span>kg</span></div>
+          </div>
+          <div class="fm-field">
+            <label>Cantidad por defecto</label>
+            <div class="fm-input-unit"><input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad que se propondrá al crear un pedido"><span>${escF(unit)}</span></div>
+          </div>
+          <div class="fm-field">
+            <label>Uds. por caja</label>
+            <div class="fm-input-unit"><input class="fm-box" data-i="${i}" type="number" min="1" step="1" value="${f.boxUnits??''}" placeholder="Opcional"><span>uds.</span></div>
+          </div>
+          <div class="fm-order">
+            <label>&nbsp;</label>
+            <div><button class="mini fm-up" data-i="${i}" type="button" title="Subir">↑</button><button class="mini fm-down" data-i="${i}" type="button" title="Bajar">↓</button></div>
+          </div>
+          <div class="fm-delete">
+            <label>&nbsp;</label>
+            <button class="mini remove fm-del" data-i="${i}" type="button" title="Eliminar formato" aria-label="Eliminar formato">🗑</button>
+          </div>
+        </div>
+        <div class="fm-desc-field">
+          <label>Descripción personalizada <span>(opcional)</span></label>
+          <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Ej.: bandeja, corte especial, presentación para el cliente...">
+        </div>
+      </div>`;
+    }).join('')+'</div>';
     box.querySelectorAll('.fm-type').forEach(el=>el.onchange=()=>{const i=+el.dataset.i,t=fmTypes.find(x=>String(x.id)===String(el.value));draft[i].tipoFormatoId=t?.id||null;draft[i].code=t?.codigo||'';draft[i].type='master';draft[i].label=t?.nombre||'';draft[i].nombre=t?.nombre||'';render();});
     box.querySelectorAll('.fm-weight').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].weight=el.value===''?null:Number(el.value);});
     box.querySelectorAll('.fm-desc').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].descripcion=el.value;});
     box.querySelectorAll('.fm-qty').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].defaultQty=el.value===''?1:Math.max(1,Math.floor(Number(el.value)||1));});
+    box.querySelectorAll('.fm-box').forEach(el=>el.oninput=()=>{draft[+el.dataset.i].boxUnits=el.value===''?null:Math.max(1,Math.floor(Number(el.value)||1));});
     box.querySelectorAll('.fm-up').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i>0){[draft[i-1],draft[i]]=[draft[i],draft[i-1]];render();}});
     box.querySelectorAll('.fm-down').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i<draft.length-1){[draft[i+1],draft[i]]=[draft[i],draft[i+1]];render();}});
     box.querySelectorAll('.fm-del').forEach(el=>el.onclick=()=>{draft.splice(+el.dataset.i,1);render();});
   }
-  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
+  window.setProductFormats=async function(formats){await loadFmTypes();draft=(Array.isArray(formats)?formats:[]).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||f.tipo_formato_id||null,code:f.code||'',type:'master',weight:f.weight===''?null:(f.weight==null?null:Number(f.weight)),defaultQty:f.defaultQty==null?1:Number(f.defaultQty)||1,boxUnits:f.boxUnits==null?null:Number(f.boxUnits)||null,label:f.label||'',nombre:f.nombre||'',descripcion:f.descripcion||'',active:f.active!==false}));render();};
   window.addProductFormat=async function(){await loadFmTypes();draft.push(blankFormat());render();};
   window.removeProductFormat=function(i){draft.splice(i,1);render();};
   window.moveProductFormat=function(i,d){const j=i+d;if(j>=0&&j<draft.length){[draft[i],draft[j]]=[draft[j],draft[i]];render();}};
-  window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
+  window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,boxUnits:Number.isFinite(Number(f.boxUnits))?Math.max(1,Math.floor(Number(f.boxUnits))):null,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
   window.updateProductFormat=function(i,key,value){if(!draft[i])return;if(key==='weight')draft[i].weight=value===''?null:Number(value);else draft[i][key]=value;render();};
   window.newProduct=async function(){editingProductSku=null;productImageData=null;document.querySelector('#productModalTitle').textContent='Nuevo producto';document.querySelector('#productSku').value='';document.querySelector('#productName').value='';document.querySelector('#productDescription').value='';document.querySelector('#productCategory').value='Sin clasificar';await window.setProductFormats([]);document.querySelector('#productPrice').value='';document.querySelector('#productBoxUnits').value='';document.querySelector('#productMinQty').value='1';document.querySelector('#productActive').checked=true;document.querySelector('#productFeatured').checked=false;document.querySelector('#productOffer').checked=false;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML='Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
-  window.editProduct=async function(sku){const p=productCatalog.find(x=>x.sku===sku);if(!p)return;editingProductSku=sku;productImageData=p.image||null;document.querySelector('#productModalTitle').textContent='Editar producto · '+p.sku;document.querySelector('#productSku').value=p.sku;document.querySelector('#productName').value=p.name;document.querySelector('#productDescription').value=p.description||'';document.querySelector('#productCategory').value=p.category||'Sin clasificar';await window.setProductFormats(p.formats||[]);document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productBoxUnits').value=p.boxUnits||'';document.querySelector('#productMinQty').value=p.minQty??1;document.querySelector('#productActive').checked=p.active!==false;document.querySelector('#productFeatured').checked=p.featured===true;document.querySelector('#productOffer').checked=p.offer===true;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML=p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:contain">`:'Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
-  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),boxUnits=document.querySelector('#productBoxUnits').value.trim(),minQty=parseFloat(document.querySelector('#productMinQty').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');if(!Number.isFinite(minQty)||minQty<=0)throw new Error('La cantidad mínima debe ser mayor que 0.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
+  window.editProduct=async function(sku){const p=productCatalog.find(x=>x.sku===sku);if(!p)return;editingProductSku=sku;productImageData=p.image||null;document.querySelector('#productModalTitle').textContent='Editar producto · '+p.sku;document.querySelector('#productSku').value=p.sku;document.querySelector('#productName').value=p.name;document.querySelector('#productDescription').value=p.description||'';document.querySelector('#productCategory').value=p.category||'Sin clasificar';await window.setProductFormats(p.formats||[]);document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productMinQty').value=p.minQty??1;document.querySelector('#productActive').checked=p.active!==false;document.querySelector('#productFeatured').checked=p.featured===true;document.querySelector('#productOffer').checked=p.offer===true;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML=p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:contain">`:'Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
+  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),minQty=parseFloat(document.querySelector('#productMinQty').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');if(!Number.isFinite(minQty)||minQty<=0)throw new Error('La cantidad mínima debe ser mayor que 0.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,minQty,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
   window.addEventListener('load',()=>setTimeout(()=>loadFmTypes().catch(()=>{}),1100));
 })();
 </script>
