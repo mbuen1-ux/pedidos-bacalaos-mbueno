@@ -4841,6 +4841,14 @@ window.mbSaveListStatusV110=save;
    if(!ch.dataset.lineId)throw new Error("La línea seleccionada no tiene identificador de Supabase.");
    await api("pedido_lineas?id=eq."+encodeURIComponent(ch.dataset.lineId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
   }
+  const remainingAfterDelete=await api("pedido_lineas?select=id&pedido_id=eq."+encodeURIComponent(p.id)+"&limit=1");
+  if(!Array.isArray(remainingAfterDelete)||remainingAfterDelete.length===0){
+   await api("pedidos?id=eq."+encodeURIComponent(p.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+   await window.mbLoadOrdersFromSupabase();
+   if(typeof window.mbReconcileConsumoClientes==="function")await window.mbReconcileConsumoClientes();
+   document.getElementById("o47-modal")?.classList.remove("open");
+   return;
+  }
   await recalcTotal(p.id);
   await window.mbLoadOrdersFromSupabase();
   const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
@@ -6390,6 +6398,16 @@ window.mbSaveListStatusV110=save;
     if(ids.length!==checked.length)throw new Error('Hay una línea seleccionada sin identificador de Supabase.');
     for(const lineId of ids)await api('pedido_lineas?id=eq.'+encodeURIComponent(lineId),{method:'DELETE',headers:{Prefer:'return=minimal'}});
     const pedido=(await api('pedidos?select=id&numero=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
+    if(pedido){
+      const remaining=await api('pedido_lineas?select=id&pedido_id=eq.'+encodeURIComponent(String(pedido.id))+'&limit=1');
+      if(!Array.isArray(remaining)||remaining.length===0){
+        await api('pedidos?id=eq.'+encodeURIComponent(String(pedido.id)),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+        await window.mbLoadOrdersFromSupabase();
+        if(typeof window.mbReconcileConsumoClientes==="function")await window.mbReconcileConsumoClientes();
+        document.getElementById('o47-modal')?.classList.remove('open');
+        return;
+      }
+    }
     if(pedido){
       const all=await api('pedido_lineas?select=peso_real,precio_kg&pedido_id=eq.'+encodeURIComponent(String(pedido.id)));
       const total=Number(all.reduce((s,l)=>s+Number(l.peso_real||0)*Number(l.precio_kg||0),0).toFixed(2));
