@@ -423,7 +423,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" type="button" id="npNewProduct">+ Nuevo artículo</button>
       <button class="btn light" type="button" id="npOpenFormatTypes">Tipos de formato</button>
-      <button class="btn light" type="button" id="npOpenCategories" onclick="window.mbOpenCategoriesMaster()">Maestro de categorías</button>
+      <button class="btn light" type="button" id="npOpenCategories" onclick="window.mbOpenCategoriesFallback()">Maestro de categorías</button>
       <button class="btn light" type="button" id="npOpenImport">Importar artículos Excel</button>
     </div>
   </div>
@@ -5441,7 +5441,36 @@ window.mbSaveListStatusV110=save;
   };
 })();
 </script>
-</html><script id="portal-orders-sync-v67">
+<script id="categorias-master-fallback-v2">
+(function(){
+  window.mbOpenCategoriesFallback=function(){
+    var old=document.getElementById('categoriesMasterOverlay');
+    if(old){old.style.display='flex';old.classList.add('open');return;}
+    var d=document.createElement('div');
+    d.id='categoriesMasterOverlay';
+    d.style.cssText='position:fixed;inset:0;background:rgba(7,28,45,.8);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999';
+    d.innerHTML='<div style="background:#fff;border-radius:14px;width:min(720px,100%);max-height:90vh;overflow:auto;padding:0;box-shadow:0 20px 60px #0005">'+
+      '<div style="padding:20px;border-bottom:1px solid #dfe5ea;display:flex;justify-content:space-between"><div><h2 style="margin:0 0 5px;color:#183044">Maestro de categorías</h2><div style="color:#71808c;font-size:13px">Categorías de Supabase</div></div><button id="cmfClose" style="font-size:22px;background:#fff;border:1px solid #dfe5ea;border-radius:8px;width:36px;height:36px">×</button></div>'+
+      '<div style="padding:20px"><div style="display:flex;gap:8px;margin-bottom:18px"><input id="cmfName" placeholder="Nombre de categoría" style="flex:1;padding:10px;border:1px solid #dfe5ea;border-radius:7px"><button id="cmfAdd" class="btn">+ Añadir</button></div><div class="tablewrap"><table><thead><tr><th>Categoría</th><th>Estado</th></tr></thead><tbody id="cmfBody"><tr><td colspan="2">Cargando...</td></tr></tbody></table></div></div>'+
+      '</div>';
+    document.body.appendChild(d);
+    document.getElementById('cmfClose').onclick=function(){d.remove()};
+    function cfg(){return window.MB_SUPABASE||{}}
+    function load(){
+      var q=cfg(); if(!q.url||!q.key){document.getElementById('cmfBody').innerHTML='<tr><td colspan="2">Supabase no está configurado.</td></tr>';return}
+      fetch(q.url+'/rest/v1/categorias?select=id,nombre,activo&order=nombre.asc',{headers:{apikey:q.key,Authorization:'Bearer '+q.key,Accept:'application/json'}})
+      .then(function(x){if(!x.ok)throw new Error('HTTP '+x.status);return x.json()})
+      .then(function(rows){document.getElementById('cmfBody').innerHTML=(rows||[]).map(function(x){return '<tr><td><input data-id="'+x.id+'" value="'+String(x.nombre||'').replace(/"/g,'&quot;')+'" style="width:100%;padding:8px;border:1px solid #dfe5ea;border-radius:6px"></td><td>'+(x.activo!==false?'Activa':'Inactiva')+'</td></tr>'}).join('')||'<tr><td colspan="2">No hay categorías.</td></tr>'})
+      .catch(function(e){document.getElementById('cmfBody').innerHTML='<tr><td colspan="2">Error: '+e.message+'</td></tr>'});
+    }
+    document.getElementById('cmfAdd').onclick=function(){
+      var name=document.getElementById('cmfName').value.trim(),q=cfg(); if(!name)return;
+      fetch(q.url+'/rest/v1/categorias',{method:'POST',headers:{apikey:q.key,Authorization:'Bearer '+q.key,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({nombre:name,activo:true})}).then(function(x){if(!x.ok)throw new Error('HTTP '+x.status);document.getElementById('cmfName').value='';load()}).catch(function(e){alert('No se ha podido crear la categoría: '+e.message)});
+    };
+    load();
+  };
+})();
+</script></html><script id="portal-orders-sync-v67">
 (function(){
   function escLocal(s){return String(s??"").replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
   function syncPortalOrders(){
