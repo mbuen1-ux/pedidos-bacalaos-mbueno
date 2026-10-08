@@ -49,7 +49,7 @@ window.MB_SUPABASE={url:'https://ffgmpwxyzizbfiechlye.supabase.co',key:'sb_publi
 <div id="toast" class="toast"></div>
 <script>
 const SB=window.MB_SUPABASE;
-let client=null, articles=[], formats=[], prices={}, history=[], cart={};
+let client=null, articles=[], formats=[], formatTypes=[], prices={}, history=[], cart={};
 const n=v=>Number(v||0);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const headers=()=>({apikey:SB.key,Authorization:'Bearer '+SB.key,Accept:'application/json','Content-Type':'application/json'});
@@ -80,7 +80,7 @@ async function loadHomeBannerFromSupabase(){
 async function boot(){document.getElementById('loginPage').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('userName').textContent=client.nombre||client.codigo||'';document.getElementById('helloName').textContent=(client.nombre||'').split(' ')[0];await Promise.all([loadCatalog(),loadHistory(),loadHomeBannerFromSupabase()]);renderAll();}
 async function loadCatalog(){
  articles=await api('articulos?select=id,referencia,nombre,precio_base,activo,destacado&activo=eq.true&order=referencia.asc&limit=5000');
- formats=await api('formatos?select=id,articulo_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&activo=eq.true&order=articulo_id.asc,orden.asc,id.asc&limit=10000');
+ const [formatRows,typeRows]=await Promise.all([api('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden,activo&activo=eq.true&order=articulo_id.asc,orden.asc,id.asc&limit=10000'),api('tipos_formato?select=id,codigo,nombre,unidad,activo,orden&activo=eq.true&order=orden.asc,codigo.asc')]); const tm=new Map(typeRows.map(t=>[String(t.id),t])); formats=formatRows.map(f=>({...f,unidad:String(tm.get(String(f.tipo_formato_id))?.unidad||'')})); formatTypes=typeRows;
  const code=String(client.tarifa_codigo||'').replace(/^ERP-/i,''); prices={};
  if(code){const ts=await api('tarifas?select=id,codigo&codigo=eq.'+encodeURIComponent(code)+'&limit=1');if(ts.length){const ps=await api('tarifa_articulos?select=articulo_id,precio_kg&tarifa_id=eq.'+encodeURIComponent(ts[0].id)+'&limit=10000');ps.forEach(x=>prices[String(x.articulo_id)]=n(x.precio_kg));}}
 }
