@@ -4307,8 +4307,18 @@ window.mbSaveListStatusV110=save;
     else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active});
     try{
       await window.mbSaveProductToSupabase(p,oldSku);
+      /* Después de guardar, volvemos a leer Supabase y reconstruimos la tabla
+         visible. Así se actualizan inmediatamente formatos, precio y demás
+         datos del artículo, sin necesidad de recargar la página. */
+      if(typeof window.mbRefreshProductsOnline==='function'){
+        await window.mbRefreshProductsOnline();
+      }else if(typeof window.mbLoadArticlesFromSupabase==='function'){
+        await window.mbLoadArticlesFromSupabase();
+        if(typeof renderProducts==='function')renderProducts();
+      }else if(typeof renderProducts==='function'){
+        renderProducts();
+      }
       window.editingProductSku=null;
-      if(typeof renderProducts==='function')renderProducts();
       if(typeof closeProduct==='function')closeProduct();
       alert('Artículo y formatos guardados en Supabase.');
     }catch(e){console.error(e);alert('El artículo se guardó en pantalla, pero no se pudo sincronizar con Supabase.\n\n'+(e.message||e));}
