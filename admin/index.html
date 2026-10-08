@@ -155,6 +155,15 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 #productFormatsBuilder .fm-unit-display span{font-size:10px;color:#667;text-transform:uppercase;font-weight:700}
 #productFormatsBuilder .fm-unit-display strong{font-size:13px;color:#173b57}
 </style>
+<style id="format-unit-editor-v2">
+#npesFormats .npes-format{grid-template-columns:minmax(170px,1.7fr) minmax(110px,1fr) minmax(95px,.8fr) minmax(120px,1.05fr) minmax(75px,.65fr) 44px 44px 72px;gap:8px;align-items:center}
+#npesFormats .mb-ft-type,#npesFormats .npes-weight,#npesFormats .npes-default-qty,#npesFormats .mb-ft-desc{box-sizing:border-box;width:100%;min-width:0}
+#npesFormats .mb-ft-desc{grid-column:1/-1;grid-row:auto}
+#npesFormats .mb-ft-unit{height:36px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 8px;border:1px solid var(--line);border-radius:7px;background:#fff;box-sizing:border-box;white-space:nowrap}
+#npesFormats .mb-ft-unit span{font-size:9px;color:#667;font-weight:700}
+#npesFormats .mb-ft-unit strong{font-size:13px;color:var(--blue)}
+@media(max-width:900px){#npesFormats .npes-format{grid-template-columns:1fr 110px 90px 110px 44px 44px 72px}#npesFormats .mb-ft-unit{grid-column:auto}}
+</style>
 </head>
 <body>
 <script id="orders-visible-dom-refresh-v156">
@@ -4197,7 +4206,7 @@ window.mbSaveListStatusV110=save;
     });
   }
   async function loadFormats(){
-    if(!Array.isArray(window.mbFormatTypes)||!window.mbFormatTypes.length){try{window.mbFormatTypes=await req('tipos_formato?select=id,codigo,nombre,activo,orden&order=orden.asc,codigo.asc')}catch(_){} }
+    if(!Array.isArray(window.mbFormatTypes)||!window.mbFormatTypes.length){try{window.mbFormatTypes=await req('tipos_formato?select=id,codigo,nombre,activo,orden,unidad&order=orden.asc,codigo.asc')}catch(_){} }
     installFormatMasterTypes();
     const [arts,formats]=await Promise.all([
       req('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo,imagen_url,destacado,oferta&order=referencia.asc'),
@@ -4333,7 +4342,8 @@ window.mbSaveListStatusV110=save;
     const p=window.productCatalog?.find(x=>x.sku===window.mbCurrentEditSku);const fs=Array.isArray(p?.formats)?p.formats:[];
     rows.forEach((row,i)=>{
       const f=fs[i]||{};const t=ensureType(f);const first=row.querySelector('.npes-type');if(first){const sel=document.createElement('select');sel.className='mb-ft-type';sel.style.minWidth='180px';sel.innerHTML=types.map(x=>`<option value="${x.id}" ${t&&String(x.id)===String(t.id)?'selected':''}>${esc(x.codigo)} · ${esc(x.nombre)}</option>`).join('');first.replaceWith(sel);}
-      const d=document.createElement('input');d.className='mb-ft-desc';d.placeholder='Descripción / opción';d.value=f.descripcion||'';d.title='Permite distinguir dos opciones del mismo código';row.insertBefore(d,row.querySelector('.npes-default-qty'));
+      const u=document.createElement('div');u.className='mb-ft-unit';u.innerHTML='<span>UNIDAD</span><strong>'+esc(t?.unidad||'—')+'</strong>';row.insertBefore(u,row.querySelector('.npes-default-qty'));
+      const d=document.createElement('input');d.className='mb-ft-desc';d.placeholder='Descripción personalizada (opcional)';d.value=f.descripcion||'';d.title='Permite distinguir dos opciones del mismo código';row.insertBefore(d,row.querySelector('.npes-default-qty'));
     });
   }
   // Intercept opening so the existing editor is enriched with master format types.
