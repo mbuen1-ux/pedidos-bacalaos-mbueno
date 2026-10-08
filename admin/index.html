@@ -4920,6 +4920,83 @@ window.mbSaveListStatusV110=save;
   }
 })();
 </script>
+<script id="direct-main-data-v11">
+(function(){
+  'use strict';
+  const cfg=()=>window.MB_SUPABASE||{};
+  async function api(path){
+    const c=cfg();
+    const r=await fetch(c.url+'/rest/v1/'+path,{headers:{apikey:c.key,Authorization:'Bearer '+c.key,Accept:'application/json'}});
+    const t=await r.text(); let d=[]; try{d=t?JSON.parse(t):[];}catch(_){}
+    if(!r.ok) throw new Error((d&&d.message)||t||('HTTP '+r.status));
+    return Array.isArray(d)?d:[];
+  }
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function loadClientsDirect(){
+    const body=document.getElementById('clientsTable'); if(!body)return;
+    try{
+      const [data,tariffs]=await Promise.all([
+        api('clientes?select=id,codigo,nombre,tarifa_codigo,activo&order=codigo.asc'),
+        api('tarifas?select=id,codigo,nombre&limit=5000')
+      ]);
+      const tm=new Map(tariffs.map(t=>[String(t.codigo||'').replace(/^ERP-/i,''),t.nombre||'']));
+      const q=String(document.getElementById('clientSearch')?.value||'').toLowerCase().trim();
+      window.__directClients=data.map(c=>({id:c.id,code:c.codigo||'',name:c.nombre||'',tariffId:c.tarifa_codigo||'',active:c.activo!==false}));
+      const rows=window.__directClients.filter(c=>!q||String(c.code).toLowerCase().includes(q)||String(c.name).toLowerCase().includes(q)).map(c=>{
+        const tc=String(c.tariffId||'').replace(/^ERP-/i,'');
+        return '<tr><td><input type="checkbox" class="client-select-check" data-client-code="'+esc(c.code)+'"></td><td><strong>'+esc(c.code)+'</strong></td><td><div class="client">'+esc(c.name)+'</div></td><td>'+esc(tm.get(tc)||'Sin tarifa')+'</td><td><span class="badge '+(c.active?'done':'pending')+'">'+(c.active?'Activo':'Inactivo')+'</span></td><td><button type="button" class="btn light client-action" onclick="editClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">Editar</button></td><td><button type="button" class="btn client-action create-order-v33" data-client-id="'+esc(c.id||c.code)+'">Crear pedido</button></td><td><button type="button" class="btn light client-action" onclick="deleteSingleClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">🗑</button></td></tr>';
+      }).join('');
+      body.innerHTML=rows||'<tr><td colspan="8" class="empty-row">No hay clientes que coincidan.</td></tr>';
+      if(typeof updateClientSelectionUI==='function')updateClientSelectionUI();
+    }catch(e){
+      body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#a33">Error cargando clientes: '+esc(e.message||e)+'</td></tr>';
+      console.error('v11 clientes',e);
+    }
+  }
+  async function loadProductsDirect(){
+    const body=document.getElementById('npProductsTable'); if(!body)return;
+    try{
+      const [arts,formats,tariffs,links]=await Promise.all([
+        api('articulos?select=id,referencia,nombre,descripcion,categoria,precio_base,activo&order=referencia.asc'),
+        api('formatos?select=articulo_id,activo'),
+        api('tarifas?select=id,codigo&codigo=eq.010&limit=1'),
+        api('tarifa_articulos?select=articulo_id,tarifa_id,precio_kg&limit=10000')
+      ]);
+      const tid=tariffs[0]?.id;
+      const prices=new Map(links.filter(x=>!tid||String(x.tarifa_id)===String(tid)).map(x=>[String(x.articulo_id),Number(x.precio_kg)]));
+      const counts=new Map(); formats.forEach(f=>{if(f.activo!==false){const k=String(f.articulo_id);counts.set(k,(counts.get(k)||0)+1);}});
+      const q=String(document.getElementById('npSearch')?.value||'').toLowerCase().trim();
+      const cat=document.getElementById('npCategory')?.value||'all';
+      const cats=[...new Set(arts.map(a=>String(a.categoria||'Sin clasificar')))].sort();
+      const sel=document.getElementById('npCategory');
+      if(sel){const old=sel.value;sel.innerHTML='<option value="all">Todas las categorías</option>'+cats.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');if(cats.includes(old))sel.value=old;}
+      const rows=arts.filter(a=>{
+        const text=(String(a.referencia||'')+' '+String(a.nombre||'')+' '+String(a.descripcion||'')).toLowerCase();
+        return (!q||text.includes(q))&&(cat==='all'||String(a.categoria||'Sin clasificar')===cat);
+      }).map(a=>{
+        const p=prices.get(String(a.id)); const price=Number.isFinite(p)?p:Number(a.precio_base||0);
+        return '<tr><td><b>'+esc(a.referencia)+'</b></td><td><div class="client">'+esc(a.nombre)+'</div><div class="sub">'+esc(a.descripcion)+'</div></td><td>'+esc(a.categoria||'Sin clasificar')+'</td><td><b>'+price.toFixed(2).replace('.',',')+' €</b></td><td>'+String(counts.get(String(a.id))||0)+'</td><td><span class="badge '+(a.activo!==false?'done':'pending')+'">'+(a.activo!==false?'Activo':'Inactivo')+'</span></td><td><button class="btn light np-edit" type="button" data-sku="'+esc(a.referencia)+'">Editar</button></td></tr>';
+      }).join('');
+      body.innerHTML=rows||'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No hay artículos</td></tr>';
+      const info=document.getElementById('npCatalogInfo');if(info)info.textContent=arts.length+' artículos online';
+    }catch(e){
+      body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:#a33">Error cargando artículos: '+esc(e.message||e)+'</td></tr>';
+      console.error('v11 productos',e);
+    }
+  }
+  function hook(){
+    document.addEventListener('click',e=>{
+      const n=e.target.closest?.('.nav[data-panel="clients"]'); if(n){setTimeout(loadClientsDirect,80);}
+      const p=e.target.closest?.('.nav[data-panel="products"]'); if(p){setTimeout(loadProductsDirect,80);}
+    },true);
+    document.addEventListener('input',e=>{if(e.target.id==='clientSearch')loadClientsDirect();if(e.target.id==='npSearch')loadProductsDirect();});
+    document.addEventListener('change',e=>{if(e.target.id==='npCategory')loadProductsDirect();});
+    window.mbDirectLoadClients=loadClientsDirect; window.mbDirectLoadProducts=loadProductsDirect;
+    setTimeout(loadClientsDirect,500); setTimeout(loadProductsDirect,600);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook);else hook();
+})();
+</script>
 </body>
 
 <!-- orders-lines-supabase-v135 desactivado en v139: sustituido por el sincronizador único v138. -->
