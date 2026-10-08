@@ -2982,7 +2982,7 @@ window.mbSyncClientsFromSupabase=async function(){
     return Array.isArray(data)?data:[];
   };
   function mapServer(a){
-    return {id:a.id||null,sku:String(a.referencia||a.codigo||a.sku||''),name:String(a.nombre||a.descripcion||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:Array.isArray(a.formatos)?a.formatos:[],price:Number(a.precio_kg||a.precio||0),active:a.activo!==false,image:a.imagen||null};
+    return {id:a.id||null,sku:String(a.referencia||a.codigo||a.sku||''),name:String(a.nombre||a.descripcion||''),description:String(a.descripcion||''),category:String(a.categoria||'Sin clasificar'),formats:[],price:Number(a.precio_kg||a.precio||0),active:a.activo!==false,image:a.imagen||null};
   }
   async function load(){
     if(!sb())return;
