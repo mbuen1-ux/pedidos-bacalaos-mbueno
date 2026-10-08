@@ -123,6 +123,43 @@ button:not(.icon-btn){letter-spacing:0!important;}
 button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brightness(.98)!important;}
 </style>
 <style id="o82-time-style">.o82-time-link{border:0;background:none;padding:0;color:var(--blue);font:inherit;font-weight:600;cursor:pointer}.o82-time-link:hover{text-decoration:underline}</style>
+<style id="orders-add-visual-v177">
+/* v177: unificar también el maquetado legacy del editor. Si alguna copia
+   antigua sigue generando .add-line-grid, debe verse exactamente igual que
+   el editor actual: artículo y formato en dos filas; cantidad y botón a la
+   derecha. */
+.add-line-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 230px!important;
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:9px!important;
+  align-items:stretch!important;
+  min-width:0!important;
+}
+.add-line-grid>div{min-width:0!important;overflow:hidden!important;}
+.add-line-grid>div:nth-child(1){grid-column:1!important;grid-row:1!important;}
+.add-line-grid>div:nth-child(2){grid-column:1!important;grid-row:2!important;}
+.add-line-grid>div:nth-child(3){grid-column:2!important;grid-row:1!important;}
+.add-line-grid>div:nth-child(4){grid-column:2!important;grid-row:2!important;}
+.add-line-grid select,.add-line-grid input{
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  box-sizing:border-box!important;text-overflow:ellipsis!important;
+  overflow:hidden!important;white-space:nowrap!important;
+}
+.add-line-grid button{width:100%!important;white-space:nowrap!important;}
+@media(max-width:760px){
+  .add-line-grid{
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto!important;
+  }
+  .add-line-grid>div:nth-child(1),
+  .add-line-grid>div:nth-child(2),
+  .add-line-grid>div:nth-child(3),
+  .add-line-grid>div:nth-child(4){
+    grid-column:1!important;grid-row:auto!important;
+  }
+}
+</style>
 </head>
 <body>
 <script id="orders-visible-dom-refresh-v156">
