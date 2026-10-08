@@ -4243,19 +4243,69 @@ window.mbSaveListStatusV110=save;
     return {mapped,formatCount:Array.isArray(formats)?formats.length:0};
   }
   async function saveFormatsForArticle(articleId,formats){
+    // Guardado autoritativo: todos los campos del formato se escriben en Supabase
+    // y se vuelven a leer para confirmar que la base contiene exactamente esos valores.
     const current=await req('formatos?select=id&articulo_id=eq.'+encodeURIComponent(articleId));
     const ids=new Set((Array.isArray(current)?current:[]).map(x=>String(x.id)));
-    const keep=[];
+    const expected=[];
     for(let i=0;i<formats.length;i++){
       const f=formats[i];
-      const row=toDb(f,articleId,i); const id=f.id||null;
+      const row=toDb(f,articleId,i);
+      const id=f.id||null;
+      let saved=null;
       if(id){
-        await req('formatos?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)}); keep.push(String(id)); ids.delete(String(id));
+        const updated=await req('formatos?id=eq.'+encodeURIComponent(id),{
+          method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(row)
+        });
+        saved=Array.isArray(updated)?updated[0]:updated;
+        if(!saved?.id)throw new Error('Supabase no devolvió el formato actualizado.');
+        ids.delete(String(saved.id));
       }else{
-        const created=await req('formatos',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)}); const c=Array.isArray(created)?created[0]:created; if(c?.id){f.id=c.id;keep.push(String(c.id));}
+        const created=await req('formatos',{
+          method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)
+        });
+        saved=Array.isArray(created)?created[0]:created;
+        if(!saved?.id)throw new Error('Supabase no devolvió el formato creado.');
+        f.id=saved.id;
       }
+      expected.push({
+        id:String(saved.id),
+        articulo_id:String(row.articulo_id),
+        tipo_formato_id:row.tipo_formato_id==null?null:String(row.tipo_formato_id),
+        nombre:row.nombre??null,
+        descripcion:row.descripcion??null,
+        peso_aproximado:row.peso_aproximado==null?null:Number(row.peso_aproximado),
+        cantidad_defecto:Number(row.cantidad_defecto),
+        orden:Number(row.orden),
+        activo:row.activo!==false,
+        unidades_caja:row.unidades_caja==null?null:Number(row.unidades_caja)
+      });
     }
-    for(const stale of ids){await req('formatos?id=eq.'+encodeURIComponent(stale),{method:'DELETE',headers:{Prefer:'return=minimal'}});}
+    for(const stale of ids){
+      await req('formatos?id=eq.'+encodeURIComponent(stale),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    }
+
+    const verify=await req('formatos?select=id,articulo_id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden,activo,unidades_caja&articulo_id=eq.'+encodeURIComponent(articleId)+'&order=orden.asc');
+    const actual=Array.isArray(verify)?verify:[];
+    if(actual.length!==expected.length)
+      throw new Error('Supabase no coincide con los formatos guardados: se esperaban '+expected.length+' y se encontraron '+actual.length+'.');
+    const norm=v=>v==null?null:String(v);
+    for(const exp of expected){
+      const got=actual.find(x=>String(x.id)===exp.id);
+      if(!got)throw new Error('Supabase no devuelve el formato '+exp.id+'.');
+      if(
+        String(got.articulo_id)!==exp.articulo_id ||
+        norm(got.tipo_formato_id)!==exp.tipo_formato_id ||
+        norm(got.nombre)!==norm(exp.nombre) ||
+        norm(got.descripcion)!==norm(exp.descripcion) ||
+        (got.peso_aproximado==null?null:Number(got.peso_aproximado))!==exp.peso_aproximado ||
+        Number(got.cantidad_defecto)!==exp.cantidad_defecto ||
+        Number(got.orden)!==exp.orden ||
+        Boolean(got.activo)!==exp.activo ||
+        (got.unidades_caja==null?null:Number(got.unidades_caja))!==exp.unidades_caja
+      ) throw new Error('Supabase no coincide con todos los datos del formato '+exp.id+'.');
+    }
+    return actual;
   }
   async function syncAll(){
     const rows=Array.isArray(window.productCatalog)?window.productCatalog:[];
