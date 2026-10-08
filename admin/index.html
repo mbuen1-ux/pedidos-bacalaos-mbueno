@@ -23,7 +23,7 @@ button,input,select{font:inherit}.top{height:72px;background:var(--blue);color:#
 @media(max-width:900px){.layout{grid-template-columns:1fr}aside{display:flex;overflow:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}.nav{min-width:max-content;margin:0}.stats{grid-template-columns:repeat(2,1fr)}.formgrid,.products{grid-template-columns:1fr}}
 
 .order-link{color:#174e78;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.detail-overlay{position:fixed;inset:0;background:#071c2dcc;display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.detail-overlay{position:fixed;inset:0;background:#071c2dcc;display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.detail-overlay.open{display:flex}
 .detail-modal{background:#fff;border-radius:14px;width:min(900px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 60px #0005}
 .detail-head{padding:20px 22px;border-bottom:1px solid #dfe5ea;display:flex;justify-content:space-between;align-items:start}
 .detail-head h2{margin:0 0 5px;font-size:22px}.detail-sub{color:#71808c;font-size:13px}
