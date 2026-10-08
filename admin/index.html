@@ -4803,7 +4803,8 @@ window.mbSaveListStatusV110=save;
   await window.mbLoadOrdersFromSupabase();
   const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
   if(!fresh)throw new Error("El pedido no se pudo recuperar después de guardar.");
-  window.openOrder(fresh.id);
+  if(typeof window.__mbOpenOrderFromSupabase==='function') window.__mbOpenOrderFromSupabase(fresh.id);
+  else if(typeof openOrder==='function') openOrder(fresh.id);
  }
  async function saveLines(){
   const n=orderId(),p=await pedidoByNumber(n); if(!p)throw new Error("No se ha encontrado el pedido.");
