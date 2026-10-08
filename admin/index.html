@@ -150,6 +150,11 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
  .v4-add-action button{width:100%}
 }
 </style>
+<style id="format-unit-fix">
+#productFormatsBuilder .fm-unit-display{height:36px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 7px;border:1px solid #cbd7df;border-radius:6px;background:#f7fafc;box-sizing:border-box;white-space:nowrap;font-size:12px}
+#productFormatsBuilder .fm-unit-display span{font-size:10px;color:#667;text-transform:uppercase;font-weight:700}
+#productFormatsBuilder .fm-unit-display strong{font-size:13px;color:#173b57}
+</style>
 </head>
 <body>
 <script id="orders-visible-dom-refresh-v156">
@@ -4364,7 +4369,7 @@ window.mbSaveListStatusV110=save;
       <input class="fm-weight" data-i="${i}" type="number" min="0" step="0.001" value="${f.weight??''}" placeholder="Peso base">
       <input class="fm-desc" data-i="${i}" value="${escF(f.descripcion||'')}" placeholder="Descripción / opción">
       <input class="fm-qty" data-i="${i}" type="number" min="1" step="1" value="${f.defaultQty??1}" title="Cantidad por defecto">
-      <span style="font-size:12px;color:#667;font-weight:700">${t?escF(t.unidad||''):''}</span>
+      <div class="fm-unit-display"><span>Unidad</span><strong>${t?escF(t.unidad||''):'—'}</strong></div>
       <button class="mini fm-up" data-i="${i}" type="button">↑</button><button class="mini fm-down" data-i="${i}" type="button">↓</button><button class="mini remove fm-del" data-i="${i}" type="button">Eliminar</button>
     </div>`}).join('');
     box.querySelectorAll('.fm-type').forEach(el=>el.onchange=()=>{const i=+el.dataset.i,t=fmTypes.find(x=>String(x.id)===String(el.value));draft[i].tipoFormatoId=t?.id||null;draft[i].code=t?.codigo||'';draft[i].type='master';draft[i].label=t?.nombre||'';draft[i].nombre=t?.nombre||'';render();});
