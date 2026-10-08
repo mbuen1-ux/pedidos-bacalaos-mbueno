@@ -644,8 +644,6 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
       <div class="npes-field"><label>Nombre del artículo *</label><input id="npesName"></div>
       <div class="npes-field"><label>Categoría</label><select id="npesCategory"><option>Sin clasificar</option><option>Lingotes</option><option>Lomos</option><option>Supremas</option><option>Imperial</option><option>Cocochas</option><option>Otros</option></select></div>
       <div class="npes-field"><label>Precio base (€/kg)</label><input id="npesPrice" type="number" min="0" step="0.01"></div>
-      <div class="npes-field"><label>Unidades por caja</label><input id="npesBox" type="number" min="0" step="1"></div>
-      <div class="npes-field"><label>Cantidad mínima</label><input id="npesMin" type="number" min="0" step="0.001" value="1"></div>
     </div>
     <div class="npes-field" style="margin-top:16px"><label>Descripción</label><textarea id="npesDesc" rows="4" placeholder="Descripción que verá el cliente"></textarea></div>
     <div style="margin-top:16px"><label style="font-weight:700;display:block;margin-bottom:6px">Estado</label><label style="display:flex;align-items:center;gap:8px"><input id="npesActive" type="checkbox" checked style="width:auto"> Artículo activo</label></div>
@@ -685,8 +683,7 @@ button:hover,.btn:hover,.action-btn:hover{box-shadow:none!important;filter:brigh
 
   <div class="formgrid" style="margin-top:14px">
     <div class="field"><label>Precio (€/kg)</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="0,00"><div class="edit-note">El precio siempre se expresa por kilo.</div></div>
-    <div class="field"><label>Unidades por caja</label><input id="productBoxUnits" type="number" min="0" step="1" placeholder="Opcional"></div>
-    <div class="field"><label>Cantidad mínima</label><input id="productMinQty" type="number" min="0" step="0.001" value="1"></div>
+
   </div>
 
   <div class="field" style="margin-top:14px"><label>Imagen del producto</label>
@@ -1289,10 +1286,7 @@ function newProduct(){
  document.querySelector('#productDescription').value='';
  document.querySelector('#productCategory').value='Sin clasificar';
  setProductFormats([]);
- document.querySelector('#productPrice').value='';
- document.querySelector('#productBoxUnits').value='';
- document.querySelector('#productMinQty').value='1';
- document.querySelector('#productActive').checked=true;
+ document.querySelector('#productPrice').value='';document.querySelector('#productActive').checked=true;
  document.querySelector('#productImageInput').value='';
  document.querySelector('#productImagePreview').innerHTML='Sin imagen';
  document.querySelector('#productOverlay').style.display='flex';
@@ -1307,10 +1301,7 @@ function editProduct(sku){
  document.querySelector('#productDescription').value=p.description||'';
  document.querySelector('#productCategory').value=p.category;
  setProductFormats(p.formats);
- document.querySelector('#productPrice').value=p.price;
- document.querySelector('#productBoxUnits').value=p.boxUnits||'';
- document.querySelector('#productMinQty').value=p.minQty;
- document.querySelector('#productActive').checked=p.active;
+ document.querySelector('#productPrice').value=p.price;document.querySelector('#productActive').checked=p.active;
  document.querySelector('#productImageInput').value='';
  document.querySelector('#productImagePreview').innerHTML=p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:contain">`:'Sin imagen';
  document.querySelector('#productOverlay').style.display='flex';
@@ -1335,20 +1326,16 @@ function saveProduct(){
  const category=document.querySelector('#productCategory').value;
  const formats=collectProductFormats();
  const price=parseFloat(document.querySelector('#productPrice').value);
- const boxUnits=document.querySelector('#productBoxUnits').value.trim();
- const minQty=parseFloat(document.querySelector('#productMinQty').value);
- const active=document.querySelector('#productActive').checked;
+ const boxUnits=const minQty=parseFloat(const active=document.querySelector('#productActive').checked;
  if(!sku||!name){alert('La referencia / SKU y el nombre son obligatorios.');return;}
  if(!formats.length){alert('Introduce al menos un formato.');return;}
- if(!Number.isFinite(price)||price<0){ if(!editingProductSku) { /* precio pendiente */ } else {alert('Introduce un precio válido.');return;} }
- if(!Number.isFinite(minQty)||minQty<=0){alert('La cantidad mínima debe ser mayor que 0.');return;}
- if(editingProductSku){
+ if(!Number.isFinite(price)||price<0){ if(!editingProductSku) { /* precio pendiente */ } else {alert('Introduce un precio válido.');return;} }if(editingProductSku){
    const p=productCatalog.find(x=>x.sku===editingProductSku);
    if(sku!==editingProductSku && productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
-   Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});
+   Object.assign(p,{sku,name,description,category,formats,price,active,image:productImageData});
  }else{
    if(productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
-   productCatalog.push({sku,name,description,category,formats,price:Number.isFinite(price)?price:0,boxUnits,minQty,active,image:productImageData});
+   productCatalog.push({sku,name,description,category,formats,price:Number.isFinite(price)?price:0,active,image:productImageData});
  }
  renderProducts(); closeProduct();
 }
@@ -2153,14 +2140,14 @@ normalizeClientTariffs();renderRecent();renderOrders();renderClients();renderPro
     const screen=document.getElementById('npEditorScreen'); const p=sku?catalog().find(x=>skuNorm(x.sku)===skuNorm(sku)):null;
     npesEditingSku=p?.sku||null; npesImage=p?.image||null; npesFormats=npesCloneFormats(p?.formats);
     document.getElementById('npesTitle').textContent=p?'Editar artículo · '+p.sku:'Nuevo artículo';
-    document.getElementById('npesSku').value=p?.sku||''; document.getElementById('npesName').value=p?.name||''; document.getElementById('npesCategory').value=p?.category||'Sin clasificar'; document.getElementById('npesDesc').value=p?.description||''; document.getElementById('npesPrice').value=p?.price??0; document.getElementById('npesBox').value=p?.boxUnits??''; document.getElementById('npesMin').value=p?.minQty??1; document.getElementById('npesActive').checked=p?.active!==false;
+    document.getElementById('npesSku').value=p?.sku||''; document.getElementById('npesName').value=p?.name||''; document.getElementById('npesCategory').value=p?.category||'Sin clasificar'; document.getElementById('npesDesc').value=p?.description||''; document.getElementById('npesPrice').value=p?.price??0;document.getElementById('npesActive').checked=p?.active!==false;
     const pv=document.getElementById('npesPreview'); pv.innerHTML=npesImage?`<img src="${npesImage}" alt="">`:'Sin imagen'; document.getElementById('npesImageInput').value=''; npesRenderFormats(); screen.style.display='block'; document.body.style.overflow='hidden';
   }
   function npesClose(){document.getElementById('npEditorScreen').style.display='none';document.body.style.overflow='';}
   function npesSave(){
     const sku=document.getElementById('npesSku').value.trim(), name=document.getElementById('npesName').value.trim(); if(!sku||!name){alert('Referencia y nombre son obligatorios.');return;}
     let p=npesEditingSku?catalog().find(x=>skuNorm(x.sku)===skuNorm(npesEditingSku)):null; const duplicate=catalog().find(x=>skuNorm(x.sku)===skuNorm(sku)&&x!==p); if(duplicate){alert('Ya existe un artículo con esa referencia.');return;}
-    if(!p){p={sku,name,description:'',category:'Sin clasificar',formats:npesCloneFormats(npesFormats),price:0,boxUnits:'',minQty:1,active:true,image:null};catalog().push(p);} p.sku=sku;p.name=name;p.category=document.getElementById('npesCategory').value;p.description=document.getElementById('npesDesc').value.trim();p.price=Math.max(0,Number(document.getElementById('npesPrice').value)||0);p.boxUnits=document.getElementById('npesBox').value;p.minQty=Math.max(0,Number(document.getElementById('npesMin').value)||0);p.active=document.getElementById('npesActive').checked;p.formats=npesCloneFormats(npesFormats);p.image=npesImage||null; npesClose();renderCatalog();alert('Artículo guardado.');
+    if(!p){p={sku,name,description:'',category:'Sin clasificar',formats:npesCloneFormats(npesFormats),price:0,boxUnits:'',minQty:1,active:true,image:null};catalog().push(p);} p.sku=sku;p.name=name;p.category=document.getElementById('npesCategory').value;p.description=document.getElementById('npesDesc').value.trim();p.price=Math.max(0,Number(document.getElementById('npesPrice').value)||0);p.active=document.getElementById('npesActive').checked;p.formats=npesCloneFormats(npesFormats);p.image=npesImage||null; npesClose();renderCatalog();alert('Artículo guardado.');
   }
 
   document.getElementById('npesClose').onclick=npesClose;
@@ -4356,18 +4343,14 @@ window.mbSaveListStatusV110=save;
     const category=document.querySelector('#productCategory')?.value||'Sin clasificar';
     const formats=typeof collectProductFormats==='function'?collectProductFormats():[];
     const price=parseFloat(document.querySelector('#productPrice')?.value);
-    const boxUnits=document.querySelector('#productBoxUnits')?.value.trim()||'';
-    const minQty=parseFloat(document.querySelector('#productMinQty')?.value);
-    const active=!!document.querySelector('#productActive')?.checked;
+    const boxUnits=const minQty=parseFloat(const active=!!document.querySelector('#productActive')?.checked;
     if(!sku||!name){alert('La referencia / SKU y el nombre son obligatorios.');return;}
-    if(!Number.isFinite(price)||price<0){alert('Introduce un precio válido.');return;}
-    if(!Number.isFinite(minQty)||minQty<=0){alert('La cantidad mínima debe ser mayor que 0.');return;}
-    const oldSku=(typeof editingProductSku!=='undefined'&&editingProductSku)?editingProductSku:null;
+    if(!Number.isFinite(price)||price<0){alert('Introduce un precio válido.');return;}const oldSku=(typeof editingProductSku!=='undefined'&&editingProductSku)?editingProductSku:null;
     let p=Array.isArray(window.productCatalog)?window.productCatalog.find(x=>x.sku===oldSku):null;
     if(oldSku && sku!==oldSku && Array.isArray(window.productCatalog)&&window.productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
     if(!oldSku && Array.isArray(window.productCatalog)&&window.productCatalog.some(x=>x.sku===sku)){alert('Esa referencia / SKU ya existe.');return;}
-    if(!p){p={sku,name,description,category,formats,price,boxUnits,minQty,active,image:null};window.productCatalog.push(p);}
-    else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active});
+    if(!p){p={sku,name,description,category,formats,price,active,image:null};window.productCatalog.push(p);}
+    else Object.assign(p,{sku,name,description,category,formats,price,active});
     try{
       await window.mbSaveProductToSupabase(p,oldSku);
       window.editingProductSku=null;
@@ -4422,7 +4405,7 @@ window.mbSaveListStatusV110=save;
   document.addEventListener('click',e=>{if(!e.target.closest('#npesSave'))return;e.preventDefault();e.stopImmediatePropagation();(async()=>{try{
     const sku=document.getElementById('npesSku').value.trim(),name=document.getElementById('npesName').value.trim();if(!sku||!name)throw new Error('Referencia y nombre son obligatorios.');
     const oldSku=window.mbCurrentEditSku||null;const p=window.productCatalog.find(x=>x.sku===oldSku)||{sku};
-    p.sku=sku;p.name=name;p.category=document.getElementById('npesCategory').value;p.description=document.getElementById('npesDesc').value.trim();p.price=Math.max(0,Number(document.getElementById('npesPrice').value)||0);p.boxUnits=document.getElementById('npesBox').value;p.minQty=Math.max(0,Number(document.getElementById('npesMin').value)||0);p.active=document.getElementById('npesActive').checked;p.formats=readRows();
+    p.sku=sku;p.name=name;p.category=document.getElementById('npesCategory').value;p.description=document.getElementById('npesDesc').value.trim();p.price=Math.max(0,Number(document.getElementById('npesPrice').value)||0);p.active=document.getElementById('npesActive').checked;p.formats=readRows();
     if(!window.productCatalog.includes(p))window.productCatalog.push(p);
     await window.mbSaveProductToSupabase(p,oldSku);alert('Artículo y formatos guardados en Supabase.');location.reload();
   }catch(err){console.error(err);alert('No se pudo guardar el artículo y sus formatos.\n\n'+err.message)}})();},true);
@@ -4488,7 +4471,7 @@ window.mbSaveListStatusV110=save;
   window.moveProductFormat=function(i,d){const j=i+d;if(j>=0&&j<draft.length){[draft[i],draft[j]]=[draft[j],draft[i]];render();}};
   window.collectProductFormats=function(){return draft.filter(f=>f.tipoFormatoId).map(f=>({id:f.id||null,tipoFormatoId:f.tipoFormatoId||null,code:f.code||'',type:'master',weight:Number.isFinite(Number(f.weight))?Number(f.weight):null,defaultQty:Number.isFinite(Number(f.defaultQty))?Number(f.defaultQty):1,boxUnits:f.boxUnits??f.unidades_caja??null,label:f.nombre||f.label||'',nombre:f.nombre||f.label||'',descripcion:f.descripcion||'',active:f.active!==false}));};
   window.updateProductFormat=function(i,key,value){if(!draft[i])return;if(key==='weight')draft[i].weight=value===''?null:Number(value);else draft[i][key]=value;render();};
-  window.newProduct=async function(){editingProductSku=null;productImageData=null;document.querySelector('#productModalTitle').textContent='Nuevo producto';document.querySelector('#productSku').value='';document.querySelector('#productName').value='';document.querySelector('#productDescription').value='';document.querySelector('#productCategory').value='Sin clasificar';await window.setProductFormats([]);document.querySelector('#productPrice').value='';document.querySelector('#productBoxUnits').value='';document.querySelector('#productMinQty').value='1';document.querySelector('#productActive').checked=true;document.querySelector('#productFeatured').checked=false;document.querySelector('#productOffer').checked=false;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML='Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
+  window.newProduct=async function(){editingProductSku=null;productImageData=null;document.querySelector('#productModalTitle').textContent='Nuevo producto';document.querySelector('#productSku').value='';document.querySelector('#productName').value='';document.querySelector('#productDescription').value='';document.querySelector('#productCategory').value='Sin clasificar';await window.setProductFormats([]);document.querySelector('#productPrice').value='';document.querySelector('#productActive').checked=true;document.querySelector('#productFeatured').checked=false;document.querySelector('#productOffer').checked=false;document.querySelector('#productImageInput').value='';document.querySelector('#productImagePreview').innerHTML='Sin imagen';document.querySelector('#productOverlay').style.display='flex';};
   window.editProduct=async function(sku){
     const p=productCatalog.find(x=>x.sku===sku);
     if(!p)return;
@@ -4520,17 +4503,14 @@ window.mbSaveListStatusV110=save;
       }
     }catch(err){console.warn('No se pudieron recargar formatos desde Supabase:',err);}
     await window.setProductFormats(freshFormats);
-    document.querySelector('#productPrice').value=p.price??0;
-    document.querySelector('#productBoxUnits').value=p.boxUnits||'';
-    document.querySelector('#productMinQty').value=p.minQty??1;
-    document.querySelector('#productActive').checked=p.active!==false;
+    document.querySelector('#productPrice').value=p.price??0;document.querySelector('#productActive').checked=p.active!==false;
     document.querySelector('#productFeatured').checked=p.featured===true;
     document.querySelector('#productOffer').checked=p.offer===true;
     document.querySelector('#productImageInput').value='';
     document.querySelector('#productImagePreview').innerHTML=p.image?'<img src="'+p.image+'" style="width:100%;height:100%;object-fit:contain">':'Sin imagen';
     document.querySelector('#productOverlay').style.display='flex';
   };
-  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),boxUnits=document.querySelector('#productBoxUnits').value.trim(),minQty=parseFloat(document.querySelector('#productMinQty').value),active=document.querySelector('#productActive').checked;if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');if(!Number.isFinite(minQty)||minQty<=0)throw new Error('La cantidad mínima debe ser mayor que 0.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,boxUnits,minQty,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
+  window.saveProduct=async function(){try{const sku=document.querySelector('#productSku').value.trim(),name=document.querySelector('#productName').value.trim(),description=document.querySelector('#productDescription').value.trim(),category=document.querySelector('#productCategory').value,formats=window.collectProductFormats(),price=parseFloat(document.querySelector('#productPrice').value),boxUnits=if(!sku||!name)throw new Error('La referencia / SKU y el nombre son obligatorios.');if(!formats.length)throw new Error('Añade al menos un formato y selecciona su tipo.');if(!Number.isFinite(price)||price<0)throw new Error('Introduce un precio válido.');let p=editingProductSku?productCatalog.find(x=>x.sku===editingProductSku):null;if(sku!==editingProductSku&&productCatalog.some(x=>x.sku===sku))throw new Error('Esa referencia / SKU ya existe.');if(!p){p={sku,name,description,category,formats,price,active,image:productImageData};productCatalog.push(p);}else Object.assign(p,{sku,name,description,category,formats,price,active,image:productImageData});if(typeof window.mbSaveProductToSupabase==='function')await window.mbSaveProductToSupabase(p,editingProductSku||null);if(typeof renderProducts==='function')renderProducts();closeProduct();alert('Artículo y formatos guardados en Supabase.');}catch(e){console.error(e);alert('No se pudo guardar el artículo y sus formatos.\n\n'+(e.message||e));}};
   window.addEventListener('load',()=>setTimeout(()=>loadFmTypes().catch(()=>{}),1100));
 })();
 </script>
