@@ -112,24 +112,24 @@ aside{padding:20px 12px}
 #productFormatsBuilder .fm-desc-field label span{font-weight:500;text-transform:none;letter-spacing:0;color:#8a98a3;margin-left:4px}
 #productFormatsBuilder .fm-desc-field input{width:100%;min-height:36px;height:36px;padding:6px 8px;border:1px solid #cbd7df;border-radius:6px;background:#fff;font-size:13px;box-sizing:border-box}
 @media(max-width:900px){
-  #productFormatsBuilder .fm-main{grid-template-columns:minmax(0,2fr) minmax(105px,1.1fr) minmax(115px,1.15fr) minmax(105px,1.05fr) 52px 48px;gap:6px}
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(155px,1.7fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(120px,1.1fr) minmax(100px,.95fr) 48px 48px}
   #productFormatsBuilder .fm-order>div{gap:3px}
   #productFormatsBuilder .fm-order .mini{padding:0;min-width:0}
   #productFormatsBuilder .fm-delete .mini{padding:0;font-size:14px}
 }
 @media(max-width:650px){
-  #productFormatsBuilder .fm-main{grid-template-columns:1fr 1fr}
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(155px,1.7fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(120px,1.1fr) minmax(100px,.95fr) 48px 48px}
   #productFormatsBuilder .fm-type-field{grid-column:1/-1}
   #productFormatsBuilder .fm-desc-field{margin-top:7px}
 }
 @media(max-width:420px){
-  #productFormatsBuilder .fm-main{grid-template-columns:1fr}
+  #productFormatsBuilder .fm-main{grid-template-columns:minmax(155px,1.7fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(120px,1.1fr) minmax(100px,.95fr) 48px 48px}
   #productFormatsBuilder .fm-type-field{grid-column:auto}
 }
-#productFormatsBuilder .fm-main{grid-template-columns:minmax(165px,1.75fr) minmax(105px,.95fr) minmax(115px,1.1fr) minmax(125px,1.15fr) minmax(105px,1fr) 52px 48px!important;gap:7px!important}
+#productFormatsBuilder .fm-main{grid-template-columns:minmax(155px,1.7fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(120px,1.1fr) minmax(100px,.95fr) 48px 48px}
 #productFormatsBuilder .fm-kind-value{height:36px;min-height:36px;display:flex;align-items:center;padding:0 9px;border:1px solid #cbd7df;border-radius:6px;background:#f7fafc;box-sizing:border-box;font-size:13px;font-weight:700;color:#284a63}
 #productFormatsBuilder .fm-kind-field{min-width:0}
-@media(max-width:1050px){#productFormatsBuilder .fm-main{grid-template-columns:minmax(150px,1.6fr) minmax(95px,.9fr) minmax(105px,1fr) minmax(115px,1.05fr) minmax(95px,.9fr) 48px 44px!important;gap:6px!important}}
+@media(max-width:1050px){#productFormatsBuilder .fm-main{grid-template-columns:minmax(155px,1.7fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(120px,1.1fr) minmax(100px,.95fr) 48px 48px}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
@@ -4416,7 +4416,7 @@ window.mbSaveListStatusV110=save;
   function typeFor(f){return fmTypes.find(t=>String(t.id)===String(f.tipoFormatoId))||fmTypes.find(t=>String(t.codigo)===String(f.code))||null;}
   function render(){const box=document.getElementById('productFormatsBuilder');if(!box)return;
     if(!draft.length){box.innerHTML='<div class="format-empty">No hay formatos asignados a este artículo.</div>';return;}
-    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{const t=typeFor(f);const unit=t?.nombre||'';const rawType=String(t?.codigo||t?.nombre||'').toUpperCase();const formatKind=rawType.includes('UD')?'Unidad':rawType.includes('CJ')||rawType.includes('CAJA')?'Caja':(t?.nombre||'—');
+    box.innerHTML='<div class="format-builder">'+draft.map((f,i)=>{const t=typeFor(f);const unit=t?.nombre||'';const code=String(t?.codigo||'').toUpperCase();const typeLabel=code.includes('UD')?'Unidad':code.includes('CJ')||code.includes('CAJA')?'Caja':'Kilo';
       return `<div class="format-row" data-fi="${i}">
         <div class="fm-main">
           <div class="fm-field fm-type-field">
@@ -4424,8 +4424,8 @@ window.mbSaveListStatusV110=save;
             <select class="fm-type" data-i="${i}"><option value="">Seleccionar formato...</option>${fmTypes.map(x=>`<option value="${escF(x.id)}" ${t&&String(x.id)===String(t.id)?'selected':''}>${escF(x.codigo)} · ${escF(x.nombre)}</option>`).join('')}</select>
           </div>
           <div class="fm-field fm-kind-field">
-            <label>Tipo de formato</label>
-            <div class="fm-kind-value">${escF(formatKind)}</div>
+            <label>Tipo</label>
+            <div class="fm-kind-value">${escF(typeLabel)}</div>
           </div>
           <div class="fm-field fm-weight-field">
             <label>Peso aproximado</label>
