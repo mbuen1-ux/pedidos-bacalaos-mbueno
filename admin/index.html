@@ -2508,7 +2508,7 @@ function openOrder(id){
  $("o47-title").textContent="Pedido "+o.id;
  $("o47-subtitle").textContent=o.client+" · "+o.date+" "+o.time;
  $("o47-body").innerHTML=`
-  <div class="v4-order-editor">
+  <div class="v4-order-editor" id="v4-order-editor">
    <div class="v4-order-toolbar">
     <label><strong>Estado</strong>
      <select id="v4-order-status" class="select">
