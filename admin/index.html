@@ -2577,7 +2577,7 @@ window.v4LoadFormats=async function(){
   const ar=await fetch(cfg.url+"/rest/v1/articulos?select=id&referencia=eq."+encodeURIComponent(ref)+"&limit=1",{headers:H});
   const arts=await ar.json(); const art=arts?.[0];
   if(!art){fs.innerHTML='<option value="">Artículo no encontrado</option>';fs.disabled=true;return;}
-  const fr=await fetch(cfg.url+"/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,orden&articulo_id=eq."+encodeURIComponent(art.id)+"&activo=eq.true&order=orden.asc",{headers:H});
+  const fr=await fetch(cfg.url+"/rest/v1/formatos?select=id,tipo_formato_id,nombre,descripcion,peso_aproximado,cantidad_defecto,unidades_caja,orden&articulo_id=eq."+encodeURIComponent(art.id)+"&activo=eq.true&order=orden.asc",{headers:H});
   const formats=await fr.json();
   const tr=await fetch(cfg.url+"/rest/v1/tipos_formato?select=id,codigo,nombre&activo=eq.true&order=orden.asc,codigo.asc",{headers:H});
   const types=await tr.json();
@@ -2586,6 +2586,7 @@ window.v4LoadFormats=async function(){
     const t=tm.get(String(f.tipo_formato_id));
     let label=(t?.codigo?String(t.codigo)+" · ":"")+String(t?.nombre||f.nombre||"Formato");
     if(f.peso_aproximado!=null) label+=" · "+Number(f.peso_aproximado).toLocaleString("es-ES",{maximumFractionDigits:3})+" kg aprox.";
+    if(f.unidades_caja!=null && Number(f.unidades_caja)>0) label+=" · "+Number(f.unidades_caja).toLocaleString("es-ES")+" uds. caja";
     if(f.descripcion) label+=" · "+String(f.descripcion);
     return '<option value="'+esc(f.id)+'">'+esc(label)+'</option>';
   }).join("");
