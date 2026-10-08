@@ -4403,7 +4403,7 @@ window.mbSaveListStatusV110=save;
     box.querySelectorAll('.fm-qty').forEach(el=>el.oninput=()=>draft[+el.dataset.i].defaultQty=el.value===''?1:Math.max(1,Math.floor(Number(el.value)||1)));
     box.querySelectorAll('.fm-box').forEach(el=>el.oninput=()=>draft[+el.dataset.i].boxUnits=el.value===''?null:Math.max(1,Math.floor(Number(el.value)||1)));
     box.querySelectorAll('.fm-del').forEach(el=>el.onclick=()=>{draft.splice(+el.dataset.i,1);render();});
-    box.querySelectorAll('.fm-edit').forEach(el=>openFormatPicker(+el.dataset.i));
+    box.querySelectorAll('.fm-edit').forEach(el=>el.onclick=()=>openFormatPicker(+el.dataset.i));
   }
   function openFormatPicker(editIndex=null){
     loadFmTypes().then(()=>{
