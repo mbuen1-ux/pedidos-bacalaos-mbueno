@@ -4835,7 +4835,7 @@ window.mbSaveListStatusV110=save;
   await recalcTotal(p.id);
   await window.mbLoadOrdersFromSupabase();
   const fresh=window.__mbOrdersState?.orders?.find(x=>String(x.id)===String(n));
-  if(fresh)window.openOrder(fresh.id);
+  if(fresh && typeof window.__mbOpenOrderFromSupabase==="function")window.__mbOpenOrderFromSupabase(fresh.id);
  }
  async function saveStatus(){
   const n=orderId(),p=await pedidoByNumber(n),v=document.getElementById("v4-order-status")?.value;
