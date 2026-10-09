@@ -6678,10 +6678,11 @@ window.mbSaveListStatusV110=save;
       const allOrders=Array.isArray(window.__mbAdminOrders)?window.__mbAdminOrders:
         (Array.isArray(window.__mbOrdersState?.orders)?window.__mbOrdersState.orders:
         (Array.isArray(window.orders)?window.orders:[]));
-      // El ERP solo debe recibir pedidos abiertos: Nuevo y En preparación.
-      // Enviado y Cancelado quedan fuera de la exportación.
-      const selectedStatuses=[...document.querySelectorAll("#o47-status-filters .o47-status-check:checked")].map(x=>x.value);
-      const orders=allOrders.filter(o=>o && selectedStatuses.includes(String(o.status||"")));
+      // La exportación al ERP es independiente de los filtros visuales de la pantalla.
+      // Solo se exportan pedidos Nuevo o En preparación; Enviado y Cancelado nunca se incluyen.
+      const normalizeStatus=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+      const exportableStatuses=new Set(["nuevo","en preparacion"]);
+      const orders=allOrders.filter(o=>o && exportableStatuses.has(normalizeStatus(o.status)));
       const headers={apikey:c.key,Authorization:'Bearer '+c.key,Accept:'application/json'};
       const cr=await fetch(c.url+'/rest/v1/clientes?select=id,codigo,nombre,email,telefono&limit=10000',{headers});
       const ct=await cr.text();
