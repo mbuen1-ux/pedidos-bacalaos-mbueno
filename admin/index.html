@@ -6658,7 +6658,7 @@ window.mbSaveListStatusV110=save;
       Producto:l.name||'',
       Formato:(/^01\s*[·.]?\s*UD\.?$/i.test(String(l.format||''))?'':(l.format||'')),
       'Uds/Caja':'',
-      Cantidad:fmtQty(l.requested),
+      Cantidad:fmtWeight(l.actual),
       'Peso real (kg)':fmtWeight(l.actual),
       'Base del precio':'kg',
       Precio:fmtPrice(l.price),
