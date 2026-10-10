@@ -1467,18 +1467,18 @@ function renderCambios(){
  document.getElementById('cambiosHasta').textContent=`${fmtCorte(ahora)} → ${fmtCorte(hasta)}`;
  let html='';
  let last='';
- rows.filter(x=>!x.preparedId).forEach(x=>{
+ rows.forEach(x=>{
    const d=x.theory;
    const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
    if(key!==last){
      html+=`<tr class="cutRow"><td colspan="8"><strong>${fmtCorte(d)}</strong></td></tr>`;
      last=key;
    }
-   const badge=x.state==='Disponible'?'yellow':(x.state==='Fuera de hora'?'red':'green');
+   const badge=x.state==='Disponible'?'yellow':(x.state==='Fuera de hora'?'red':(x.preparedId?'blue':'green'));
+   if(x.preparedId){const b=x.state==='Fuera de hora'?'red':(x.state==='Disponible'?'yellow':'blue');html+='<tr><td>'+d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+'</td><td><strong>'+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+'</strong></td><td><span class="statusDot '+b+'"></span> <b>'+x.cuba+'</b></td><td>'+x.op+'</td><td>'+x.items+'</td><td><strong>'+x.nextOp+'</strong></td><td>'+fmtCorte(d)+'</td><td><span class="badge '+b+'">'+x.state+'</span></td></tr>';return;}
    const nextStyle='background:#e8f1ff;color:#0b5cab;font-weight:800';
-   html+=`<tr><td>${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}</td><td><strong>${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</strong></td><td style="white-space:nowrap"><span class="statusDot ${badge}" style="margin-right:8px"></span><b>${x.cuba}</b></td><td>${x.op}</td><td>${x.items}</td><td style="${nextStyle};border-radius:6px;padding:8px 10px"><strong>${x.nextOp}</strong></td><td>${fmtCorte(d)}</td></tr>`;
+   html+=`<tr><td>${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}</td><td><strong>${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</strong></td><td style="white-space:nowrap"><span class="statusDot ${badge}" style="margin-right:8px"></span><b>${x.cuba}</b></td><td>${x.op}</td><td>${x.items}</td><td style="${nextStyle};border-radius:6px;padding:8px 10px"><strong>${x.nextOp}</strong></td><td>${fmtCorte(d)}</td><td></td></tr>`;
  });
- html+=rows.filter(x=>x.preparedId).map(x=>{const d=x.theory,b=x.state==='Fuera de hora'?'red':(x.state==='Disponible'?'yellow':'green');return '<tr><td>'+d.toLocaleDateString('es-ES')+'</td><td><strong>'+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+'</strong></td><td><span class="statusDot '+b+'"></span><b>'+preparedText(x.cuba)+'</b></td><td>'+x.op+'</td><td>'+x.items+'</td><td><strong>'+x.nextOp+'</strong></td><td>'+fmtCorte(d)+'</td><td><span class="badge '+(b==='red'?'red':b==='yellow'?'yellow':'gray')+'">'+x.state+'</span></td></tr>';}).join('');
  document.getElementById('cambiosBody').innerHTML=html||'<tr><td colspan="7" style="padding:24px;text-align:center;color:#64748b">No hay cambios dentro del corte seleccionado.</td></tr>';
 }
 renderCambios();
