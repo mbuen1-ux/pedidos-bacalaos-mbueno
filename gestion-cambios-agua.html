@@ -847,7 +847,7 @@ function renderCubaCards(target){
  if(sumBusy)sumBusy.textContent=(busy+scheduledPrepared.length)+' cubas en proceso';
  if(sumPending)sumPending.textContent=(pending+scheduledPrepared.length)+' operaciones pendientes';
  if(sumKg)sumKg.textContent=(kg+scheduledPrepared.reduce((n,p)=>n+(p.datos?.lines||[]).reduce((a,x)=>a+Number(x.kg||0),0),0))+' kg en proceso';
- const scheduledPrepared=(target==='cubaList'||target==='prodCubaList')?preparedItems.filter(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(entries.find(([,c])=>String(c.id)===String(p.cuba_numero))?.[1]?.id||p.cuba_numero)):[];
+ const scheduledPrepared=(target==='cubaList'||target==='prodCubaList')?(typeof preparedItems!=='undefined'?preparedItems:[]).filter(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(entries.find(([,c])=>String(c.id)===String(p.cuba_numero))?.[1]?.id||p.cuba_numero)):[];
 const html=entries.map(([key,c])=>{
    const lines=Array.isArray(c.lines)?c.lines:[];
    const ops=Array.isArray(c.ops)?c.ops:[];
