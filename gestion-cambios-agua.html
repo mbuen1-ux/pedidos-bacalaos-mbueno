@@ -252,7 +252,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v172 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v176 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -1347,7 +1347,7 @@ async function startPrepared(id){
  const p=preparedItems.find(x=>String(x.id)===String(id));if(!p||p.estado!=='PROGRAMADA')return;const c=Object.values(liveCubas).find(x=>String(x.id)===String(p.cuba_numero));if(!c||c.busy){alert('La cuba reservada ya no está libre.');return;}
  const oldLines=lines.map(x=>({...x}));lines=(p.datos?.lines||[]).map(x=>({...x}));renderLines();renderProdRecipeInfo();renderCubaSelect();document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;
  const now=new Date(),iso=localIsoMinute(now);document.getElementById('fecha').value=iso.slice(0,10);const h=document.getElementById('hora'),time=iso.slice(11,16);if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}h.value=time;
- const nav=Array.from(document.querySelectorAll('nav button')).find(b=>String(b.getAttribute('onclick')||'').includes("go('produccion'"));if(nav)go('produccion',nav);
+ const nav=Array.from(document.querySelectorAll('nav button')).find(b=>String(b.getAttribute('onclick')||'').includes("go('produccion'"));if(nav)go('produccion',nav);document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;document.getElementById('fecha').value=iso.slice(0,10);h.value=time;
  if(!confirm('Confirmar inicio REAL de la cuba '+p.cuba_numero+' a las '+now.toLocaleString('es-ES')+'?')){lines=oldLines;renderLines();return;}
  pendingStartPreparedId=id;try{await startProduction();}finally{if(pendingStartPreparedId===null){const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(!q.error)await loadPrepared();}else pendingStartPreparedId=null;}
 }
