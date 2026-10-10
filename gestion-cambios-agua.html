@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v187</title>
+<title>Gestión de Cambios de Agua · v188</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -252,7 +252,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v187 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v188 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -465,9 +465,10 @@ function currentActiveLots(){
   return ls.filter(l=>l.state!=='Bloqueado' && Number(l.availableKg ?? l.kg ?? 0)>0);
 }
 function lastLotForArticle(article){
-  const preferred='';
+  const key=String(article||'');
+  const preferred=ultimoLotePorArticulo[key]||'';
   const ls=currentActiveLots();
-  if(preferred && ls.some(l=>l.id===preferred)) return preferred;
+  if(preferred && ls.some(l=>String(l.id)===String(preferred))) return preferred;
   return ls.length?ls[0].id:'';
 }
 function lotOptions(article,selected){
@@ -504,8 +505,19 @@ function renderLines(){
   checkRecipe();renderProdRecipeInfo();updateProductionEndBox();
 }
 function rememberLot(i,lot){
-  const desc=lines[i]?.desc;if(!desc||!lot)return;
-  // La selección se mantiene solo en memoria durante la sesión; los datos persistentes están en Supabase.
+  const line=lines[i];
+  if(!line?.code||!lot)return;
+  rememberLotForArticle(line.code,lot);
+}
+async function rememberLotForArticle(articleCode,lot){
+  const code=String(articleCode||''),number=String(lot||'');
+  if(!code||!number)return;
+  ultimoLotePorArticulo[code]=number;
+  try{
+    if(!sbReady)return;
+    const {error}=await sb.from('agua_ultimo_lote_articulo').upsert({codigo_articulo:code,lote_numero:number,updated_at:new Date().toISOString()},{onConflict:'codigo_articulo'});
+    if(error)throw error;
+  }catch(e){console.warn('No se pudo recordar el último lote del artículo:',e);}
 }
 function updateArticle(i,value){
   const a=articles.find(x=>String(x.code)===String(value));
@@ -1318,7 +1330,7 @@ function updatePreparedArticle(i,value){const a=articles.find(x=>String(x.code)=
 function renderPreparedLines(){
  const box=document.getElementById('preparedRows');if(!box)return;
  if(!preparedLines.length)box.innerHTML='<div class="meta" style="padding:16px;text-align:center">Todavía no hay artículos. Pulsa «+ Añadir artículo».</div>';
- else box.innerHTML=preparedLines.map(function(x,i){const a=articles.find(z=>String(z.code)===String(x.code));const r=a?recipeByCode(a.recipeCode):null;const recipeState=!a?'Selecciona un artículo':!r?'Sin receta activa asignada':(r.active===false?'Receta inactiva':r.code+' · '+r.desc);const recipeClass=!a?'meta':!r||r.active===false?'recipeMissing':'recipeOk';return '<div class="prepLine"><div class="prepLineMain"><div class="fieldBox"><label>Artículo <span class="meta">(obligatorio)</span></label><select required onchange="updatePreparedArticle('+i+',this.value)">'+articleOptions(x.code)+'</select></div><div class="fieldBox"><label>Lote <span class="meta">(opcional)</span></label><select onchange="preparedLines['+i+'].lot=this.value;renderPreparedLines()">'+lotOptions(x.desc,x.lot)+'</select></div><div class="fieldBox"><label>Kilos</label><input type="number" min="0" step="0.001" value="'+(x.kg||'')+'" onchange="preparedLines['+i+'].kg=parseFloat(this.value)||0;renderPreparedLines()"></div><button class="removeBtn" title="Quitar artículo" onclick="preparedLines.splice('+i+',1);renderPreparedLines()">×</button></div><div class="recipeState '+recipeClass+'">'+(a?'Receta: ':'')+'<b>'+preparedText(recipeState)+'</b></div></div>';}).join('');
+ else box.innerHTML=preparedLines.map(function(x,i){const a=articles.find(z=>String(z.code)===String(x.code));const r=a?recipeByCode(a.recipeCode):null;const recipeState=!a?'Selecciona un artículo':!r?'Sin receta activa asignada':(r.active===false?'Receta inactiva':r.code+' · '+r.desc);const recipeClass=!a?'meta':!r||r.active===false?'recipeMissing':'recipeOk';return '<div class="prepLine"><div class="prepLineMain"><div class="fieldBox"><label>Artículo <span class="meta">(obligatorio)</span></label><select required onchange="updatePreparedArticle('+i+',this.value)">'+articleOptions(x.code)+'</select></div><div class="fieldBox"><label>Lote <span class="meta">(opcional)</span></label><select onchange="preparedLines['+i+'].lot=this.value;rememberLotForArticle(preparedLines['+i+'].code,this.value);renderPreparedLines()">'+lotOptions(x.desc,x.lot)+'</select></div><div class="fieldBox"><label>Kilos</label><input type="number" min="0" step="0.001" value="'+(x.kg||'')+'" onchange="preparedLines['+i+'].kg=parseFloat(this.value)||0;renderPreparedLines()"></div><button class="removeBtn" title="Quitar artículo" onclick="preparedLines.splice('+i+',1);renderPreparedLines()">×</button></div><div class="recipeState '+recipeClass+'">'+(a?'Receta: ':'')+'<b>'+preparedText(recipeState)+'</b></div></div>';}).join('');
  const total=preparedLines.reduce((n,x)=>n+Number(x.kg||0),0);document.getElementById('preparedTotal').textContent=total.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';
  const sel=preparedLines.filter(x=>x.code).map(x=>recipeForArticle(x.desc));const good=sel.length&&sel.every(r=>r&&r.active!==false&&r.code===sel[0].code);
  document.getElementById('preparedRecipeInfo').textContent=!sel.length?'Selecciona artículos de una misma receta activa.':good?'Receta '+sel[0].code+' · '+sel[0].desc+' · '+sel[0].steps.map(x=>x.process+' '+x.hours+' h').join(' → '):'Todos los artículos deben tener la misma receta activa.';
@@ -1685,6 +1697,10 @@ async function sbLoadMasters(){
       sb.from('agua_lotes').select('*').order('numero')
     ]);
     for(const x of [a,ae,p,r,rc,c,o,l]) if(x.error) throw x.error;
+    const lastLots=await sb.from('agua_ultimo_lote_articulo').select('codigo_articulo,lote_numero');
+    if(lastLots.error) throw lastLots.error;
+    Object.keys(ultimoLotePorArticulo).forEach(k=>delete ultimoLotePorArticulo[k]);
+    (lastLots.data||[]).forEach(x=>{ultimoLotePorArticulo[String(x.codigo_articulo)]=String(x.lote_numero||'');});
     const inc=await sb.from('agua_incidencias').select('*').order('fecha',{ascending:false}); if(inc.error) throw inc.error;
     const sf=await sb.from('agua_subfamilias').select('*').eq('activo',true).order('nombre'); if(sf.error) throw sf.error; subfamilies=(sf.data||[]).map(x=>x.nombre); if(!subfamilies.length) subfamilies=['Bacalao','Especialidades'];
     window._sbRecipeCodes={}; (r.data||[]).forEach(x=>window._sbRecipeCodes[x.id]=x.codigo);
