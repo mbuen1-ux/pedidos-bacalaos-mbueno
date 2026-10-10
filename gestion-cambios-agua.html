@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v175</title>
+<title>Gestión de Cambios de Agua · v176</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -59,6 +59,14 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 
 .filterBtn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:8px 13px;font-weight:700;cursor:pointer}.filterBtn.active{background:#123f67;color:#fff;border-color:#123f67}.muted{color:#64748b;font-size:13px}.summary{display:flex;justify-content:space-between;gap:15px;background:#f1f5f9;border:1px solid #dbe3ea;border-radius:8px;padding:10px 14px;color:#475569}.summary strong{color:#123f67}
 
+
+/* v176 · Productos preparados */
+.prepLine{display:grid;grid-template-columns:minmax(200px,2fr) minmax(180px,1.5fr) 120px 40px;gap:10px;align-items:end;padding:10px 0;border-bottom:1px solid #edf1f3}
+.prepCard{border:1px solid #dbe5ea;border-radius:10px;padding:14px;margin:10px 0;background:#fff}
+.prepGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.prepActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:800px){.prepGrid,.prepLine{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.prepGrid,.prepLine{grid-template-columns:1fr}}
 /* v105 - Produccion rediseñada */
 .prodHeader{background:#f6f9fb;border:1px solid #dbe5ea;border-radius:12px;padding:18px;margin-bottom:16px}
 .prodHeaderGrid{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:14px}
@@ -244,11 +252,12 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v172 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v176 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
 <button onclick="go('produccion',this)">Producción</button>
+<button onclick="go('preparados',this)">Productos preparados</button>
 <button onclick="go('cubas',this)">Cubas en proceso</button>
 <button onclick="go('articulos',this)">Artículos</button>
 <button onclick="go('lotes',this)">Lotes</button>
@@ -308,6 +317,12 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <div id="prodCubaList"></div>
 </section>
 
+<section id="preparados" class="section">
+<h2>Productos preparados</h2><div class="subtitle">Prepara artículos sin asignar cuba ni iniciar procesos. Después programa cuba, operario y fecha/hora prevista.</div>
+<div id="prepError" class="alert error"></div><div id="prepOk" class="alert ok"></div>
+<div class="card"><div class="panelHead"><div><h3 style="margin:0">Nueva preparación</h3><div class="meta">Mismo flujo de artículos, lotes y kilos que en Producción; no ocupa cuba ni descuenta lotes.</div></div><button class="secondary" onclick="addPreparedLine()">+ Añadir artículo</button></div><div id="preparedRows" class="rows"></div><div class="loadCard"><b>Total preparado: <span id="preparedTotal">0,000 kg</span></b><div id="preparedRecipeInfo" class="meta" style="margin-top:8px">Selecciona artículos de una misma receta activa.</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="primary" onclick="savePrepared()">Guardar preparación</button></div></div>
+<div class="card"><div class="panelHead"><div><h3 style="margin:0">Sala de espera</h3><div class="meta">Preparaciones guardadas, pendientes de programar o iniciar.</div></div><button class="secondary" onclick="loadPrepared()">Actualizar</button></div><div id="preparedList" style="margin-top:12px">Cargando…</div></div>
+</section>
 <section id="cubas" class="section">
 <h2>Cubas en proceso</h2><div class="subtitle">Procesos activos y operaciones pendientes.</div>
 <div class="summarybar" style="margin-bottom:15px"><span id="cubaSumBusy"></span><span id="cubaSumPending"></span><span id="cubaSumKg"></span><button type="button" id="cubaFilterClear" class="secondary" style="margin-left:auto" onclick="clearCubasSituationFilter()">Mostrar todas</button></div>
@@ -435,12 +450,15 @@ const dateField=document.getElementById("fecha"); if(dateField) dateField.value=
 const recipeDefs={};
 function rebuildRecipeDefs(){Object.keys(recipeDefs).forEach(k=>delete recipeDefs[k]);articles.forEach(a=>{const r=recipeByCode(a.recipeCode);if(r)recipeDefs[a.desc]={version:r.code,steps:(r.steps||[]).map(st=>[st.process,st.hours])};});}
 let lines=[];
+let preparedLines=[];
+let preparedItems=[];
+let pendingStartPreparedId=null;
 let liveCubas={};
 let cubaSituationFilter='all';
 
 function filterCubasSituation(status){cubaSituationFilter=status||'all';const nav=[...document.querySelectorAll('nav button')].find(b=>String(b.getAttribute('onclick')||'').includes("go('cubas'"));if(nav)go('cubas',nav);else{document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById('cubas').classList.add('active');renderAllCubaViews();}}
 function clearCubasSituationFilter(){cubaSituationFilter='all';renderAllCubaViews();}
-function go(id,btn){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='cubas'||id==='produccion'){renderAllCubaViews();}if(id==='produccion'){setProductionDefaults();}if(id==='config'){renderCubaMaster();}if(id==='articulos'){renderList();}if(id==='registros'){renderRecords();}}
+function go(id,btn){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='cubas'||id==='produccion'){renderAllCubaViews();}if(id==='produccion'){setProductionDefaults();}if(id==='preparados'){renderPreparedLines();loadPrepared();}if(id==='config'){renderCubaMaster();}if(id==='articulos'){renderList();}if(id==='registros'){renderRecords();}}
 function articleOptions(selected){const sel=String(selected??'');return '<option value="">Seleccionar artículo</option>'+articles.filter(a=>a.active!==false).slice().sort((a,b)=>String(a.code).localeCompare(String(b.code),undefined,{numeric:true})).map(a=>{const code=String(a.code);return `<option value="${code}" ${code===sel?'selected':''}>${code} · ${a.desc}</option>`}).join('');}
 function currentActiveLots(){
   let ls=lotes||[];
@@ -690,7 +708,7 @@ async function startProduction(){
   }
   try{
     const saved=await sbSaveProductionBundle(c,lines,r,d);
-    c.busy=true;c.operator=document.getElementById('operario').value;c.start=d;c.lines=lines.map(x=>({...x}));c.recipe=r.code;c.recipeDesc=r.desc;c.done=0;c.ops=ops;c.actualOps=[];c._sbIdProd=saved.id;if(typeof renderLots==='function')renderLots();lines=[];ok.style.display='block';ok.textContent='PROCESO INICIADO Y GUARDADO EN SUPABASE. '+c.id+' pasa a EN PROCESO. Finalización prevista: '+formatProductionEnd(plannedEnd);e.style.display='none';renderCubaSelect();renderLines();renderAllCubaViews();renderCubaMaster();
+    c.busy=true;c.operator=document.getElementById('operario').value;c.start=d;c.lines=lines.map(x=>({...x}));c.recipe=r.code;c.recipeDesc=r.desc;c.done=0;c.ops=ops;c.actualOps=[];c._sbIdProd=saved.id;if(typeof renderLots==='function')renderLots();lines=[];ok.style.display='block';ok.textContent='PROCESO INICIADO Y GUARDADO EN SUPABASE. '+c.id+' pasa a EN PROCESO. Finalización prevista: '+formatProductionEnd(plannedEnd);e.style.display='none';renderCubaSelect();renderLines();renderAllCubaViews();renderCubaMaster();if(pendingStartPreparedId)pendingStartPreparedId=null;
   }catch(err){
     e.style.display='block';e.textContent='NO SE PUDO GUARDAR LA PRODUCCIÓN EN SUPABASE. No se ha iniciado localmente.\n\n'+(err?.message||err);ok.style.display='none';console.error('Error guardando producción:',err);
   }
@@ -755,7 +773,7 @@ deleteCuba=async function(key){
 
 function toggleCuba(key){const c=liveCubas[key];if(!c)return;if(c.busy){alert('No se puede desactivar una cuba que está en proceso.');return}c.active=c.active===false;renderCubaMaster();renderCubaSelect();renderAllCubaViews();}
 function deleteCuba(key){const c=liveCubas[key];if(!c)return;if(c.busy){alert('No se puede eliminar una cuba que está en proceso.');return}delete liveCubas[key];renderCubaMaster();renderCubaSelect();renderAllCubaViews();}
-function renderCubaSelect(){const s=document.getElementById('cubaSel');if(!s)return;const old=s.value;s.innerHTML='<option value="">Seleccionar cuba libre</option>'+Object.entries(liveCubas).filter(([,c])=>c.active!==false&&!c.busy).sort((a,b)=>String(a[1].id).localeCompare(String(b[1].id),undefined,{numeric:true})).map(([key,c])=>`<option value="${key}" data-cap="${c.cap}">${c.id} · ${c.cap} kg</option>`).join('');if(old&&[...s.options].some(o=>o.value===old))s.value=old;}
+function renderCubaSelect(){const s=document.getElementById('cubaSel');if(!s)return;const old=s.value;s.innerHTML='<option value="">Seleccionar cuba libre</option>'+Object.entries(liveCubas).filter(([,c])=>c.active!==false&&!c.busy&&!preparedItems.some(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(c.id))).sort((a,b)=>String(a[1].id).localeCompare(String(b[1].id),undefined,{numeric:true})).map(([key,c])=>`<option value="${key}" data-cap="${c.cap}">${c.id} · ${c.cap} kg</option>`).join('');if(old&&[...s.options].some(o=>o.value===old))s.value=old;}
 function startProductionFromCuba(key){
   const c=liveCubas[key];
   if(!c || c.active===false || c.busy){alert('Esta cuba no está disponible para iniciar un proceso.');return;}
@@ -1290,6 +1308,51 @@ function filterCambios(hours,btn){
  renderCambios();
 }
 function fmtCorte(d){return d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+
+function addPreparedLine(){preparedLines.push({code:'',desc:'',lot:'',kg:0});renderPreparedLines();}
+function preparedText(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function updatePreparedArticle(i,value){const a=articles.find(x=>String(x.code)===String(value));if(!a)preparedLines[i]={code:'',desc:'',lot:'',kg:0};else preparedLines[i]={...preparedLines[i],code:String(a.code),desc:a.desc,lot:lastLotForArticle(value),kg:Number(a.kg||0)};renderPreparedLines();}
+function renderPreparedLines(){
+ const box=document.getElementById('preparedRows');if(!box)return;
+ if(!preparedLines.length)box.innerHTML='<div class="meta" style="padding:16px;text-align:center">Todavía no hay artículos. Pulsa «+ Añadir artículo».</div>';
+ else box.innerHTML=preparedLines.map(function(x,i){const a=articles.find(z=>String(z.code)===String(x.code));const r=a?recipeByCode(a.recipeCode):null;return '<div class="prepLine"><div><label>Artículo</label><select onchange="updatePreparedArticle('+i+',this.value)">'+articleOptions(x.code)+'</select><div class="meta">'+(r?'Receta '+preparedText(r.code)+' · '+preparedText(r.desc):'Sin receta activa')+'</div></div><div><label>Lote (opcional)</label><select onchange="preparedLines['+i+'].lot=this.value;renderPreparedLines()">'+lotOptions(x.desc,x.lot)+'</select></div><div><label>Kilos</label><input type="number" min="0" step="0.001" value="'+(x.kg||'')+'" onchange="preparedLines['+i+'].kg=Number(this.value)||0;renderPreparedLines()"></div><button class="removeBtn" onclick="preparedLines.splice('+i+',1);renderPreparedLines()">×</button></div>';}).join('');
+ const total=preparedLines.reduce((n,x)=>n+Number(x.kg||0),0);document.getElementById('preparedTotal').textContent=total.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';
+ const sel=preparedLines.filter(x=>x.code).map(x=>recipeForArticle(x.desc));const good=sel.length&&sel.every(r=>r&&r.active!==false&&r.code===sel[0].code);
+ document.getElementById('preparedRecipeInfo').textContent=!sel.length?'Selecciona artículos de una misma receta activa.':good?'Receta '+sel[0].code+' · '+sel[0].desc+' · '+sel[0].steps.map(x=>x.process+' '+x.hours+' h').join(' → '):'Todos los artículos deben tener la misma receta activa.';
+}
+async function savePrepared(){
+ const err=document.getElementById('prepError'),ok=document.getElementById('prepOk');err.style.display='none';ok.style.display='none';
+ if(!sbReady){err.style.display='block';err.textContent='Supabase todavía no está conectado.';return;}
+ if(!preparedLines.length||preparedLines.some(x=>!x.code||!(Number(x.kg)>0))){err.style.display='block';err.textContent='Añade artículos y completa los kilos.';return;}
+ const recs=preparedLines.map(x=>recipeForArticle(x.desc));if(recs.some(r=>!r||r.active===false)||recs.some(r=>r.code!==recs[0].code)){err.style.display='block';err.textContent='Todos los artículos deben tener la misma receta activa.';return;}
+ const lotTotals={};preparedLines.forEach(x=>{if(x.lot)lotTotals[x.lot]=(lotTotals[x.lot]||0)+Number(x.kg||0);});
+ for(const lot of Object.keys(lotTotals)){const l=currentActiveLots().find(z=>String(z.id)===String(lot));if(!l||lotTotals[lot]>Number(l.availableKg??l.kg??0)+0.000001){err.style.display='block';err.textContent='El lote '+lot+' no tiene kilos suficientes.';return;}}
+ const data={lines:preparedLines.map(x=>({...x})),recipeCode:recs[0].code,recipeDesc:recs[0].desc,totalKg:preparedLines.reduce((n,x)=>n+Number(x.kg||0),0)};
+ try{const q=await sb.from('agua_preparaciones').insert({nombre:preparedLines.map(x=>x.desc).join(' + ').slice(0,180),datos:data,estado:'PREPARADA'}).select().single();if(q.error)throw q.error;preparedLines=[];renderPreparedLines();await loadPrepared();ok.style.display='block';ok.textContent='Preparación guardada. No se ha asignado cuba ni iniciado ningún proceso.';}catch(e){err.style.display='block';err.textContent='No se pudo guardar: '+(e.message||e);}
+}
+async function loadPrepared(){const box=document.getElementById('preparedList');if(!box||!sbReady)return;try{const q=await sb.from('agua_preparaciones').select('*').in('estado',['PREPARADA','PROGRAMADA']).order('created_at',{ascending:false});if(q.error)throw q.error;preparedItems=(q.data||[]).map(x=>({...x,datos:x.datos||{}}));renderPreparedList();renderCubaSelect();renderCambios();}catch(e){box.innerHTML='<div class="alert error" style="display:block">No se pudieron cargar los preparados: '+preparedText(e.message||e)+'</div>';}}
+function renderPreparedList(){
+ const box=document.getElementById('preparedList');if(!box)return;if(!preparedItems.length){box.innerHTML='<div class="meta" style="padding:16px;text-align:center">No hay preparaciones pendientes.</div>';return;}
+ box.innerHTML=preparedItems.map(function(p){const d=p.datos||{},ls=d.lines||[],kg=ls.reduce((n,x)=>n+Number(x.kg||0),0),scheduled=p.estado==='PROGRAMADA',dt=p.fecha_programada?new Date(p.fecha_programada):null;const free=Object.values(liveCubas).filter(c=>c.active!==false&&(!c.busy||String(c.id)===String(p.cuba_numero))).sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));const ops=operarios.filter(o=>o.active!==false);return '<div class="prepCard"><div class="panelHead"><div><h3 style="margin:0">'+preparedText(p.nombre||'Preparación')+'</h3><div class="meta">'+preparedText(d.recipeCode||'')+' · '+preparedText(d.recipeDesc||'')+'</div></div><span class="badge '+(scheduled?'yellow':'gray')+'">'+(scheduled?'Programada':'Preparada')+'</span></div><div class="meta" style="margin:8px 0">'+ls.map(x=>preparedText(x.desc)+' · '+Number(x.kg||0).toLocaleString('es-ES')+' kg'+(x.lot?' · lote '+preparedText(x.lot):'')).join('<br>')+'<br><b>Total: '+kg.toLocaleString('es-ES')+' kg</b>'+(scheduled?'<br>Cuba '+preparedText(p.cuba_numero)+' · '+(dt?dt.toLocaleString('es-ES'):'')+' · '+preparedText((ops.find(o=>String(o.code)===String(p.operario_codigo))||{}).name||p.operario_codigo||''):'')+'</div><div class="prepGrid"><div><label>Cuba</label><select id="prepCube_'+p.id+'"><option value="">Seleccionar cuba libre</option>'+free.map(c=>'<option value="'+preparedText(c.id)+'" '+(String(p.cuba_numero||'')===String(c.id)?'selected':'')+'>'+preparedText(c.id)+' · '+c.cap+' kg</option>').join('')+'</select></div><div><label>Operario</label><select id="prepOp_'+p.id+'"><option value="">Seleccionar operario</option>'+ops.map(o=>'<option value="'+preparedText(o.code)+'" '+(String(p.operario_codigo||'')===String(o.code)?'selected':'')+'>'+preparedText(o.name)+'</option>').join('')+'</select></div><div><label>Fecha y hora programadas</label><input id="prepDate_'+p.id+'" type="datetime-local" value="'+(dt?localIsoMinute(dt):'')+'"></div><div style="display:flex;align-items:end"><button class="primary" style="width:100%" onclick="schedulePrepared(\''+p.id+'\')">'+(scheduled?'Guardar programación':'Programar')+'</button></div></div><div class="prepActions">'+(scheduled?'<button class="primary" onclick="startPrepared(\''+p.id+'\')">Llenar e iniciar</button>':'')+'<button class="secondary" onclick="editPrepared(\''+p.id+'\')">Editar preparación</button><button class="danger" onclick="deletePrepared(\''+p.id+'\')">Eliminar</button></div></div>';}).join('');
+}
+async function schedulePrepared(id){
+ const p=preparedItems.find(x=>String(x.id)===String(id));if(!p)return;const cube=document.getElementById('prepCube_'+id).value,op=document.getElementById('prepOp_'+id).value,dt=document.getElementById('prepDate_'+id).value;if(!cube||!op||!dt){alert('Selecciona cuba, operario y fecha/hora.');return;}
+ const c=Object.values(liveCubas).find(x=>String(x.id)===String(cube));if(!c||c.active===false||(c.busy&&String(p.cuba_numero)!==String(cube))){alert('La cuba seleccionada no está libre.');return;}const kg=(p.datos?.lines||[]).reduce((n,x)=>n+Number(x.kg||0),0);if(kg>Number(c.cap)){alert('La carga supera la capacidad de '+c.cap+' kg.');return;}
+ const reserved=preparedItems.find(x=>x.id!==p.id&&x.estado==='PROGRAMADA'&&String(x.cuba_numero)===String(cube));if(reserved){alert('La cuba ya está reservada por otra preparación.');return;}const date=new Date(dt);if(Number.isNaN(date.getTime())){alert('Fecha/hora no válida.');return;}
+ try{const q=await sb.from('agua_preparaciones').update({estado:'PROGRAMADA',cuba_numero:cube,operario_codigo:op,fecha_programada:date.toISOString(),updated_at:new Date().toISOString()}).eq('id',id);if(q.error)throw q.error;await loadPrepared();alert('Programación guardada. La cuba todavía no ha iniciado.');}catch(e){alert('No se pudo programar: '+e.message);}
+}
+function editPrepared(id){const p=preparedItems.find(x=>String(x.id)===String(id));if(!p)return;preparedLines=(p.datos?.lines||[]).map(x=>({...x}));if(p.estado==='PROGRAMADA'){sb.from('agua_preparaciones').update({estado:'PREPARADA',cuba_numero:null,operario_codigo:null,fecha_programada:null,updated_at:new Date().toISOString()}).eq('id',id).then(function(q){if(q.error)alert(q.error.message);else loadPrepared();});}renderPreparedLines();document.getElementById('preparedRows').scrollIntoView({behavior:'smooth',block:'start'});}
+async function deletePrepared(id){if(!confirm('¿Eliminar esta preparación?'))return;try{const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(q.error)throw q.error;await loadPrepared();}catch(e){alert('No se pudo eliminar: '+e.message);}}
+async function startPrepared(id){
+ const p=preparedItems.find(x=>String(x.id)===String(id));if(!p||p.estado!=='PROGRAMADA')return;const c=Object.values(liveCubas).find(x=>String(x.id)===String(p.cuba_numero));if(!c||c.busy){alert('La cuba reservada ya no está libre.');return;}
+ const oldLines=lines.map(x=>({...x}));lines=(p.datos?.lines||[]).map(x=>({...x}));renderLines();renderProdRecipeInfo();renderCubaSelect();document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;
+ const now=new Date(),iso=localIsoMinute(now);document.getElementById('fecha').value=iso.slice(0,10);const h=document.getElementById('hora'),time=iso.slice(11,16);if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}h.value=time;
+ const nav=Array.from(document.querySelectorAll('nav button')).find(b=>String(b.getAttribute('onclick')||'').includes("go('produccion'"));if(nav)go('produccion',nav);document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;document.getElementById('fecha').value=iso.slice(0,10);h.value=time;
+ if(!confirm('Confirmar inicio REAL de la cuba '+p.cuba_numero+' a las '+now.toLocaleString('es-ES')+'?')){lines=oldLines;renderLines();return;}
+ pendingStartPreparedId=id;try{await startProduction();}catch(e){alert('No se pudo iniciar la producción: '+(e.message||e));}finally{if(pendingStartPreparedId===null){const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(!q.error)await loadPrepared();}else pendingStartPreparedId=null;}
+}
+function cambiosDesdePreparados(){const now=Date.now();return preparedItems.filter(p=>p.estado==='PROGRAMADA'&&p.fecha_programada&&p.cuba_numero).map(p=>{const theory=new Date(p.fecha_programada),state=now>=theory.getTime()?'Fuera de hora':(now>=theory.getTime()-2*3600000?'Disponible':'Programado'),ls=p.datos?.lines||[];return {theory,cuba:p.cuba_numero,op:'Llenar para iniciar',items:ls.map(x=>preparedText(x.desc)+' ('+Number(x.kg||0).toLocaleString('es-ES')+' kg)').join('<br>'),nextOp:'Llenar para iniciar',state,preparedId:p.id};});}
+
 function cambiosDesdeCubas(){
   const rows=[];
   Object.values(liveCubas||{}).forEach(c=>{
@@ -1394,15 +1457,15 @@ async function sendCambios48Email(){
 function renderCambios(){
  const ahora=new Date();
  const hasta=new Date(ahora.getTime()+cambiosFilter*3600000);
- const rows=cambiosDesdeCubas().filter(x=>x.theory.getTime()<=hasta.getTime())
+ const rows=[...cambiosDesdeCubas(),...cambiosDesdePreparados()].filter(x=>x.theory.getTime()<=hasta.getTime())
    .sort((a,b)=>a.theory-b.theory||((parseInt(String(a.cuba).replace(/\D/g,''),10)||0)-(parseInt(String(b.cuba).replace(/\D/g,''),10)||0)));
  document.getElementById('cambiosCount').textContent=rows.length;
- const late=cambiosDesdeCubas().filter(x=>x.state==='Fuera de hora').length;
+ const late=[...cambiosDesdeCubas(),...cambiosDesdePreparados()].filter(x=>x.state==='Fuera de hora').length;
  if(document.getElementById('kpiLate')) document.getElementById('kpiLate').textContent=late;
  document.getElementById('cambiosHasta').textContent=`${fmtCorte(ahora)} → ${fmtCorte(hasta)}`;
  let html='';
  let last='';
- rows.forEach(x=>{
+ rows.filter(x=>!x.preparedId).forEach(x=>{
    const d=x.theory;
    const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
    if(key!==last){
@@ -1413,6 +1476,7 @@ function renderCambios(){
    const nextStyle='background:#e8f1ff;color:#0b5cab;font-weight:800';
    html+=`<tr><td>${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}</td><td><strong>${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</strong></td><td style="white-space:nowrap"><span class="statusDot ${badge}" style="margin-right:8px"></span><b>${x.cuba}</b></td><td>${x.op}</td><td>${x.items}</td><td style="${nextStyle};border-radius:6px;padding:8px 10px"><strong>${x.nextOp}</strong></td><td>${fmtCorte(d)}</td></tr>`;
  });
+ html+=rows.filter(x=>x.preparedId).map(x=>{const d=x.theory,b=x.state==='Fuera de hora'?'red':(x.state==='Disponible'?'yellow':'green');return '<tr><td>'+d.toLocaleDateString('es-ES')+'</td><td><strong>'+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+'</strong></td><td><span class="statusDot '+b+'"></span><b>'+preparedText(x.cuba)+'</b></td><td>'+x.op+'</td><td>'+x.items+'</td><td><strong>'+x.nextOp+' <button class="primary" onclick="startPrepared(\''+x.preparedId+'\')">Llenar e iniciar</button></strong></td><td>'+fmtCorte(d)+'</td><td><span class="badge '+(b==='red'?'red':b==='yellow'?'yellow':'gray')+'">'+x.state+'</span></td></tr>';}).join('');
  document.getElementById('cambiosBody').innerHTML=html||'<tr><td colspan="7" style="padding:24px;text-align:center;color:#64748b">No hay cambios dentro del corte seleccionado.</td></tr>';
 }
 renderCambios();
@@ -1695,7 +1759,8 @@ async function sbLoadMasters(){
     }catch(e){console.warn('No se pudieron recuperar las producciones activas:',e);}
     sbReady=true;
     await sbLoadRecords();
-    sbLog('Maestros y Registros sincronizados');
+    await loadPrepared();
+    sbLog('Maestros, Preparados y Registros sincronizados');
   }catch(err){console.error('Error cargando Supabase',err); throw err;}
 }
 async function sbSaveArticle(x){
