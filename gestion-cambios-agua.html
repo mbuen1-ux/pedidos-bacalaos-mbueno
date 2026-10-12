@@ -247,17 +247,19 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 #cubaList>.card.process:not(.detail-open) .actions,#prodCubaList>.card.process:not(.detail-open) .actions{left:14px!important;right:14px!important;width:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
 #cubaList>.card.process:not(.detail-open) .actions button,#prodCubaList>.card.process:not(.detail-open) .actions button{width:100%!important;min-width:0!important}
 #cubaList .cubaCountdown .nextTimerBox,#prodCubaList .cubaCountdown .nextTimerBox{background:transparent!important;border:2px solid currentColor!important;box-shadow:none!important}
+
+/* v189: Producción queda oculta en la interfaz mientras sus funciones internas siguen activas. */
+#produccion{display:none!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v188 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v189 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
-<button onclick="go('produccion',this)">Producción</button>
-<button onclick="go('preparados',this)">Productos preparados</button>
+<button onclick="go('preparados',this)">Preparación y carga</button>
 <button onclick="go('cubas',this)">Cubas en proceso</button>
 <button onclick="go('articulos',this)">Artículos</button>
 <button onclick="go('lotes',this)">Lotes</button>
@@ -293,7 +295,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 </div>
 </section>
 
-<section id="produccion" class="section">
+<section id="produccion" class="section" aria-hidden="true">
 <h2>Producción</h2><div class="subtitle">Inicio de un nuevo proceso de desalado.</div>
 <div id="prodError" class="alert error"></div><div id="prodOk" class="alert ok"></div>
 <div class="card">
@@ -318,10 +320,10 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 </section>
 
 <section id="preparados" class="section">
-<h2>Productos preparados</h2><div class="subtitle">Prepara artículos sin asignar cuba ni iniciar procesos. Después programa cuba, operario y fecha/hora prevista.</div>
+<h2>Preparación y carga</h2><div class="subtitle">Prepara las cargas, selecciona artículos, lotes y kilos y después asigna cuba, operario, fecha y hora. El proceso solo comienza al confirmar el llenado.</div>
 <div id="prepError" class="alert error"></div><div id="prepOk" class="alert ok"></div>
-<div class="card"><div class="panelHead"><div><h3 style="margin:0">Nueva preparación</h3><div class="meta">Mismo flujo de artículos, lotes y kilos que en Producción; no ocupa cuba ni descuenta lotes.</div></div><button class="secondary" onclick="addPreparedLine()">+ Añadir artículo</button></div><div id="preparedRows" class="rows"></div><div class="loadCard"><b>Total preparado: <span id="preparedTotal">0,000 kg</span></b><div id="preparedRecipeInfo" class="meta" style="margin-top:8px">Selecciona artículos de una misma receta activa.</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="primary" onclick="savePrepared()">Guardar preparación</button></div></div>
-<div class="card"><div class="panelHead"><div><h3 style="margin:0">Sala de espera</h3><div class="meta">Preparaciones guardadas, pendientes de programar o iniciar.</div></div><button class="secondary" onclick="loadPrepared()">Actualizar</button></div><div id="preparedList" style="margin-top:12px">Cargando…</div></div>
+<div class="card"><div class="panelHead"><div><h3 style="margin:0">Nueva carga</h3><div class="meta">Define los artículos, lotes y kilos antes de asignar una cuba. Guardar la carga no inicia el proceso ni descuenta lotes.</div></div><button class="secondary" onclick="addPreparedLine()">+ Añadir artículo</button></div><div id="preparedRows" class="rows"></div><div class="loadCard"><b>Total preparado: <span id="preparedTotal">0,000 kg</span></b><div id="preparedRecipeInfo" class="meta" style="margin-top:8px">Selecciona artículos de una misma receta activa.</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="primary" onclick="savePrepared()">Guardar preparación</button></div></div>
+<div class="card"><div class="panelHead"><div><h3 style="margin:0">Cargas pendientes de asignación o inicio</h3><div class="meta">Cargas guardadas que esperan cuba, operario, fecha y hora, o el inicio real.</div></div><button class="secondary" onclick="loadPrepared()">Actualizar</button></div><div id="preparedList" style="margin-top:12px">Cargando…</div></div>
 </section>
 <section id="cubas" class="section">
 <h2>Cubas en proceso</h2><div class="subtitle">Procesos activos y operaciones pendientes.</div>
@@ -331,7 +333,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 
 <section id="articulos" class="section">
 <div class="articleInnerNav"><button id="tabA" class="active" onclick="articleShowTab('articles',this)">Artículos</button><button id="tabS" onclick="articleShowTab('subfamilies',this)">Subfamilias</button></div>
-<section id="articles"><h2>Artículos</h2><div class="sub">Maestro real de artículos. La carga en cuba se gestiona desde Producción.</div>
+<section id="articles"><h2>Artículos</h2><div class="sub">Maestro real de artículos. Las cargas se preparan desde Preparación y carga.</div>
 <div class="card"><div class="toolbar"><div><label>Buscar</label><input id="search" class="search" placeholder="Código o descripción" oninput="renderList()"></div><div><label>Subfamilia</label><select id="filterSub" onchange="renderList()"></select></div><div><label>Estado</label><select id="filterState" onchange="renderList()"><option value="">Todos</option><option value="1">Activos</option><option value="0">Inactivos</option></select></div><button class="primary" onclick="newArticle()">+ Nuevo artículo</button></div></div>
 <div class="card"><table><thead><tr><th>CÓDIGO</th><th>DESCRIPCIÓN</th><th>SUBFAMILIA</th><th>KG INICIO</th><th>RECETA</th><th>ESTADO</th><th>ACCIONES</th></tr></thead><tbody id="articleBody"></tbody></table></div></section>
 
@@ -789,8 +791,9 @@ function renderCubaSelect(){const s=document.getElementById('cubaSel');if(!s)ret
 function startProductionFromCuba(key){
   const c=liveCubas[key];
   if(!c || c.active===false || c.busy){alert('Esta cuba no está disponible para iniciar un proceso.');return;}
-  const navBtn=[...document.querySelectorAll('nav button')].find(b=>String(b.textContent||'').trim()==='Producción');
-  if(navBtn) go('produccion',navBtn);
+  const navBtn=[...document.querySelectorAll('nav button')].find(b=>String(b.textContent||'').trim()==='Preparación y carga');
+  if(navBtn) go('preparados',navBtn);
+  alert('La cuba está libre. Prepara y guarda la carga en Preparación y carga; después asígnale esta cuba, el operario y el horario.');
   const sel=document.getElementById('cubaSel');
   if(sel){renderCubaSelect();sel.value=key;}
   renderLines();
@@ -1362,7 +1365,8 @@ async function startPrepared(id){
  const p=preparedItems.find(x=>String(x.id)===String(id));if(!p||p.estado!=='PROGRAMADA')return;const c=Object.values(liveCubas).find(x=>String(x.id)===String(p.cuba_numero));if(!c||c.busy){alert('La cuba reservada ya no está libre.');return;}
  const oldLines=lines.map(x=>({...x}));pendingStartPreparedId=id;lines=(p.datos?.lines||[]).map(x=>({...x}));renderLines();renderProdRecipeInfo();renderCubaSelect();document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;
  const now=new Date(),iso=localIsoMinute(now);document.getElementById('fecha').value=iso.slice(0,10);const h=document.getElementById('hora'),time=iso.slice(11,16);if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}h.value=time;
- const nav=Array.from(document.querySelectorAll('nav button')).find(b=>String(b.getAttribute('onclick')||'').includes("go('produccion'"));if(nav)go('produccion',nav);document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;document.getElementById('fecha').value=iso.slice(0,10);h.value=time;
+  // v189: iniciar desde la preparación sin mostrar la sección interna de Producción.
+  document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;document.getElementById('fecha').value=iso.slice(0,10);h.value=time;
  if(!confirm('Confirmar inicio REAL de la cuba '+p.cuba_numero+' a las '+now.toLocaleString('es-ES')+'?')){pendingStartPreparedId=null;lines=oldLines;renderLines();renderCubaSelect();return;}
  try{await startProduction();}catch(e){alert('No se pudo iniciar la producción: '+(e.message||e));}finally{if(pendingStartPreparedId===null){const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(!q.error)await loadPrepared();}else pendingStartPreparedId=null;}
 }
