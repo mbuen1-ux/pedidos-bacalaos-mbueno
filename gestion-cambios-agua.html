@@ -1175,7 +1175,7 @@ async function changeProductionCuba(key,box){
 function processUsed(name){return recipes.some(r=>(r.steps||[]).some(s=>s.process===name));}
 function recipeUsed(code){return articles.some(a=>a.recipeCode===code);}
 function processSort(a,b){return String(a.code||'99').localeCompare(String(b.code||'99'),undefined,{numeric:true})||a.name.localeCompare(b.name)}
-function nextSequentialCode(list,field,prefix,pad){const re=prefix?new RegExp('^'+prefix+'(\\d+)$','i'):/^(\\d+)$/;const nums=list.map(x=>{const m=String(x?.[field]||'').match(re);return m?Number(m[1]):NaN;}).filter(Number.isFinite);return prefix+String((nums.length?Math.max(...nums):0)+1).padStart(pad,'0');}
+function nextSequentialCode(list,field,prefix,pad){const nums=list.map(x=>{const raw=String(x?.[field]||'');const tail=prefix?(raw.toLowerCase().startsWith(prefix.toLowerCase())?raw.slice(prefix.length):''):raw;return tail!==''&&/^\d+$/.test(tail)?Number(tail):NaN;}).filter(Number.isFinite);return prefix+String((nums.length?Math.max(...nums):0)+1).padStart(pad,'0');}
 function nextProcessCode(){return nextSequentialCode(processes,'code','',2);}
 function nextRecipeCode(){return nextSequentialCode(recipes,'code','R',3);}
 function nextOperatorCode(){return nextSequentialCode(operarios,'code','',3);}
