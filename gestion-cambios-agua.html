@@ -1048,33 +1048,14 @@ async function markOpByKey(key){
    if(oe) throw oe;
    c.done++;
    if(c.done>=c.ops.length){
-     // Al finalizar: calculamos la salida con la hidratación del artículo y guardamos el último coste real del escandallo.
+     // Hidratación y coste quedan fijados al iniciar la producción.
+     // No consultar de nuevo el escandallo al finalizar: cambios posteriores no alteran este proceso.
      const finishedLines=(c.lines||[]).map(x=>({...x}));
-     const finalCodes=[...new Set(finishedLines.map(x=>String(x.code||'')).filter(Boolean))];
-     const finalCostMap={};
-     if(finalCodes.length){
-       const {data:costRows,error:costErr}=await sb.from('escandallo_lineas').select('codigo_articulo,hidratacion_pct,coste_real_kg,created_at').in('codigo_articulo',finalCodes).order('created_at',{ascending:false});
-       if(costErr) throw new Error('No se pudo obtener el último coste real del escandallo: '+costErr.message);
-       for(const row of (costRows||[])){
-         const code=String(row.codigo_articulo||'');
-         if(code&&!finalCostMap[code]) finalCostMap[code]={hidratacion:row.hidratacion_pct==null?0:Number(row.hidratacion_pct),coste:row.coste_real_kg==null?null:Number(row.coste_real_kg)};
-       }
-       const missingCodes=finalCodes.filter(code=>!finalCostMap[code]);
-       if(missingCodes.length){
-         const {data:escArts,error:escArtErr}=await sb.from('escandallo_articulos').select('codigo_articulo,hidratacion_pct,activo').in('codigo_articulo',missingCodes);
-         if(escArtErr) throw new Error('No se pudo leer la hidratación del maestro de Escandallo: '+escArtErr.message);
-         for(const row of (escArts||[])){
-           const code=String(row.codigo_articulo||'');
-           if(code&&!finalCostMap[code]) finalCostMap[code]={hidratacion:row.hidratacion_pct==null?0:Number(row.hidratacion_pct),coste:null};
-         }
-       }
-     }
      for(const x of finishedLines){
-       const esc=finalCostMap[String(x.code)]||{};
-       const h=Number(x.hidratacion_pct_snapshot ?? esc.hidratacion ?? 0);
+       const h=Number(x.hidratacion_pct_snapshot||0);
        const entrada=Number(x.kg||0);
        const salida=entrada*(1+h/100);
-       const coste=Object.prototype.hasOwnProperty.call(esc,'coste') ? (esc.coste==null?null:Number(esc.coste)) : (x.coste_real_kg_snapshot==null?null:Number(x.coste_real_kg_snapshot));
+       const coste=x.coste_real_kg_snapshot==null?null:Number(x.coste_real_kg_snapshot);
        x.hidratacion_pct_snapshot=h;
        x.kg_obtenidos=salida;
        x.coste_real_kg_snapshot=coste;
