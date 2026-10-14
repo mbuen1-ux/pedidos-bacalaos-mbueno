@@ -5022,7 +5022,7 @@ window.mbSaveListStatusV110=save;
     document.addEventListener('input',e=>{if(e.target.id==='clientSearch')loadClientsDirect();if(e.target.id==='npSearch')loadProductsDirect();});
     document.addEventListener('change',e=>{if(e.target.id==='npCategory')loadProductsDirect();});
     window.mbDirectLoadClients=loadClientsDirect; window.mbDirectLoadProducts=loadProductsDirect;
-    setTimeout(loadClientsDirect,500); setTimeout(()=>{if(!document.querySelector('#clientsTable .client-tariff-link'))loadClientsDirect();},1400); setTimeout(()=>{if(!document.querySelector('#clientsTable .client-tariff-link'))loadClientsDirect();},2600); setTimeout(loadProductsDirect,600);
+    setTimeout(loadClientsDirect,500); setTimeout(()=>{if(!document.querySelector('#clientsTable .client-tariff-button'))loadClientsDirect();},1400); setTimeout(()=>{if(!document.querySelector('#clientsTable .client-tariff-button'))loadClientsDirect();},2600); setTimeout(loadProductsDirect,600);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hook);else hook();
 })();
