@@ -375,7 +375,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 </div>
 </div>
 <div class="card"><div class="panelHead"><div><h3>Histórico de procesos</h3><div class="meta">Cada registro conserva cuba, artículos, lotes, receta, hidratación y datos de salida.</div></div></div>
-<div class="tableWrap"><table><thead><tr><th>Nº PROCESO</th><th>Nº CUBA</th><th>FINAL TEÓRICO</th><th>DESCRIPCIÓN DEL ARTÍCULO</th><th>KG OBTENIDOS</th><th>Nº LOTE / CONSULTAR</th></tr></thead><tbody id="recordsBody"></tbody></table></div></div>
+<div class="tableWrap"><table><thead><tr><th>Nº PROCESO</th><th>Nº CUBA</th><th>FINAL TEÓRICO</th><th>DESCRIPCIÓN DEL ARTÍCULO</th><th>KG OBTENIDOS</th></tr></thead><tbody id="recordsBody"></tbody></table></div></div>
 
 </section>
 
@@ -1694,8 +1694,8 @@ function renderRecords(){
     const isOpen=window.openRecordDetailKey===key;
     const safeId=String(r.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const theoreticalFinal=(r.ops||[]).length?r.ops[r.ops.length-1][1]:r.end;
-    const lotLink=line.lot?`<a href="#" style="color:#123d60;text-decoration:underline;font-weight:bold" onclick="event.preventDefault();consultRecord('${safeId}',${lineIndex},'${key}')">${line.lot}</a>`:`<a href="#" style="color:#123d60;text-decoration:underline;font-weight:bold" onclick="event.preventDefault();consultRecord('${safeId}',${lineIndex},'${key}')">${isOpen?'Cerrar':'Consultar'}</a>`;
-    const mainRow=`<tr data-record-key="${key}"><td><b>${r.id}</b></td><td>${r.cuba||'—'}</td><td>${formatDateEU(theoreticalFinal)||'—'}</td><td>${line.desc||'—'}</td><td><b>${Number(line.kgSalida||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td><td>${lotLink}</td></tr>`;
+    const processLink=`<a href="#" style="color:#123d60;text-decoration:underline;font-weight:bold" onclick="event.preventDefault();consultRecord('${safeId}',${lineIndex},'${key}')">${r.id}</a>`;
+    const mainRow=`<tr data-record-key="${key}"><td>${processLink}</td><td>${r.cuba||'—'}</td><td>${formatDateEU(theoreticalFinal)||'—'}</td><td>${line.desc||'—'}</td><td><b>${Number(line.kgSalida||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td></tr>`;
     if(!isOpen)return mainRow;
     const ls=(r.lines||[]).map(recordLineNorm);
     const ops=(r.ops||[]).map((x,i)=>{const theoreticalStart=i===0?r.start:r.ops[i-1]?.[1];const theoreticalEnd=x[1];return `<tr><td><b>${x[0]||'—'}</b></td><td>${formatDateEU(theoreticalStart)||'—'}</td><td>${formatDateEU(theoreticalEnd)||'—'}</td><td>${formatDateEU(x[2])||'—'}</td><td><span class="badge green">Realizada</span></td></tr>`;}).join('');
