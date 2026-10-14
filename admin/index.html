@@ -6920,9 +6920,10 @@ window.mbSaveListStatusV110=save;
     window.__clientTariffPdfContext={name:link.dataset.clientName||'',code:link.dataset.clientCode||''};
     const tariffCode=String(link.dataset.tariffCode||'').replace(/^ERP-/i,'').trim();
 
-    // Abrir la pestaña de forma inmediata, sin esperar a las consultas de Supabase.
-    if(typeof window.show==='function') window.show('tariffs');
-    else document.querySelector('.nav[data-panel="tariffs"]')?.click();
+    // La pestaña real de tarifas/precios se identifica como "prices".
+    // Usar "tariffs" no existe en este HTML y dejaba la aplicación en blanco.
+    if(typeof window.show==='function') window.show('prices');
+    else document.querySelector('.nav[data-panel="prices"]')?.click();
 
     (async()=>{try{
       if(typeof window.renderTariffs!=='function'||typeof window.showTariffPrices!=='function')throw new Error('La gestión de tarifas todavía no está disponible. Recarga la página e inténtalo de nuevo.');
