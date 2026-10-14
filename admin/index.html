@@ -104,6 +104,7 @@ aside{padding:20px 12px}
 
 <style id="clients-clean-v70">
 .client-list-card{box-shadow:0 8px 24px rgba(18,57,92,.06)}
+.client-tariff-link{appearance:none;background:none;border:0;padding:0;color:#1769aa;text-decoration:underline;text-underline-offset:3px;font:inherit;font-weight:600;cursor:pointer}.client-tariff-link:hover{color:#0b4779}
 .client-clean-table{min-width:760px}
 .client-clean-table th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b7c8d;font-weight:700}
 .client-clean-table td{height:58px;vertical-align:middle}
@@ -4973,7 +4974,7 @@ window.mbSaveListStatusV110=save;
       window.__directClients=data.map(c=>({id:c.id,code:c.codigo||'',name:c.nombre||'',tariffId:c.tarifa_codigo||'',active:c.activo!==false}));
       const rows=window.__directClients.filter(c=>!q||String(c.code).toLowerCase().includes(q)||String(c.name).toLowerCase().includes(q)).map(c=>{
         const tc=String(c.tariffId||'').replace(/^ERP-/i,'');
-        return '<tr><td><input type="checkbox" class="client-select-check" data-client-code="'+esc(c.code)+'"></td><td><strong>'+esc(c.code)+'</strong></td><td><div class="client">'+esc(c.name)+'</div></td><td>'+esc(tm.get(tc)||'Sin tarifa')+'</td><td><span class="badge '+(c.active?'done':'pending')+'">'+(c.active?'Activo':'Inactivo')+'</span></td><td><button type="button" class="btn light client-action" onclick="editClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">Editar</button></td><td><button type="button" class="btn client-action create-order-v33" data-client-id="'+esc(c.id||c.code)+'">Crear pedido</button></td><td><button type="button" class="btn light client-action" onclick="deleteSingleClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">🗑</button></td></tr>';
+        return '<tr><td><input type="checkbox" class="client-select-check" data-client-code="'+esc(c.code)+'"></td><td><strong>'+esc(c.code)+'</strong></td><td><div class="client">'+esc(c.name)+'</div></td><td>'+(tc?'<button type="button" class="client-tariff-link" data-tariff-code="'+esc(tc)+'" data-client-name="'+esc(c.name)+'" data-client-code="'+esc(c.code)+'" title="Generar PDF personalizado de esta tarifa">'+esc(tm.get(tc)||tc)+'</button>':'Sin tarifa')+'</td><td><span class="badge '+(c.active?'done':'pending')+'">'+(c.active?'Activo':'Inactivo')+'</span></td><td><button type="button" class="btn light client-action" onclick="editClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">Editar</button></td><td><button type="button" class="btn client-action create-order-v33" data-client-id="'+esc(c.id||c.code)+'">Crear pedido</button></td><td><button type="button" class="btn light client-action" onclick="deleteSingleClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">🗑</button></td></tr>';
       }).join('');
       body.innerHTML=rows||'<tr><td colspan="8" class="empty-row">No hay clientes que coincidan.</td></tr>';
       if(typeof updateClientSelectionUI==='function')updateClientSelectionUI();
@@ -6899,15 +6900,35 @@ window.mbSaveListStatusV110=save;
     const rows=[...document.querySelectorAll('#tariffPricesTable tr[data-v185-row]')].filter(r=>r.querySelector('.v185-check')?.checked);
     if(!rows.length){alert('Selecciona al menos un artículo para generar el PDF.');return;}
     const title=$("selectedTariffTitle")?.textContent||'Tarifa de precios';
-    const customLine=window.prompt('Línea personalizada para incluir en el PDF de la tarifa.\nEjemplos: Descuento especial del 15%; Portes no incluidos: 8,95 € + IVA.\nDéjalo vacío si no quieres añadir ninguna.', '');
-    if(customLine===null)return;
+    const clientContext=window.__clientTariffPdfContext||null;
+    const customLine=window.prompt('Línea personalizada para incluir en el PDF de la tarifa.\\nEjemplos: Descuento especial del 15%; Portes no incluidos: 8,95 € + IVA.\\nDéjalo vacío si no quieres añadir ninguna.', '');
+    if(customLine===null){window.__clientTariffPdfContext=null;return;}
     const customNote=customLine.trim()?`<p class="custom-note">${esc(customLine.trim())}</p>`:'';
+    const clientHeading=clientContext?`<section class="client-heading"><div class="client-label">TARIFA PERSONALIZADA PARA</div><div class="client-name">${esc(clientContext.name)}</div><div class="client-code">Código de cliente: ${esc(clientContext.code)}</div></section>`:'';
     const lines=rows.map(r=>{const c=r.children;return `<tr><td>${esc(c[1]?.innerText||'')}</td><td>${esc(c[2]?.innerText||'')}</td><td style="text-align:right">${esc(c[3]?.querySelector('input')?.value||'0')} €/kg</td></tr>`}).join('');
     const w=window.open('','_blank'); if(!w){alert('El navegador ha bloqueado la ventana del PDF. Permite ventanas emergentes para este sitio.');return;}
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;color:#183044;margin:38px}h1{font-size:22px;margin:0 0 6px}p{color:#647686;margin:0 0 22px}.custom-note{color:#183044;font-size:14px;font-weight:700;margin:0 0 18px;white-space:pre-wrap}table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid #dfe5ea;text-align:left}th{font-size:12px;color:#647686;text-transform:uppercase}footer{margin-top:30px;font-size:11px;color:#71808c}@media print{button{display:none}}</style></head><body><h1>BACALAOS M. BUENO</h1><p>${esc(title)}</p>${customNote}<table><thead><tr><th>Referencia</th><th>Artículo</th><th style="text-align:right">Precio €/kg</th></tr></thead><tbody>${lines}</tbody></table><footer><strong>Precios IVA no incluido</strong><br><strong>Precios válidos hasta nuevo aviso</strong><br><br>Tarifa de precios · ${new Date().toLocaleDateString('es-ES')}</footer><script>window.onload=function(){window.print()}<\/script>
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;color:#183044;margin:38px}h1{font-size:22px;margin:0 0 6px}p{color:#647686;margin:0 0 22px}.client-heading{margin:18px 0 20px;padding:13px 15px;border:1px solid #dfe5ea;border-radius:5px}.client-label{font-size:10px;letter-spacing:1px;color:#647686;margin-bottom:5px}.client-name{font-size:18px;font-weight:700}.client-code{font-size:11px;color:#647686;margin-top:4px}.custom-note{color:#183044;font-size:14px;font-weight:700;margin:0 0 18px;white-space:pre-wrap}table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid #dfe5ea;text-align:left}th{font-size:12px;color:#647686;text-transform:uppercase}footer{margin-top:30px;font-size:11px;color:#71808c}@media print{button{display:none}}</style></head><body><h1>BACALAOS M. BUENO</h1><p>${esc(title)}</p>${clientHeading}${customNote}<table><thead><tr><th>Referencia</th><th>Artículo</th><th style="text-align:right">Precio €/kg</th></tr></thead><tbody>${lines}</tbody></table><footer><strong>Precios IVA no incluido</strong><br><strong>Precios válidos hasta nuevo aviso</strong><br><br>Tarifa de precios · ${new Date().toLocaleDateString('es-ES')}</footer><script>window.onload=function(){window.print()}<\/script>
 </body></html>`);
     w.document.close();
+    window.__clientTariffPdfContext=null;
   }
+
+  document.addEventListener('click',function(e){
+    const link=e.target.closest?.('.client-tariff-link');if(!link)return;
+    e.preventDefault();
+    window.__clientTariffPdfContext={name:link.dataset.clientName||'',code:link.dataset.clientCode||''};
+    const nav=document.querySelector('.nav[data-panel="tariffs"]');if(nav)nav.click();
+    const tariffCode=String(link.dataset.tariffCode||'').replace(/^ERP-/i,'');
+    setTimeout(async()=>{try{
+      let ts=window.__onlineTariffs||[];
+      if(!ts.length&&typeof window.renderTariffs==='function')await window.renderTariffs();
+      ts=window.__onlineTariffs||ts;
+      const t=ts.find(x=>String(x.codigo??x.code??'').replace(/^ERP-/i,'')===tariffCode);
+      if(!t)throw new Error('No se ha encontrado la tarifa asignada ('+tariffCode+').');
+      if(typeof window.showTariffPrices!=='function')throw new Error('No se ha podido abrir la gestión de tarifas.');
+      await window.showTariffPrices(t.id);
+    }catch(err){window.__clientTariffPdfContext=null;alert(err.message||err);}},350);
+  },true);
 
   window.renderTariffs=loadTariffList;
   window.showTariffPrices=show;
