@@ -1177,14 +1177,22 @@ let editingCode=null, editingProcessIndex=null, editingRecipeIndex=null;
 function recipeByCode(code){return recipes.find(r=>r.code===code);}
 function recipeForArticle(desc){const a=articles.find(x=>x.desc===desc);return a&&a.recipeCode?recipeByCode(a.recipeCode):null;}
 function recipeDefForArticle(desc){const r=recipeForArticle(desc);if(!r)return null;return {version:r.code,steps:(r.steps||[]).map(st=>[st.process,st.hours])};}
+async function recipeChangesBlocked(){
+  const localActive=Object.values(liveCubas||{}).some(c=>c&&c.busy&&(c.recipe||c.recipeDesc));
+  if(localActive)return 'Hay una receta en curso en una cuba. Finaliza o cancela esa producción antes de modificar recetas.';
+  if(!sbReady||!sb)return 'No se puede comprobar si hay recetas activas porque Supabase no está conectado. Por seguridad, no se permiten cambios.';
+  try{const {data,error}=await sb.from('agua_producciones').select('id,numero').eq('estado','ACTIVA').limit(1);if(error)throw error;if((data||[]).length)return 'Hay una receta activa en una cuba (producción '+(data[0].numero||'')+'). Finaliza o cancela la producción antes de modificar recetas.';return '';}
+  catch(e){console.error('No se pudo comprobar si hay recetas activas:',e);return 'No se ha podido comprobar si hay recetas activas en Supabase. Por seguridad, no se permiten cambios.';}
+}
+async function guardRecipeChanges(){const reason=await recipeChangesBlocked();if(reason){alert(reason);return false;}return true;}
 function renderRecipeMaster(){const b=document.getElementById('recipeMasterBody');if(!b)return;b.innerHTML=recipes.map((r,i)=>{const totalHours=(r.steps||[]).reduce((sum,st)=>sum+Number(st.hours||0),0);return `<tr><td><b>${r.code}</b></td><td>${r.desc}</td><td>${(r.steps||[]).length}</td><td><b>${totalHours.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})} h</b></td><td><span class="statusPill ${r.active?'':'statusOff'}">${r.active?'Activo':'Desactivada'}</span></td><td><button class="actionBtn" onclick="editRecipeMaster(${i})">Editar</button><button class="actionBtn" onclick="toggleRecipeMaster(${i})">${r.active?'Desactivar':'Activar'}</button><button class="actionBtn dangerText" onclick="deleteRecipeMaster(${i})">Eliminar</button></td></tr>`}).join('');}
 function recipeProcessOptions(selected){return processes.slice().sort(processSort).filter(p=>p.active||p.name===selected).map(p=>`<option value="${p.name}" ${p.name===selected?'selected':''}>${p.name}</option>`).join('');}
 function addMasterRecipeRow(step){const box=document.getElementById('masterRecipeRows'),n=box.children.length;const selected=step?step.process:(processes.find(p=>p.active)||{}).name||'';const p=processes.find(x=>x.name===selected);box.insertAdjacentHTML('beforeend',`<div class="recipeRow"><div><label>Paso</label><input class="step readonly" value="${n+1}" readonly></div><div><label>Proceso</label><select class="mproc" onchange="syncMasterRecipeRow(this)">${recipeProcessOptions(selected)}</select></div><div><label>Duración h</label><input class="mhours" type="number" min="0" step="0.5" value="${step?step.hours:(p?p.hours:0)}"></div><div><label>Observaciones</label><input class="mobs readonly" readonly value="${p?p.obs:''}"></div><button class="danger" onclick="this.parentElement.remove();renumberMasterRecipe()">×</button></div>`);syncMasterRecipeRow(box.lastElementChild.querySelector('.mproc'));}
 function syncMasterRecipeRow(sel){const row=sel.closest('.recipeRow'),p=processes.find(x=>x.name===sel.value);row.querySelector('.mobs').value=p?p.obs:'';}
 function renumberMasterRecipe(){document.querySelectorAll('#masterRecipeRows .recipeRow').forEach((r,i)=>r.querySelector('.step').value=i+1);}
 function getMasterRecipeSteps(){return [...document.querySelectorAll('#masterRecipeRows .recipeRow')].map(r=>({process:r.querySelector('.mproc').value,hours:Number(r.querySelector('.mhours').value)||0}));}
-function newRecipeMaster(){editingRecipeIndex=null;document.getElementById('rmCode').value=nextRecipeCode();document.getElementById('rmDesc').value='';document.getElementById('rmActive').value='1';document.getElementById('masterRecipeRows').innerHTML='';addMasterRecipeRow();document.getElementById('recipeMasterForm').style.display='block';}
-function editRecipeMaster(i){const r=recipes[i];editingRecipeIndex=i;document.getElementById('rmCode').value=r.code;document.getElementById('rmDesc').value=r.desc;document.getElementById('rmActive').value=r.active?'1':'0';document.getElementById('masterRecipeRows').innerHTML='';(r.steps||[]).forEach(st=>addMasterRecipeRow(st));document.getElementById('recipeMasterForm').style.display='block';}
+async function newRecipeMaster(){if(!await guardRecipeChanges())return;editingRecipeIndex=null;document.getElementById('rmCode').value=nextRecipeCode();document.getElementById('rmDesc').value='';document.getElementById('rmActive').value='1';document.getElementById('masterRecipeRows').innerHTML='';addMasterRecipeRow();document.getElementById('recipeMasterForm').style.display='block';}
+async function editRecipeMaster(i){if(!await guardRecipeChanges())return;const r=recipes[i];editingRecipeIndex=i;document.getElementById('rmCode').value=r.code;document.getElementById('rmDesc').value=r.desc;document.getElementById('rmActive').value=r.active?'1':'0';document.getElementById('masterRecipeRows').innerHTML='';(r.steps||[]).forEach(st=>addMasterRecipeRow(st));document.getElementById('recipeMasterForm').style.display='block';}
 function cancelRecipeMaster(){editingRecipeIndex=null;document.getElementById('recipeMasterForm').style.display='none';}
 function saveRecipeMaster(){const code=document.getElementById('rmCode').value.trim().toUpperCase(),desc=document.getElementById('rmDesc').value.trim(),steps=getMasterRecipeSteps();if(!code||!desc||!steps.length){alert('Código, descripción y al menos un proceso son obligatorios.');return}if(recipes.some((r,i)=>r.code===code&&i!==editingRecipeIndex)){alert('Ya existe ese código de receta.');return}if(editingRecipeIndex!==null){const r=recipes[editingRecipeIndex];r.code=code;r.desc=desc;r.active=document.getElementById('rmActive').value==='1';r.steps=steps;}else recipes.push({code,desc,active:true,steps});persistMasters();rebuildRecipeDefs();cancelRecipeMaster();renderRecipeMaster();renderList();}
 async function syncRecipeToSupabase(r){
@@ -1209,6 +1217,7 @@ async function syncRecipeToSupabase(r){
 }
 const _saveRecipeMasterLocal=saveRecipeMaster;
 saveRecipeMaster=async function(){
+  if(!await guardRecipeChanges())return;
   const code=document.getElementById('rmCode').value.trim().toUpperCase();
   _saveRecipeMasterLocal();
   const r=recipes.find(x=>x.code===code);
@@ -1224,8 +1233,8 @@ saveRecipeMaster=async function(){
   }
 };
 
-function toggleRecipeMaster(i){recipes[i].active=!recipes[i].active;persistMasters();renderRecipeMaster();}
-function deleteRecipeMaster(i){const r=recipes[i];if(recipeUsed(r.code)){alert('No se puede eliminar «'+r.code+'» porque está asignada a uno o más artículos. Puedes desactivarla.');return}recipes.splice(i,1);persistMasters();renderRecipeMaster();}
+async function toggleRecipeMaster(i){if(!await guardRecipeChanges())return;recipes[i].active=!recipes[i].active;try{await syncRecipeToSupabase(recipes[i]);persistMasters();renderRecipeMaster();renderList();}catch(e){alert('No se pudo actualizar la receta en Supabase.\n\n'+e.message);}}
+async function deleteRecipeMaster(i){if(!await guardRecipeChanges())return;const r=recipes[i];if(recipeUsed(r.code)){alert('No se puede eliminar «'+r.code+'» porque está asignada a uno o más artículos. Puedes desactivarla.');return}recipes.splice(i,1);persistMasters();renderRecipeMaster();}
 
 function articleShowTab(id,btn){document.getElementById('articles').classList.toggle('hidden',id!=='articles');document.getElementById('subfamilies').classList.toggle('hidden',id!=='subfamilies');document.getElementById('articleEdit').style.display='none';document.querySelectorAll('#articulos .articleInnerNav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');id==='subfamilies'?renderSubs():renderList();}
 function renderFilters(){let f=document.getElementById('filterSub'),cur=f.value;f.innerHTML='<option value="">Todas</option>'+subfamilies.map(s=>'<option>'+s+'</option>').join('');f.value=cur;document.getElementById('fSub').innerHTML='<option value="">Sin subfamilia</option>'+subfamilies.map(s=>'<option>'+s+'</option>').join('');}
