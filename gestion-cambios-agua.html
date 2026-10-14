@@ -375,8 +375,8 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 </div>
 </div>
 <div class="card"><div class="panelHead"><div><h3>Histórico de procesos</h3><div class="meta">Cada registro conserva cuba, artículos, lotes, receta, hidratación y datos de salida.</div></div></div>
-<div class="tableWrap"><table><thead><tr><th>Nº PROCESO</th><th>INICIO</th><th>FINAL</th><th>CUBA</th><th>ARTÍCULOS / LOTES</th><th>KG</th><th>OPERARIO</th><th>RECETA</th><th>ESTADO</th><th></th></tr></thead><tbody id="recordsBody"></tbody></table></div></div>
-<div id="recordDetail" class="card" style="display:none"></div>
+<div class="tableWrap"><table><thead><tr><th>Nº PROCESO</th><th>Nº CUBA</th><th>FINAL TEÓRICO</th><th>DESCRIPCIÓN DEL ARTÍCULO</th><th>KG OBTENIDOS</th><th></th></tr></thead><tbody id="recordsBody"></tbody></table></div></div>
+
 </section>
 
 <section id="cambios" class="section">
@@ -1662,17 +1662,17 @@ function renderRecords(){
   const b=document.getElementById('recordsBody');
   if(!b)return;
   const rows=records.filter(recordMatchesFilters);
-  const totalProcesos=rows.length;
+  const totalProcesos=new Set(rows.map(r=>String(r.id))).size;
   const totalKg=rows.reduce((sum,r)=>{
     const ls=(r.lines||[]).map(recordLineNorm);
     return sum+Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0));
   },0);
   const now=new Date();
-  const totalMes=rows.filter(r=>{
+  const totalMes=new Set(rows.filter(r=>{
     if(!r.end)return false;
     const d=new Date(r.end);
     return !Number.isNaN(d.getTime()) && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
-  }).length;
+  }).map(r=>String(r.id))).size;
   const countEl=document.getElementById('regCount');
   const kgEl=document.getElementById('regKg');
   const monthEl=document.getElementById('regMonth');
@@ -1681,17 +1681,35 @@ function renderRecords(){
   if(kgEl)kgEl.textContent=totalKg.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';
   if(monthEl)monthEl.textContent=totalMes.toLocaleString('es-ES')+' este mes';
   const active=!!(document.getElementById('regSearch')?.value||document.getElementById('regFilterCuba')?.value||document.getElementById('regFilterOperator')?.value||document.getElementById('regFilterFrom')?.value||document.getElementById('regFilterTo')?.value);
-  if(filteredEl){
-    filteredEl.style.display=active?'inline-block':'none';
-    filteredEl.textContent=active?'Filtros activos':'';
-  }
-  b.innerHTML=rows.map(r=>{
+  if(filteredEl){filteredEl.style.display=active?'inline-block':'none';filteredEl.textContent=active?'Filtros activos':'';}
+  const flat=[];
+  rows.forEach(r=>{
     const ls=(r.lines||[]).map(recordLineNorm);
-    const kg=Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0));
-    return `<tr><td><b>${r.id}</b></td><td>${formatDateEU(r.start)}</td><td>${formatDateEU(r.end)}</td><td>${r.cuba}</td><td>${ls.map(x=>x.code+' · '+x.lot).join('<br>')}</td><td>${kg.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</td><td>${r.operator}</td><td>${r.recipe}</td><td><span class="badge green">Terminado</span></td><td><button class="actionBtn" onclick="consultRecord('${r.id}')">Consultar</button></td></tr>`;
-  }).join('')||'<tr><td colspan="10" style="padding:24px;text-align:center;color:#64748b">No hay registros que coincidan con los filtros.</td></tr>';
+    if(ls.length)ls.forEach((line,lineIndex)=>flat.push({r,line,lineIndex}));
+    else flat.push({r,line:{code:'',desc:'Sin artículo',lot:'',kgSalida:0,kgEntrada:0,hidratacion:0,costeReal:null,costeSalida:null},lineIndex:0});
+  });
+  b.innerHTML=flat.map((item,rowIndex)=>{
+    const {r,line,lineIndex}=item;
+    const key='record-row-'+rowIndex;
+    const isOpen=window.openRecordDetailKey===key;
+    const safeId=String(r.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const mainRow=`<tr data-record-key="${key}"><td><b>${r.id}</b></td><td>${r.cuba||'—'}</td><td>${formatDateEU(r.end)||'—'}</td><td>${line.desc||'—'}</td><td><b>${Number(line.kgSalida||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td><td><button class="actionBtn" onclick="consultRecord('${safeId}',${lineIndex},'${key}')">${isOpen?'Cerrar':'Consultar'}</button></td></tr>`;
+    if(!isOpen)return mainRow;
+    const ls=(r.lines||[]).map(recordLineNorm);
+    const ops=(r.ops||[]).map(x=>`<tr><td><b>${x[0]||'—'}</b></td><td>${r.operator||'—'}</td><td>${formatDateEU(x[1])||'—'}</td><td>${formatDateEU(x[2])||'—'}</td><td><span class="badge green">Realizada</span></td></tr>`).join('');
+    const detail=`<tr class="recordInlineDetail"><td colspan="6"><div style="padding:12px;background:#f8fafc;border:1px solid #dbe5ea;border-radius:8px"><div class="panelHead"><div><h3 style="margin:0">Proceso ${r.id} · Cuba ${r.cuba||'—'}</h3><div class="meta">Inicio ${formatDateEU(r.start)||'—'} · Final teórico ${formatDateEU(r.end)||'—'} · Operario ${r.operator||'—'} · Receta ${r.recipe||'—'}</div></div><button class="secondary" onclick="closeRecordDetail()">Cerrar</button></div><h4>Artículo consultado</h4><div class="tableWrap"><table><thead><tr><th>Código</th><th>Artículo</th><th>Lote</th><th>Kg entrada</th><th>Hidratación</th><th>Kg obtenidos</th><th>Coste real €/kg</th><th>Coste salida</th></tr></thead><tbody><tr><td>${line.code||'—'}</td><td>${line.desc||'—'}</td><td>${line.lot||'—'}</td><td>${Number(line.kgEntrada||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</td><td>${Number(line.hidratacion||0).toLocaleString('es-ES',{maximumFractionDigits:3})}%</td><td><b>${Number(line.kgSalida||0).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td><td>${line.costeReal==null?'—':line.costeReal.toLocaleString('es-ES',{minimumFractionDigits:4,maximumFractionDigits:4})}</td><td>${line.costeSalida==null?'—':line.costeSalida.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}</td></tr></tbody></table></div><h4 style="margin-top:16px">Operaciones del proceso</h4><div class="tableWrap"><table><thead><tr><th>Operación</th><th>Operario</th><th>Hora teórica</th><th>Hora real</th><th>Estado</th></tr></thead><tbody>${ops||'<tr><td colspan="5">No hay operaciones registradas.</td></tr>'}</tbody></table></div><div class="summarybar" style="margin-top:12px"><span>Artículos en el proceso: <b>${ls.length}</b></span><span>Kilos totales obtenidos: <b>${Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0)).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})} kg</b></span></div></div></td></tr>`;
+    return mainRow+detail;
+  }).join('')||'<tr><td colspan="6" style="padding:24px;text-align:center;color:#64748b">No hay registros que coincidan con los filtros.</td></tr>';
 }
-function consultRecord(id){const r=records.find(x=>x.id===id);if(!r)return;const ls=(r.lines||[]).map(recordLineNorm);const d=document.getElementById('recordDetail');d.style.display='block';d.innerHTML=`<div class="panelHead"><div><h3>${r.id} · ${r.cuba}</h3><div class="meta">Inicio ${formatDateEU(r.start)} · Final ${formatDateEU(r.end)} · Operario ${r.operator} · Receta ${r.recipe}</div></div><button class="secondary" onclick="document.getElementById('recordDetail').style.display='none'">Cerrar</button></div><h4>Artículos y salida</h4><table><thead><tr><th>Código</th><th>Artículo</th><th>Lote</th><th>Kg entrada</th><th>Hidratación</th><th>Kg salida</th><th>Coste real €/kg</th><th>Coste salida</th></tr></thead><tbody>${ls.map(x=>`<tr><td>${x.code}</td><td>${x.desc}</td><td>${x.lot}</td><td>${x.kgEntrada.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</td><td>${x.hidratacion.toLocaleString('es-ES',{maximumFractionDigits:3})}%</td><td><b>${x.kgSalida.toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})}</b></td><td>${x.costeReal==null?'—':x.costeReal.toLocaleString('es-ES',{minimumFractionDigits:4,maximumFractionDigits:4})}</td><td>${x.costeSalida==null?'—':x.costeSalida.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}</td></tr>`).join('')}</tbody></table><h4 style="margin-top:18px">Resumen de salida</h4><div class="summarybar"><span>Entrada <b>${Number(r.kgEntrada||ls.reduce((a,x)=>a+x.kgEntrada,0)).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})} kg</b></span><span>Salida <b>${Number(r.kg||ls.reduce((a,x)=>a+x.kgSalida,0)).toLocaleString('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3})} kg</b></span><span>Coste total <b>${ls.reduce((a,x)=>a+(x.costeSalida||0),0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})} €</b></span></div><h4 style="margin-top:18px">Operaciones realizadas</h4><table><thead><tr><th>Operación</th><th>Operario</th><th>Hora teórica</th><th>Hora real</th><th>Estado</th></tr></thead><tbody>${r.ops.map(x=>`<tr><td><b>${x[0]}</b></td><td>${r.operator||'—'}</td><td>${formatDateEU(x[1])}</td><td>${formatDateEU(x[2])}</td><td><span class="badge green">Realizada</span></td></tr>`).join('')}</tbody></table>`;d.scrollIntoView({behavior:'smooth',block:'start'});}
+window.openRecordDetailKey=null;
+function consultRecord(id,lineIndex,key){
+  if(window.openRecordDetailKey===key){closeRecordDetail();return;}
+  window.openRecordDetailKey=key;
+  renderRecords();
+  const detail=document.querySelector('[data-record-key="'+key+'"]')?.nextElementSibling;
+  if(detail?.classList.contains('recordInlineDetail'))detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeRecordDetail(){window.openRecordDetailKey=null;renderRecords();}
 function exportRecordsCSV(){const rows=records.map(r=>{const ls=(r.lines||[]).map(recordLineNorm);return ls.map(x=>({proceso:r.id,cuba:r.cuba,fecha_inicio:r.start,fecha_fin:r.end,operario:r.operator,receta:r.recipe,codigo_articulo:x.code,articulo:x.desc,lote:x.lot,kg_entrada:x.kgEntrada,hidratacion_pct:x.hidratacion,kg_salida:x.kgSalida,coste_real_kg:x.costeReal==null?'':x.costeReal,coste_salida_total:x.costeSalida==null?'':x.costeSalida}));}).flat();const header=['proceso','cuba','fecha_inicio','fecha_fin','operario','receta','codigo_articulo','articulo','lote','kg_entrada','hidratacion_pct','kg_salida','coste_real_kg','coste_salida_total'];const csv=[header,...rows.map(r=>header.map(k=>String(r[k]??'').replaceAll('"','""')))];const text=csv.map(row=>row.map(v=>'"'+v+'"').join(';')).join('\r\n');const blob=new Blob([text],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='registros_salida_agua.csv';a.click();URL.revokeObjectURL(url);}
 </script>
 <script>renderRecords();
