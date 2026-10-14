@@ -6916,18 +6916,18 @@ window.mbSaveListStatusV110=save;
   document.addEventListener('click',function(e){
     const link=e.target.closest?.('.client-tariff-link');if(!link)return;
     e.preventDefault();
+    e.stopPropagation();
     window.__clientTariffPdfContext={name:link.dataset.clientName||'',code:link.dataset.clientCode||''};
-    const nav=document.querySelector('.nav[data-panel="tariffs"]');if(nav)nav.click();
-    const tariffCode=String(link.dataset.tariffCode||'').replace(/^ERP-/i,'');
-    setTimeout(async()=>{try{
-      let ts=window.__onlineTariffs||[];
-      if(!ts.length&&typeof window.renderTariffs==='function')await window.renderTariffs();
-      ts=window.__onlineTariffs||ts;
-      const t=ts.find(x=>String(x.codigo??x.code??'').replace(/^ERP-/i,'')===tariffCode);
+    const tariffCode=String(link.dataset.tariffCode||'').replace(/^ERP-/i,'').trim();
+    (async()=>{try{
+      if(typeof window.renderTariffs!=='function'||typeof window.showTariffPrices!=='function')throw new Error('La gestión de tarifas todavía no está disponible. Recarga la página e inténtalo de nuevo.');
+      await window.renderTariffs();
+      const ts=window.__onlineTariffs||[];
+      const t=ts.find(x=>String(x.codigo??x.code??'').replace(/^ERP-/i,'').trim()===tariffCode);
       if(!t)throw new Error('No se ha encontrado la tarifa asignada ('+tariffCode+').');
-      if(typeof window.showTariffPrices!=='function')throw new Error('No se ha podido abrir la gestión de tarifas.');
+      const nav=document.querySelector('.nav[data-panel="tariffs"]');if(nav)nav.click();
       await window.showTariffPrices(t.id);
-    }catch(err){window.__clientTariffPdfContext=null;alert(err.message||err);}},350);
+    }catch(err){window.__clientTariffPdfContext=null;alert(err.message||err);}})();
   },true);
 
   window.renderTariffs=loadTariffList;
