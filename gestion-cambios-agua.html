@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v192</title>
+<title>Gestión de Cambios de Agua · v193</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -255,7 +255,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v192 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v193 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -1402,8 +1402,10 @@ async function startPrepared(id){
  renderLines();renderProdRecipeInfo();renderCubaSelect();
  document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';
  document.getElementById('operario').value=op.name;
- const now=new Date(),iso=localIsoMinute(now),h=document.getElementById('hora'),time=iso.slice(11,16);
- document.getElementById('fecha').value=iso.slice(0,10);
+ // La fecha y hora teóricas programadas son la referencia oficial del proceso.
+ // La hora real de pulsación solo es informativa y nunca desplaza los vencimientos.
+ const theoreticalIso=localIsoMinute(scheduledAt),h=document.getElementById('hora'),time=theoreticalIso.slice(11,16);
+ document.getElementById('fecha').value=theoreticalIso.slice(0,10);
  if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}
  h.value=time;
  if(needsConfirmation&&!confirm('La cuba está programada para dentro de más de 4 horas. ¿Confirmas que ya se ha realizado el llenado y quieres iniciar ahora?')){
