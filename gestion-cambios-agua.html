@@ -1583,7 +1583,7 @@ async function sbLoadRecords(){
 }
 function recordLineNorm(x){
   if(Array.isArray(x)) return {code:x[0]||'',desc:x[1]||'',lot:x[2]||'',kgEntrada:Number(x[3]||0),hidratacion:Number(x[4]||0),kgSalida:Number(x[5]||x[3]||0),costeReal:x[6]==null?null:Number(x[6]),costeSalida:x[7]==null?null:Number(x[7])};
-  return {code:x.code||'',desc:x.desc||'',lot:x.lot||'',kgEntrada:Number(x.kgEntrada||0),hidratacion:Number(x.hidratacion||0),kgSalida:Number(x.kgSalida||0),costeReal:x.costeReal==null?null:Number(x.costeReal),costeSalida:x.costeSalida==null?null:Number(x.costeSalida)};
+  return {code:x.code||x.articulo_codigo_snapshot||x.codigo_articulo||'',desc:x.desc||x.articulo_descripcion_snapshot||x.descripcion_articulo||'',lot:x.lot||x.lote_numero_snapshot||x.lote_numero||'',kgEntrada:Number(x.kgEntrada??x.kg_entrada??x.kg??0),hidratacion:Number(x.hidratacion??x.hidratacion_pct_snapshot??0),kgSalida:Number(x.kgSalida??x.kg_obtenidos??x.kg_salida??0),costeReal:x.costeReal==null?(x.coste_real_kg_snapshot==null?null:Number(x.coste_real_kg_snapshot)):Number(x.costeReal),costeSalida:x.costeSalida==null?(x.coste_salida_total==null?null:Number(x.coste_salida_total)):Number(x.costeSalida)};
 }
 function formatDateEU(value){
   if(!value)return '';
