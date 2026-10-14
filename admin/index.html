@@ -6919,13 +6919,17 @@ window.mbSaveListStatusV110=save;
     e.stopPropagation();
     window.__clientTariffPdfContext={name:link.dataset.clientName||'',code:link.dataset.clientCode||''};
     const tariffCode=String(link.dataset.tariffCode||'').replace(/^ERP-/i,'').trim();
+
+    // Abrir la pestaña de forma inmediata, sin esperar a las consultas de Supabase.
+    if(typeof window.show==='function') window.show('tariffs');
+    else document.querySelector('.nav[data-panel="tariffs"]')?.click();
+
     (async()=>{try{
       if(typeof window.renderTariffs!=='function'||typeof window.showTariffPrices!=='function')throw new Error('La gestión de tarifas todavía no está disponible. Recarga la página e inténtalo de nuevo.');
       await window.renderTariffs();
       const ts=window.__onlineTariffs||[];
       const t=ts.find(x=>String(x.codigo??x.code??'').replace(/^ERP-/i,'').trim()===tariffCode);
       if(!t)throw new Error('No se ha encontrado la tarifa asignada ('+tariffCode+').');
-      const nav=document.querySelector('.nav[data-panel="tariffs"]');if(nav)nav.click();
       await window.showTariffPrices(t.id);
     }catch(err){window.__clientTariffPdfContext=null;alert(err.message||err);}})();
   },true);
