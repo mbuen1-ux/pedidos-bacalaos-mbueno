@@ -1363,21 +1363,24 @@ function renderClients(){
  const rows=clients.filter(c=>String(c.code||'').toLowerCase().includes(q)||String(c.name||'').toLowerCase().includes(q))
  .map(c=>{
    const tariff=(tariffs.find(t=>String(t.id)===String(c.tariffId))||tariffs.find(t=>String(t.code)===String(c.tariffId).replace(/^ERP-/i,'')));
+   const tariffCode=String(c.tariffId||tariff?.code||'').replace(/^ERP-/i,'');
+   const tariffName=String(tariff?.name||tariff?.nombre||c.tariffId||'Sin tarifa');
+   const safe=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+   const tariffCell=c.tariffId?'<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap"><button type="button" class="btn icon-btn client-tariff-button" data-tariff-code="'+safe(tariffCode)+'" data-client-name="'+safe(c.name||'')+'" data-client-code="'+safe(c.code||'')+'" onclick="window.openClientTariffDropdown(this)" title="Generar PDF personalizado para este cliente" aria-label="Generar PDF personalizado para este cliente"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></button><span>'+safe(tariffName)+'</span></div>':'Sin tarifa';
    return `<tr>
-   <td><input type="checkbox" class="client-select-check" data-client-code="${String(c.code||'').replace(/"/g,'&quot;')}" onchange="updateClientSelectionUI()"></td>
-   <td><strong>${c.code||''}</strong></td>
-   <td><div class="client">${c.name||''}</div></td>
-   <td>${tariff?'<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap"><button type="button" class="btn icon-btn client-tariff-button" data-tariff-code="'+String(tariff.code||c.tariffId||'').replace(/^ERP-/i,'').replace(/"/g,'&quot;')+'" data-client-name="'+String(c.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" data-client-code="'+String(c.code||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" onclick="window.openClientTariffDropdown(this)" title="Generar PDF personalizado para este cliente" aria-label="Generar PDF personalizado para este cliente"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></button><span>'+String(tariff.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span></div>':'Sin tarifa'}</td>
+   <td><input type="checkbox" class="client-select-check" data-client-code="${safe(c.code||'')}" onchange="updateClientSelectionUI()"></td>
+   <td><strong>${safe(c.code||'')}</strong></td>
+   <td><div class="client">${safe(c.name||'')}</div></td>
+   <td>${tariffCell}</td>
    <td><span class="badge ${c.active?'done':'pending'}">${c.active?'Activo':'Inactivo'}</span></td>
-   <td><button type="button" class="btn light client-action" onclick="editClient('${String(c.code).replace(/'/g,"\\'")}')">Editar</button></td>
-   <td><button type="button" class="btn client-action create-order-v33" data-client-id="${c.id||c.code}">Crear pedido</button></td>
-   <td><button type="button" class="btn light client-action" onclick="deleteSingleClient('${String(c.code).replace(/'/g,"\\'")}')">🗑</button></td>
+   <td><button type="button" class="btn light client-action" onclick="editClient('${String(c.code||'').replace(/'/g,"\\'")}')">Editar</button></td>
+   <td><button type="button" class="btn client-action create-order-v33" data-client-id="${safe(c.id||c.code)}">Crear pedido</button></td>
+   <td><button type="button" class="btn light client-action" onclick="deleteSingleClient('${String(c.code||'').replace(/'/g,"\\'")}')">🗑</button></td>
    </tr>`;
  }).join('');
- document.querySelector('#clientsTable').innerHTML=rows||'<tr><td colspan="7" class="empty-row">No hay clientes que coincidan.</td></tr>';
+ document.querySelector('#clientsTable').innerHTML=rows||'<tr><td colspan="8" class="empty-row">No hay clientes que coincidan.</td></tr>';
  updateClientSelectionUI();
 }
-
 function getVisibleClientCodes(){
   return [...document.querySelectorAll('#clientsTable .client-select-check')].map(x=>String(x.dataset.clientCode||'')).filter(Boolean);
 }
