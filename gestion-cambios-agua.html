@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v191</title>
+<title>Gestión de Cambios de Agua · v192</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -255,7 +255,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v191 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v192 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -1377,20 +1377,47 @@ async function schedulePrepared(id,btn){
    if(q.error)throw q.error;
    if(!q.data||q.data.estado!=='PROGRAMADA')throw new Error('Supabase no confirmó el cambio a PROGRAMADA.');
    await loadPrepared();
-   alert('Programación guardada. La cuba todavía no ha iniciado.');
+   const hoursAhead=(date.getTime()-Date.now())/3600000;
+   if(hoursAhead<=4){await startPrepared(id);return;}
+   alert('Programación guardada. El llenado se confirmará cuando se inicie con más de 4 horas de antelación.');
   }finally{if(btn){btn.disabled=false;btn.textContent=p.estado==='PROGRAMADA'?'Guardar programación':'Programar';}}
  }catch(e){console.error('Error al programar la carga:',e);alert('No se pudo programar: '+(e?.message||String(e)));}
 }
 function editPrepared(id){const p=preparedItems.find(x=>String(x.id)===String(id));if(!p)return;preparedLines=(p.datos?.lines||[]).map(x=>({...x}));if(p.estado==='PROGRAMADA'){sb.from('agua_preparaciones').update({estado:'PREPARADA',cuba_numero:null,operario_codigo:null,fecha_programada:null,updated_at:new Date().toISOString()}).eq('id',id).then(function(q){if(q.error)alert(q.error.message);else loadPrepared();});}renderPreparedLines();document.getElementById('preparedRows').scrollIntoView({behavior:'smooth',block:'start'});}
 async function deletePrepared(id){if(!confirm('¿Eliminar esta preparación?'))return;try{const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(q.error)throw q.error;await loadPrepared();}catch(e){alert('No se pudo eliminar: '+e.message);}}
 async function startPrepared(id){
- const p=preparedItems.find(x=>String(x.id)===String(id));if(!p||p.estado!=='PROGRAMADA')return;const c=Object.values(liveCubas).find(x=>String(x.id)===String(p.cuba_numero));if(!c||c.busy){alert('La cuba reservada ya no está libre.');return;}
- const oldLines=lines.map(x=>({...x}));pendingStartPreparedId=id;lines=(p.datos?.lines||[]).map(x=>({...x}));renderLines();renderProdRecipeInfo();renderCubaSelect();document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;
- const now=new Date(),iso=localIsoMinute(now);document.getElementById('fecha').value=iso.slice(0,10);const h=document.getElementById('hora'),time=iso.slice(11,16);if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}h.value=time;
-  // v189: iniciar desde la preparación sin mostrar la sección interna de Producción.
-  document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';document.getElementById('operario').value=p.operario_codigo;document.getElementById('fecha').value=iso.slice(0,10);h.value=time;
- if(!confirm('Confirmar inicio REAL de la cuba '+p.cuba_numero+' a las '+now.toLocaleString('es-ES')+'?')){pendingStartPreparedId=null;lines=oldLines;renderLines();renderCubaSelect();return;}
- try{await startProduction();}catch(e){alert('No se pudo iniciar la producción: '+(e.message||e));}finally{if(pendingStartPreparedId===null){const q=await sb.from('agua_preparaciones').delete().eq('id',id);if(!q.error)await loadPrepared();}else pendingStartPreparedId=null;}
+ const p=preparedItems.find(x=>String(x.id)===String(id));
+ if(!p||p.estado!=='PROGRAMADA'){alert('La preparación no está programada.');return;}
+ const c=Object.values(liveCubas).find(x=>String(x.id)===String(p.cuba_numero));
+ if(!c||c.busy){alert('La cuba reservada ya no está libre.');return;}
+ const scheduledAt=new Date(p.datos?.programmedLocal||p.fecha_programada);
+ if(Number.isNaN(scheduledAt.getTime())){alert('La fecha programada no es válida.');return;}
+ const hoursAhead=(scheduledAt.getTime()-Date.now())/3600000;
+ const needsConfirmation=hoursAhead>4;
+ const op=operarios.find(o=>String(o.code)===String(p.operario_codigo)||String(o.id)===String(p.operario_codigo)||String(o.name)===String(p.operario_codigo));
+ if(!op){alert('No se encuentra el operario asignado. Revisa la programación y vuelve a guardar.');return;}
+ const oldLines=lines.map(x=>({...x}));
+ pendingStartPreparedId=id;
+ lines=(p.datos?.lines||[]).map(x=>({...x}));
+ renderLines();renderProdRecipeInfo();renderCubaSelect();
+ document.getElementById('cubaSel').value=keyForId(p.cuba_numero)||'';
+ document.getElementById('operario').value=op.name;
+ const now=new Date(),iso=localIsoMinute(now),h=document.getElementById('hora'),time=iso.slice(11,16);
+ document.getElementById('fecha').value=iso.slice(0,10);
+ if(!Array.from(h.options).some(o=>o.value===time)){const opt=document.createElement('option');opt.value=time;opt.textContent=time;h.appendChild(opt);}
+ h.value=time;
+ if(needsConfirmation&&!confirm('La cuba está programada para dentro de más de 4 horas. ¿Confirmas que ya se ha realizado el llenado y quieres iniciar ahora?')){
+  pendingStartPreparedId=null;lines=oldLines;renderLines();renderCubaSelect();return;
+ }
+ try{
+  await startProduction();
+  if(pendingStartPreparedId===null){
+   const q=await sb.from('agua_preparaciones').delete().eq('id',id);
+   if(q.error)throw q.error;
+   await loadPrepared();
+  }
+ }catch(e){alert('No se pudo iniciar la producción: '+(e.message||e));}
+ finally{if(pendingStartPreparedId!==null)pendingStartPreparedId=null;}
 }
 function cambiosDesdePreparados(){const now=Date.now();return preparedItems.filter(p=>p.estado==='PROGRAMADA'&&p.fecha_programada&&p.cuba_numero).map(p=>{const theory=new Date(p.datos?.programmedLocal||p.fecha_programada),state=now>=theory.getTime()?'Fuera de hora':(now>=theory.getTime()-2*3600000?'Disponible':'Programado'),ls=p.datos?.lines||[];return {theory,cuba:p.cuba_numero,op:'Llenar para iniciar',items:ls.map(x=>preparedText(x.desc)+' ('+Number(x.kg||0).toLocaleString('es-ES')+' kg)').join('<br>'),nextOp:'Llenar para iniciar',state,preparedId:p.id};});}
 
