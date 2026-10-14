@@ -104,7 +104,7 @@ aside{padding:20px 12px}
 
 <style id="clients-clean-v70">
 .client-list-card{box-shadow:0 8px 24px rgba(18,57,92,.06)}
-.client-tariff-link{appearance:none;background:none;border:0;padding:0;color:#1769aa;text-decoration:underline;text-underline-offset:3px;font:inherit;font-weight:600;cursor:pointer}.client-tariff-link:hover{color:#0b4779}
+.client-tariff-button{white-space:nowrap;min-width:112px}.client-tariff-button:hover{filter:brightness(.96)}
 .client-clean-table{min-width:760px}
 .client-clean-table th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b7c8d;font-weight:700}
 .client-clean-table td{height:58px;vertical-align:middle}
@@ -4974,7 +4974,7 @@ window.mbSaveListStatusV110=save;
       window.__directClients=data.map(c=>({id:c.id,code:c.codigo||'',name:c.nombre||'',tariffId:c.tarifa_codigo||'',active:c.activo!==false}));
       const rows=window.__directClients.filter(c=>!q||String(c.code).toLowerCase().includes(q)||String(c.name).toLowerCase().includes(q)).map(c=>{
         const tc=String(c.tariffId||'').replace(/^ERP-/i,'');
-        return '<tr><td><input type="checkbox" class="client-select-check" data-client-code="'+esc(c.code)+'"></td><td><strong>'+esc(c.code)+'</strong></td><td><div class="client">'+esc(c.name)+'</div></td><td>'+(tc?'<button type="button" class="client-tariff-link" data-tariff-code="'+esc(tc)+'" data-client-name="'+esc(c.name)+'" data-client-code="'+esc(c.code)+'" title="Generar PDF personalizado de esta tarifa">'+esc(tm.get(tc)||tc)+'</button>':'Sin tarifa')+'</td><td><span class="badge '+(c.active?'done':'pending')+'">'+(c.active?'Activo':'Inactivo')+'</span></td><td><button type="button" class="btn light client-action" onclick="editClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">Editar</button></td><td><button type="button" class="btn client-action create-order-v33" data-client-id="'+esc(c.id||c.code)+'">Crear pedido</button></td><td><button type="button" class="btn light client-action" onclick="deleteSingleClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">🗑</button></td></tr>';
+        return '<tr><td><input type="checkbox" class="client-select-check" data-client-code="'+esc(c.code)+'"></td><td><strong>'+esc(c.code)+'</strong></td><td><div class="client">'+esc(c.name)+'</div></td><td>'+(tc?'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>'+esc(tm.get(tc)||tc)+'</span><button type="button" class="btn client-tariff-button" data-tariff-code="'+esc(tc)+'" data-client-name="'+esc(c.name)+'" data-client-code="'+esc(c.code)+'" onclick="window.openClientTariffDropdown(this)" title="Generar PDF personalizado para este cliente">Generar PDF</button></div>':'Sin tarifa')+'</td><td><span class="badge '+(c.active?'done':'pending')+'">'+(c.active?'Activo':'Inactivo')+'</span></td><td><button type="button" class="btn light client-action" onclick="editClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">Editar</button></td><td><button type="button" class="btn client-action create-order-v33" data-client-id="'+esc(c.id||c.code)+'">Crear pedido</button></td><td><button type="button" class="btn light client-action" onclick="deleteSingleClient(\''+String(c.code).replace(/'/g,"\\'")+'\')">🗑</button></td></tr>';
       }).join('');
       body.innerHTML=rows||'<tr><td colspan="8" class="empty-row">No hay clientes que coincidan.</td></tr>';
       if(typeof updateClientSelectionUI==='function')updateClientSelectionUI();
@@ -6912,13 +6912,6 @@ window.mbSaveListStatusV110=save;
     w.document.close();
     window.__clientTariffPdfContext=null;
   }
-
-  document.addEventListener('click',function(e){
-    const link=e.target.closest?.('.client-tariff-link');if(!link)return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if(typeof window.openClientTariffDropdown==='function') window.openClientTariffDropdown(link);
-  },true);
 
   window.renderTariffs=loadTariffList;
   window.showTariffPrices=show;
