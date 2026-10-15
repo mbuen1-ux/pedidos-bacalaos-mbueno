@@ -971,6 +971,9 @@ function updateInicioKilosSemana(){
   const weekEnd=new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate()+7);
   const inThisWeek=t=>Number.isFinite(t)&&t>=weekStart.getTime()&&t<weekEnd.getTime();
+  const previousWeekStart=new Date(weekStart);
+  previousWeekStart.setDate(previousWeekStart.getDate()-7);
+  const inPreviousWeek=t=>Number.isFinite(t)&&t>=previousWeekStart.getTime()&&t<weekStart.getTime();
   const theoreticalFinishOfRecord=r=>{
     const ops=Array.isArray(r.ops)?r.ops:[];
     if(!ops.length)return NaN;
@@ -981,12 +984,18 @@ function updateInicioKilosSemana(){
   };
   // Los registros finalizados se imputan a la semana de su última hora teórica,
   // no a la fecha/hora real en que el operario marcó la finalización.
-  const completedKg=(records||[]).reduce((sum,r)=>{
-    const finish=theoreticalFinishOfRecord(r);
-    if(!inThisWeek(finish))return sum;
+  const kilosOfRecord=r=>{
     const lines=Array.isArray(r.lines)?r.lines:[];
     const kg=Number(r.kg||lines.reduce((a,x)=>a+Number(recordLineNorm(x).kgSalida||0),0));
-    return sum+(Number.isFinite(kg)?kg:0);
+    return Number.isFinite(kg)?kg:0;
+  };
+  const completedKg=(records||[]).reduce((sum,r)=>{
+    const finish=theoreticalFinishOfRecord(r);
+    return sum+(inThisWeek(finish)?kilosOfRecord(r):0);
+  },0);
+  const previousWeekKg=(records||[]).reduce((sum,r)=>{
+    const finish=theoreticalFinishOfRecord(r);
+    return sum+(inPreviousWeek(finish)?kilosOfRecord(r):0);
   },0);
   // Para producciones todavía activas usamos la hora teórica del último proceso
   // y estimamos la salida con el porcentaje de hidratación guardado al iniciar.
@@ -1010,6 +1019,7 @@ function updateInicioKilosSemana(){
   set('kpiKgDesalados',formatKg(completedKg));
   set('kpiKgPrevistos',formatKg(forecastKg));
   set('kpiKgTotalSemana',formatKg(completedKg+forecastKg));
+  set('kpiKgSemanaPasada',formatKg(previousWeekKg));
 }
 function updateInicioDashboard(){
   updateInicioDisponibilidad();
