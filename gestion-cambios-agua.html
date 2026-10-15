@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v199</title>
+<title>Gestión de Cambios de Agua · v200</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -158,7 +158,7 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 
 /* Estado semanal de kilos desalados en Inicio */
 .kilosDesaladosPanel{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px}
-.kilosDesaladosKpi{min-height:118px;justify-content:center}
+.kilosDesaladosKpi{min-height:118px;justify-content:center}.kilosDesaladosKpi>span{font-size:14px;font-weight:900;letter-spacing:.35px;color:#17324d;line-height:1.3;text-transform:uppercase}
 .kilosDesaladosKpi b{font-size:clamp(24px,2.5vw,34px)!important;color:#174d76}
 .kilosDesaladosKpi small{font-size:11px;color:#64748b;margin-top:5px;line-height:1.35}
 .kilosDetalleBtn{margin-top:12px;padding:7px 10px;border:1px solid #c7d7e3;border-radius:7px;background:#f4f8fb;color:#174d76;font-size:12px;font-weight:800;cursor:pointer}
@@ -295,7 +295,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v199 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v200 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -313,14 +313,14 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <section id="inicio" class="section active">
 <h2>Inicio</h2><div class="subtitle">Situación general de la producción de desalado.</div>
 <div class="kpis kilosDesaladosPanel">
-<div class="card kpi kilosDesaladosKpi"><span>Kilos ya desalados esta semana</span><b id="kpiKgDesalados">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekDone')">Ver artículos</button><small>Producciones finalizadas según su hora teórica</small></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos pendientes de terminar</span><b id="kpiKgPrevistos">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekPending')">Ver artículos</button><small>Producciones activas con final teórico esta semana</small></div>
-<div class="card kpi kilosDesaladosKpi total"><span>Total desalado de la semana</span><b id="kpiKgTotalSemana">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekTotal')">Ver artículos</button><small>Ya desalados + previsión pendiente</small></div>
+<div class="card kpi kilosDesaladosKpi"><span>YA DESALADOS · ESTA SEMANA</span><b id="kpiKgDesalados">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekDone')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>PENDIENTES DE TERMINAR</span><b id="kpiKgPrevistos">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekPending')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi total"><span>TOTAL DE LA SEMANA</span><b id="kpiKgTotalSemana">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekTotal')">Ver artículos</button></div>
 </div>
 <div class="kpis kilosDesaladosPanel kilosDesaladosHistorico">
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana pasada</span><b id="kpiKgSemanaPasada"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('lastWeek')">Ver artículos</button></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados misma semana del año pasado</span><b id="kpiKgMismaSemanaAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('sameWeekLastYear')">Ver artículos</button></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana siguiente del año pasado</span><b id="kpiKgSemanaSiguienteAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('nextWeekLastYear')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>SEMANA PASADA</span><b id="kpiKgSemanaPasada"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('lastWeek')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>MISMA SEMANA · AÑO PASADO</span><b id="kpiKgMismaSemanaAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('sameWeekLastYear')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>SEMANA SIGUIENTE · AÑO PASADO</span><b id="kpiKgSemanaSiguienteAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('nextWeekLastYear')">Ver artículos</button></div>
 </div>
 <div class="card inicioDisponibilidad">
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
