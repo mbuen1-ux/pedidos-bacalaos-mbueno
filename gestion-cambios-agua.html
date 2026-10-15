@@ -1647,6 +1647,7 @@ async function sbLoadRecords(){
     records.length=0; records.push(...remote);
     
     renderRecords();
+    if(typeof updateInicioKilosSemana==='function')updateInicioKilosSemana();
   }catch(err){
     console.warn('No se pudieron recuperar los Registros desde Supabase:',err);
     renderRecords();
