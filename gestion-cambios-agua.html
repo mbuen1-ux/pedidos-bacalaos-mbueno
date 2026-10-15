@@ -1031,7 +1031,7 @@ function openKilosArticuloResumen(period){
   if(!overlay||!content||!title)return;
   title.textContent=titles[period]||'Resumen por artículo';
   const hasHistoricalData=(period==='weekDone'||period==='weekPending'||period==='weekTotal'||period==='lastWeek');
-  const rows=Object.entries(sum).filter(([,kg])=>Number.isFinite(kg)&&kg!==0).sort((a,b)=>a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
+  const rows=Object.entries(sum).filter(([,kg])=>Number.isFinite(kg)&&kg!==0).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
   const fmt=n=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg';
   if(!hasHistoricalData){
     content.innerHTML='<div class="kilosResumenEmpty">Todavía no hay datos históricos disponibles para este periodo.</div>';
