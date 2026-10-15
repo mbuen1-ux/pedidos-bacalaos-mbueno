@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gestión de Cambios de Agua · v200</title>
+<title>Gestión de Cambios de Agua · v201</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f8;color:#17324d}
 header{height:70px;background:#123d60;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
@@ -91,8 +91,9 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 .loadCard{margin-top:15px;background:#f8fafb;border:1px solid #dbe5ea;border-radius:10px;padding:14px}
 @media(max-width:900px){.prodHeaderGrid{grid-template-columns:1fr 1fr}.prodLineMain{grid-template-columns:1fr 1fr}.prodLine .removeBtn{margin-top:24px;justify-self:end}}
 @media(max-width:600px){.prodHeaderGrid{grid-template-columns:1fr}.prodLineMain{grid-template-columns:1fr}.prodLine .removeBtn{margin-top:0;justify-self:end}}
-.cubaSituationBar{align-items:stretch}.situationBtn{border:1px solid #dfe7ea;background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font:inherit;text-align:left}.situationBtn:hover{filter:brightness(.97)}.statusDot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:7px;border:2px solid rgba(0,0,0,.08)}.statusDot.green{background:#5a9b6c}.statusDot.yellow{background:#e0ad2f}.statusDot.red{background:#d65a52}.statusDot.gray{background:#d9dfe3}.situationBtn b{font-size:1.05em}.situationBtn.normal{color:#19733a}.situationBtn.ready{color:#8a6500}.situationBtn.late{color:#a52828}
+.cubaSituationBar{align-items:stretch}.situationBtn{border:1px solid #dfe7ea;background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font:inherit;text-align:left}.situationBtn:hover{filter:brightness(.97)}.statusDot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:7px;border:2px solid rgba(0,0,0,.08)}.statusDot.green{background:#5a9b6c}.statusDot.yellow{background:#e0ad2f}.statusDot.red{background:#d65a52}.statusDot.gray{background:#d9dfe3}.situationBtn b{font-size:1.05em}.situationBtn.normal{color:#19733a}.situationBtn.ready{color:#8a6500}.situationBtn.late{color:#a52828}.situationBtn.scheduled{color:#245d9c}
 
+.inicioSituacionPanel{width:100%}.inicioSituacionPanel .cubaSituationBar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.inicioSituacionPanel .situationBtn{min-height:54px}@media(max-width:900px){.inicioSituacionPanel .cubaSituationBar{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.inicioSituacionPanel .cubaSituationBar{grid-template-columns:1fr}}
 /* v161: cuadrantes compactos iguales en Cubas en proceso y Cubas en producción */
 #cubaList,#prodCubaList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
 #cubaList>.card.process,#prodCubaList>.card.process{margin:0;border-radius:6px;padding:14px;min-width:0;box-sizing:border-box}
@@ -295,7 +296,7 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
-<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v200 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
+<header><h1>Gestión de Cambios de Agua</h1><div class="clock">v201 · Datos sincronizados con Supabase <span id="sbBadge" style="margin-left:12px;padding:4px 9px;border-radius:12px;background:#fff0d8;color:#9a6500;font-weight:700">Conectando...</span></div></header>
 <div class="layout">
 <nav>
 <button class="active" onclick="go('inicio',this)">Inicio</button>
@@ -326,9 +327,14 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
   <div id="inicioDisponibilidadGrid" class="inicioDisponibilidadGrid"><div class="meta">Calculando disponibilidad...</div></div>
 </div>
-<div class="grid2">
-<div class="card"><h3>Situación de cubas</h3><div class="summarybar cubaSituationBar"><button type="button" class="situationBtn normal" onclick="filterCubasSituation('green')">🟢 <b id="sumNormal">0</b> en proceso normal</button><button type="button" class="situationBtn ready" onclick="filterCubasSituation('yellow')">🟡 <b id="sumReady">0</b> operaciones disponibles</button><button type="button" class="situationBtn late" onclick="filterCubasSituation('red')">🔴 <b id="sumLate">0</b> fuera de hora</button></div><p class="meta">Toca una situación para ir a Cubas en proceso filtrada por ese estado.</p></div>
-<div class="card"><h3>Avisos</h3><div id="inicioAvisos"><p class="meta">Cargando situación...</p></div></div>
+<div class="card inicioSituacionPanel">
+  <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Situación de cubas</h3><div class="meta">Pulsa una situación para abrir las cubas filtradas.</div></div></div>
+  <div class="summarybar cubaSituationBar">
+    <button type="button" class="situationBtn normal" onclick="filterCubasSituation('green')">🟢 <b id="sumNormal">0</b> en proceso normal</button>
+    <button type="button" class="situationBtn ready" onclick="filterCubasSituation('yellow')">🟡 <b id="sumReady">0</b> cambios próximos</button>
+    <button type="button" class="situationBtn late" onclick="filterCubasSituation('red')">🔴 <b id="sumLate">0</b> fuera de hora</button>
+    <button type="button" class="situationBtn scheduled" onclick="filterCubasSituation('scheduled')">🔵 <b id="sumScheduled">0</b> programadas</button>
+  </div>
 </div>
 <div class="card inicioCubasPanel">
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Estado de las cubas</h3><div class="meta">Situación actual y próximo cambio de cada cuba.</div></div></div>
@@ -895,7 +901,7 @@ function updateCubaCountdowns(){
 }
 function renderCubaCards(target){
  let entries=Object.entries(liveCubas).filter(([,c])=>c.active!==false).sort((a,b)=>String(a[1].name||a[1].id).localeCompare(String(b[1].name||b[1].id),'es',{numeric:true,sensitivity:'base'}));
- if(target==='cubaList' && cubaSituationFilter!=='all') entries=entries.filter(([,c])=>{if((typeof preparedItems!=='undefined'?preparedItems:[]).some(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(c.id)))return true;if(!c.busy)return false;const i=Number(c.done||0),op=(c.ops||[])[i];if(!op)return cubaSituationFilter==='green';const st=opStatus(c,i);return (cubaSituationFilter==='green'&&st==='future')||(cubaSituationFilter==='yellow'&&st==='ready')||(cubaSituationFilter==='red'&&st==='late');});
+ if(target==='cubaList' && cubaSituationFilter!=='all') entries=entries.filter(([,c])=>{const scheduled=(typeof preparedItems!=='undefined'?preparedItems:[]).some(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(c.id));if(scheduled)return cubaSituationFilter==='scheduled';if(cubaSituationFilter==='scheduled'||!c.busy)return false;const i=Number(c.done||0),op=(c.ops||[])[i];if(!op)return cubaSituationFilter==='green';const st=opStatus(c,i);return (cubaSituationFilter==='green'&&st==='future')||(cubaSituationFilter==='yellow'&&st==='ready')||(cubaSituationFilter==='red'&&st==='late');});
  const scheduledPrepared=(target==='cubaList'||target==='prodCubaList')?(typeof preparedItems!=='undefined'?preparedItems:[]).filter(p=>p.estado==='PROGRAMADA'&&Object.values(liveCubas).some(c=>c.active!==false&&String(c.id)===String(p.cuba_numero))):[];
  entries=entries.filter(([,c])=>!scheduledPrepared.some(p=>String(p.cuba_numero)===String(c.id)));
  let busy=0,pending=0,kg=0;
@@ -1157,7 +1163,7 @@ function updateInicioDashboard(){
   const free=cubes.filter(c=>!c.busy).length;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   set('kpiBusy',busy.length);set('kpiFree',free);set('kpiPending',pending);set('kpiLate',late);set('kpiKg',Number.isInteger(kg)?kg.toLocaleString('es-ES')+' kg':kg.toLocaleString('es-ES',{maximumFractionDigits:3})+' kg');
-  set('sumNormal',normal);set('sumReady',ready);set('sumLate',late);
+  set('sumNormal',normal);set('sumReady',ready);set('sumLate',late);set('sumScheduled',(typeof preparedItems!=='undefined'?preparedItems:[]).filter(p=>p.estado==='PROGRAMADA'&&cubes.some(c=>String(c.id)===String(p.cuba_numero))).length);
   changes.sort((a,b)=>a.time-b.time);
   const next=changes.find(x=>x.time.getTime()>=now);
   const nextEl=document.getElementById('inicioProximo');
