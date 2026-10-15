@@ -1090,7 +1090,7 @@ function updateInicioDashboard(){
   }
 }
 
-function renderAllCubaViews(){Object.values(liveCubas).forEach(c=>{if(c.active!==false&&!c.busy&&c.completedAt&&(Array.isArray(c.lines)&&c.lines.length||Array.isArray(c.ops)&&c.ops.length||c.recipe||c.process)){c.lines=[];c.recipe='';c.recipeDesc='';c.process='';c.start='';c.operator='';c.ops=[];c.actualOps=[];c.done=0;}});renderCubaSelect();renderCubaCards('prodCubaList');const n=renderCubaCards('cubaList');document.getElementById('kpiBusy').textContent=n;document.getElementById('kpiFree').textContent=Object.values(liveCubas).filter(c=>c.active!==false&&!c.busy&&!preparedItems.some(p=>p.estado==='PROGRAMADA'&&String(p.cuba_numero)===String(c.id))).length;let late=0,kg=0;Object.values(liveCubas).filter(c=>c.busy).forEach(c=>{kg+=c.lines.reduce((a,x)=>a+Number(x.kg||0),0);if(c.ops[c.done]&&opStatus(c,c.done)==='late')late++;});document.getElementById('kpiPending').textContent=Object.values(liveCubas).filter(c=>c.busy).reduce((a,c)=>a+c.ops.length-c.done,0);document.getElementById('kpiKg').textContent=kg+' kg';document.getElementById('kpiLate').textContent=late;updateInicioDashboard();}
+function renderAllCubaViews(){Object.values(liveCubas).forEach(c=>{if(c.active!==false&&!c.busy&&c.completedAt&&(Array.isArray(c.lines)&&c.lines.length||Array.isArray(c.ops)&&c.ops.length||c.recipe||c.process)){c.lines=[];c.recipe='';c.recipeDesc='';c.process='';c.start='';c.operator='';c.ops=[];c.actualOps=[];c.done=0;}});renderCubaSelect();renderCubaCards('prodCubaList');renderCubaCards('cubaList');updateInicioDashboard();}
 function toggle(id){const e=document.getElementById(id);if(e)e.style.display=e.style.display==='block'?'none':'block';}
 async function markOpByKey(key){
  const c=liveCubas[key];
