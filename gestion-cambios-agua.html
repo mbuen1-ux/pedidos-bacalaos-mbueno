@@ -156,6 +156,15 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 #cubaList .availableBadge,#prodCubaList .availableBadge{font-size:15px!important;font-weight:800;padding:7px 11px!important;letter-spacing:.1px}
 @media(max-width:700px){#cubaList,#prodCubaList{grid-auto-rows:auto} #cubaList>.card.process,#prodCubaList>.card.process{height:auto}}
 
+/* Estado semanal de kilos desalados en Inicio */
+.kilosDesaladosPanel{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px}
+.kilosDesaladosKpi{min-height:118px;justify-content:center}
+.kilosDesaladosKpi b{font-size:clamp(24px,2.5vw,34px)!important;color:#174d76}
+.kilosDesaladosKpi small{font-size:11px;color:#64748b;margin-top:5px;line-height:1.35}
+.kilosDesaladosKpi.total{border:2px solid #174d76;background:#f0f6fb}
+.kilosDesaladosKpi.total b{color:#0b3557}
+@media(max-width:650px){.kilosDesaladosPanel{grid-template-columns:1fr;gap:8px}.kilosDesaladosKpi{min-height:90px}}
+
 /* Disponibilidad futura de cubas en Inicio */
 .inicioDisponibilidad{margin-top:14px}
 .inicioDisponibilidadGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
@@ -277,12 +286,10 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 
 <section id="inicio" class="section active">
 <h2>Inicio</h2><div class="subtitle">Situación general de la producción de desalado.</div>
-<div class="kpis">
-<div class="card kpi"><span>Cubas en proceso</span><b id="kpiBusy">0</b></div>
-<div class="card kpi"><span>Cubas libres</span><b id="kpiFree">0</b></div>
-<div class="card kpi"><span>Operaciones pendientes</span><b id="kpiPending">0</b></div>
-<div class="card kpi"><span>Fuera de hora</span><b id="kpiLate">0</b></div>
-<div class="card kpi"><span>Kilos en proceso</span><b id="kpiKg">0 kg</b></div>
+<div class="kpis kilosDesaladosPanel">
+<div class="card kpi kilosDesaladosKpi"><span>Kilos ya desalados esta semana</span><b id="kpiKgDesalados">0 kg</b><small>Producciones finalizadas según su hora teórica</small></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos previstos para esta semana</span><b id="kpiKgPrevistos">0 kg</b><small>Producciones activas con final teórico esta semana</small></div>
+<div class="card kpi kilosDesaladosKpi total"><span>Total desalado de la semana</span><b id="kpiKgTotalSemana">0 kg</b><small>Ya desalados + previsión pendiente</small></div>
 </div>
 <div class="card inicioDisponibilidad">
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
@@ -946,8 +953,58 @@ function updateInicioDisponibilidad(){
   }).join('');
 }
 
+function updateInicioKilosSemana(){
+  const now=new Date();
+  const weekStart=new Date(now);
+  weekStart.setHours(0,0,0,0);
+  const day=(weekStart.getDay()+6)%7;
+  weekStart.setDate(weekStart.getDate()-day);
+  const weekEnd=new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate()+7);
+  const inThisWeek=t=>Number.isFinite(t)&&t>=weekStart.getTime()&&t<weekEnd.getTime();
+  const theoreticalFinishOfRecord=r=>{
+    const ops=Array.isArray(r.ops)?r.ops:[];
+    if(!ops.length)return NaN;
+    const last=ops[ops.length-1];
+    const value=Array.isArray(last)?last[1]:(last?.fecha_teorica||last?.theoretical||'');
+    const time=value?new Date(value).getTime():NaN;
+    return Number.isFinite(time)?time:NaN;
+  };
+  // Los registros finalizados se imputan a la semana de su última hora teórica,
+  // no a la fecha/hora real en que el operario marcó la finalización.
+  const completedKg=(records||[]).reduce((sum,r)=>{
+    const finish=theoreticalFinishOfRecord(r);
+    if(!inThisWeek(finish))return sum;
+    const lines=Array.isArray(r.lines)?r.lines:[];
+    const kg=Number(r.kg||lines.reduce((a,x)=>a+Number(recordLineNorm(x).kgSalida||0),0));
+    return sum+(Number.isFinite(kg)?kg:0);
+  },0);
+  // Para producciones todavía activas usamos la hora teórica del último proceso
+  // y estimamos la salida con el porcentaje de hidratación guardado al iniciar.
+  const forecastKg=Object.values(liveCubas||{}).reduce((sum,c)=>{
+    if(!c.busy)return sum;
+    const ops=Array.isArray(c.ops)?c.ops:[];
+    if(!ops.length)return sum;
+    const last=ops[ops.length-1];
+    const value=Array.isArray(last)?last[1]:(last?.fecha_teorica||last?.theoretical||'');
+    const finish=value?new Date(value).getTime():NaN;
+    if(!inThisWeek(finish))return sum;
+    return sum+(c.lines||[]).reduce((a,x)=>{
+      const kg=Number(x.kg||0);
+      const hydration=Number(x.hidratacion_pct_snapshot||0);
+      const output=Number(x.kg_obtenidos||0)>0?Number(x.kg_obtenidos):kg*(1+hydration/100);
+      return a+(Number.isFinite(output)?output:0);
+    },0);
+  },0);
+  const formatKg=n=>Math.round(n).toLocaleString('es-ES')+' kg';
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  set('kpiKgDesalados',formatKg(completedKg));
+  set('kpiKgPrevistos',formatKg(forecastKg));
+  set('kpiKgTotalSemana',formatKg(completedKg+forecastKg));
+}
 function updateInicioDashboard(){
   updateInicioDisponibilidad();
+  updateInicioKilosSemana();
   const cubes=Object.values(liveCubas||{}).filter(c=>c.active!==false);
   const busy=cubes.filter(c=>c.busy);
   let pending=0,late=0,ready=0,kg=0,normal=0;
