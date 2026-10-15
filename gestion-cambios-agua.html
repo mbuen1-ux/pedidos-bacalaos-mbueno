@@ -161,6 +161,22 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 .kilosDesaladosKpi{min-height:118px;justify-content:center}
 .kilosDesaladosKpi b{font-size:clamp(24px,2.5vw,34px)!important;color:#174d76}
 .kilosDesaladosKpi small{font-size:11px;color:#64748b;margin-top:5px;line-height:1.35}
+.kilosDetalleBtn{margin-top:12px;padding:7px 10px;border:1px solid #c7d7e3;border-radius:7px;background:#f4f8fb;color:#174d76;font-size:12px;font-weight:800;cursor:pointer}
+.kilosDetalleBtn:hover{background:#e5eff7}
+.kilosDesaladosKpi{align-items:stretch}
+.kilosDesaladosKpi .kilosDetalleBtn{align-self:stretch}
+.kilosResumenOverlay{position:fixed;inset:0;z-index:10000;background:rgba(13,30,45,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.kilosResumenModal{width:min(520px,100%);max-height:min(80vh,700px);overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.25);padding:20px}
+.kilosResumenHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.kilosResumenHead h3{margin:0;color:#17324d;font-size:20px}
+.kilosResumenClose{border:0;border-radius:8px;background:#edf2f6;color:#17324d;font-size:20px;font-weight:800;width:36px;height:36px;cursor:pointer;flex-shrink:0}
+.kilosResumenTotal{background:#edf5fb;border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px;font-weight:800;color:#174d76}
+.kilosResumenTable{width:100%;border-collapse:collapse}
+.kilosResumenTable td{padding:10px 8px;border-bottom:1px solid #e7edf1}
+.kilosResumenTable td:last-child{text-align:right;font-weight:800;white-space:nowrap;color:#174d76}
+.kilosResumenEmpty{padding:22px 12px;text-align:center;color:#64748b;background:#f7f9fb;border-radius:9px;font-size:14px}
+@media(max-width:650px){.kilosResumenModal{padding:15px}.kilosResumenHead h3{font-size:18px}}
+
 .kilosDesaladosKpi.total{border:2px solid #174d76;background:#f0f6fb}
 .kilosDesaladosKpi.total b{color:#0b3557}
 .kilosDesaladosHistorico{margin-top:0}
@@ -269,6 +285,12 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 /* v189: Producción queda oculta en la interfaz mientras sus funciones internas siguen activas. */
 #produccion{display:none!important}
 </style>
+<div id="kilosResumenOverlay" class="kilosResumenOverlay" role="dialog" aria-modal="true" aria-labelledby="kilosResumenTitle" onclick="if(event.target===this)closeKilosArticuloResumen()">
+  <div class="kilosResumenModal">
+    <div class="kilosResumenHead"><h3 id="kilosResumenTitle">Resumen por artículo</h3><button type="button" class="kilosResumenClose" aria-label="Cerrar" onclick="closeKilosArticuloResumen()">×</button></div>
+    <div id="kilosResumenContent"></div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head>
@@ -291,14 +313,14 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <section id="inicio" class="section active">
 <h2>Inicio</h2><div class="subtitle">Situación general de la producción de desalado.</div>
 <div class="kpis kilosDesaladosPanel">
-<div class="card kpi kilosDesaladosKpi"><span>Kilos ya desalados esta semana</span><b id="kpiKgDesalados">0 kg</b><small>Producciones finalizadas según su hora teórica</small></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos pendientes de terminar</span><b id="kpiKgPrevistos">0 kg</b><small>Producciones activas con final teórico esta semana</small></div>
-<div class="card kpi kilosDesaladosKpi total"><span>Total desalado de la semana</span><b id="kpiKgTotalSemana">0 kg</b><small>Ya desalados + previsión pendiente</small></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos ya desalados esta semana</span><b id="kpiKgDesalados">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekDone')">Ver artículos</button><small>Producciones finalizadas según su hora teórica</small></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos pendientes de terminar</span><b id="kpiKgPrevistos">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekPending')">Ver artículos</button><small>Producciones activas con final teórico esta semana</small></div>
+<div class="card kpi kilosDesaladosKpi total"><span>Total desalado de la semana</span><b id="kpiKgTotalSemana">0 kg</b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('weekTotal')">Ver artículos</button><small>Ya desalados + previsión pendiente</small></div>
 </div>
 <div class="kpis kilosDesaladosPanel kilosDesaladosHistorico">
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana pasada</span><b id="kpiKgSemanaPasada"></b></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados misma semana del año pasado</span><b id="kpiKgMismaSemanaAnioPasado"></b></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana siguiente del año pasado</span><b id="kpiKgSemanaSiguienteAnioPasado"></b></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana pasada</span><b id="kpiKgSemanaPasada"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('lastWeek')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados misma semana del año pasado</span><b id="kpiKgMismaSemanaAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('sameWeekLastYear')">Ver artículos</button></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana siguiente del año pasado</span><b id="kpiKgSemanaSiguienteAnioPasado"></b><button type="button" class="kilosDetalleBtn" onclick="openKilosArticuloResumen('nextWeekLastYear')">Ver artículos</button></div>
 </div>
 <div class="card inicioDisponibilidad">
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
@@ -962,6 +984,70 @@ function updateInicioDisponibilidad(){
   }).join('');
 }
 
+function openKilosArticuloResumen(period){
+  const titles={weekDone:'Kilos ya desalados esta semana',weekPending:'Kilos pendientes de terminar',weekTotal:'Total desalado de la semana',lastWeek:'Kilos desalados semana pasada',sameWeekLastYear:'Kilos desalados misma semana del año pasado',nextWeekLastYear:'Kilos desalados semana siguiente del año pasado'};
+  const now=new Date();
+  const start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7));
+  const end=new Date(start);end.setDate(end.getDate()+7);
+  const prevStart=new Date(start);prevStart.setDate(prevStart.getDate()-7);
+  const lastYearStart=new Date(start);lastYearStart.setFullYear(lastYearStart.getFullYear()-1);
+  const nextLastYearStart=new Date(start);nextLastYearStart.setFullYear(nextLastYearStart.getFullYear()-1);nextLastYearStart.setDate(nextLastYearStart.getDate()+7);
+  const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+  const finishOf=r=>{
+    const ops=Array.isArray(r.ops)?r.ops:[];
+    if(!ops.length)return NaN;
+    const last=ops[ops.length-1],v=Array.isArray(last)?last[1]:(last?.fecha_teorica||last?.theoretical||'');
+    const t=v?new Date(v).getTime():NaN;return Number.isFinite(t)?t:NaN;
+  };
+  const sum={};
+  const addLine=(line,kg)=>{
+    const n=recordLineNorm(line),name=String(n.desc||n.code||'Artículo sin nombre').trim();
+    if(!name)return;
+    sum[name]=(sum[name]||0)+Number(kg||0);
+  };
+  const includeRecord=(r,from,to)=>{
+    const t=finishOf(r);if(!(Number.isFinite(t)&&t>=from.getTime()&&t<to.getTime()))return;
+    const lines=Array.isArray(r.lines)?r.lines:[];
+    lines.forEach(line=>{const n=recordLineNorm(line);addLine(line,n.kgSalida);});
+  };
+  if(period==='weekDone'||period==='weekTotal'||period==='lastWeek'){
+    const from=period==='lastWeek'?prevStart:start,to=period==='lastWeek'?start:end;
+    (records||[]).forEach(r=>includeRecord(r,from,to));
+  }
+  if(period==='weekPending'||period==='weekTotal'){
+    Object.values(liveCubas||{}).forEach(c=>{
+      if(!c.busy)return;
+      const ops=Array.isArray(c.ops)?c.ops:[];if(!ops.length)return;
+      const last=ops[ops.length-1],v=Array.isArray(last)?last[1]:(last?.fecha_teorica||last?.theoretical||'');
+      const t=v?new Date(v).getTime():NaN;if(!(Number.isFinite(t)&&t>=start.getTime()&&t<end.getTime()))return;
+      (c.lines||[]).forEach(line=>{
+        const kg=Number(line.kg||0),h=Number(line.hidratacion_pct_snapshot||0);
+        const output=Number(line.kg_obtenidos||0)>0?Number(line.kg_obtenidos):kg*(1+h/100);
+        addLine({desc:line.desc||line.code||'Artículo sin nombre'},output);
+      });
+    });
+  }
+  const overlay=document.getElementById('kilosResumenOverlay'),content=document.getElementById('kilosResumenContent'),title=document.getElementById('kilosResumenTitle');
+  if(!overlay||!content||!title)return;
+  title.textContent=titles[period]||'Resumen por artículo';
+  const hasHistoricalData=(period==='weekDone'||period==='weekPending'||period==='weekTotal'||period==='lastWeek');
+  const rows=Object.entries(sum).filter(([,kg])=>Number.isFinite(kg)&&kg!==0).sort((a,b)=>a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
+  const fmt=n=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg';
+  if(!hasHistoricalData){
+    content.innerHTML='<div class="kilosResumenEmpty">Todavía no hay datos históricos disponibles para este periodo.</div>';
+  }else if(!rows.length){
+    content.innerHTML='<div class="kilosResumenEmpty">No hay kilos registrados para este periodo.</div>';
+  }else{
+    const total=rows.reduce((a,x)=>a+x[1],0);
+    const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    content.innerHTML='<div class="kilosResumenTotal"><span>Total</span><span>'+fmt(total)+'</span></div><table class="kilosResumenTable"><tbody>'+rows.map(([name,kg])=>'<tr><td>'+esc(name)+'</td><td>'+fmt(kg)+'</td></tr>').join('')+'</tbody></table>';
+  }
+  overlay.style.display='flex';
+}
+function closeKilosArticuloResumen(){
+  const overlay=document.getElementById('kilosResumenOverlay');if(overlay)overlay.style.display='none';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeKilosArticuloResumen();});
 function updateInicioKilosSemana(){
   const now=new Date();
   const weekStart=new Date(now);
