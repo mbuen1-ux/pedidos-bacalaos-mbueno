@@ -990,9 +990,10 @@ function openKilosArticuloResumen(period){
   const start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7));
   const end=new Date(start);end.setDate(end.getDate()+7);
   const prevStart=new Date(start);prevStart.setDate(prevStart.getDate()-7);
-  const lastYearStart=new Date(start);lastYearStart.setFullYear(lastYearStart.getFullYear()-1);
-  const nextLastYearStart=new Date(start);nextLastYearStart.setFullYear(nextLastYearStart.getFullYear()-1);nextLastYearStart.setDate(nextLastYearStart.getDate()+7);
   const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+  const lastYearStart=addDays(start,-364);
+  const nextLastYearStart=addDays(lastYearStart,7);
+  const dateKey=d=>{const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
   const finishOf=r=>{
     const ops=Array.isArray(r.ops)?r.ops:[];
     if(!ops.length)return NaN;
@@ -1014,6 +1015,19 @@ function openKilosArticuloResumen(period){
     const from=period==='lastWeek'?prevStart:start,to=period==='lastWeek'?start:end;
     (records||[]).forEach(r=>includeRecord(r,from,to));
   }
+  if(period==='sameWeekLastYear'||period==='nextWeekLastYear'){
+    const target=period==='sameWeekLastYear'?lastYearStart:nextLastYearStart;
+    const week=historicoVentasSemanales.find(x=>x.weekStart===dateKey(target));
+    if(week){
+      Object.entries(week.articulos||{}).forEach(([code,kg])=>{
+        const article=articles.find(a=>String(a.code)===String(code));
+        if(article&&article.active!==false){
+          const name=String(article.desc||code).trim();
+          sum[name]=(sum[name]||0)+Number(kg||0);
+        }
+      });
+    }
+  }
   if(period==='weekPending'||period==='weekTotal'){
     Object.values(liveCubas||{}).forEach(c=>{
       if(!c.busy)return;
@@ -1030,7 +1044,7 @@ function openKilosArticuloResumen(period){
   const overlay=document.getElementById('kilosResumenOverlay'),content=document.getElementById('kilosResumenContent'),title=document.getElementById('kilosResumenTitle');
   if(!overlay||!content||!title)return;
   title.textContent=titles[period]||'Resumen por artículo';
-  const hasHistoricalData=(period==='weekDone'||period==='weekPending'||period==='weekTotal'||period==='lastWeek');
+  const hasHistoricalData=(period==='weekDone'||period==='weekPending'||period==='weekTotal'||period==='lastWeek'||period==='sameWeekLastYear'||period==='nextWeekLastYear');
   const rows=Object.entries(sum).filter(([,kg])=>Number.isFinite(kg)&&kg!==0).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
   const fmt=n=>Number(n).toLocaleString('es-ES',{maximumFractionDigits:3})+' kg';
   if(!hasHistoricalData){
@@ -1106,6 +1120,13 @@ function updateInicioKilosSemana(){
   set('kpiKgPrevistos',formatKg(forecastKg));
   set('kpiKgTotalSemana',formatKg(completedKg+forecastKg));
   set('kpiKgSemanaPasada',formatKg(previousWeekKg));
+  const dateKey=d=>{const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+  const sameLastYearStart=new Date(weekStart);sameLastYearStart.setDate(sameLastYearStart.getDate()-364);
+  const nextLastYearStart=new Date(sameLastYearStart);nextLastYearStart.setDate(nextLastYearStart.getDate()+7);
+  const historicalKg=week=>historicoVentasSemanales.find(x=>x.weekStart===dateKey(week))?.kgTotal;
+  const sameYearKg=historicalKg(sameLastYearStart),nextYearKg=historicalKg(nextLastYearStart);
+  set('kpiKgMismaSemanaAnioPasado',sameYearKg==null?'Sin datos':formatKg(sameYearKg));
+  set('kpiKgSemanaSiguienteAnioPasado',nextYearKg==null?'Sin datos':formatKg(nextYearKg));
 }
 function updateInicioDashboard(){
   updateInicioDisponibilidad();
@@ -1729,6 +1750,13 @@ updateCubaCountdowns();
 setInterval(()=>{updateInicioDashboard();if(document.getElementById('cambios')?.classList.contains('active')) renderCambios();},60000);
 
 const records=[];
+let historicoVentasSemanales=[];
+async function sbLoadHistoricoVentas(){
+  const {data,error}=await sb.from('agua_historico_ventas_semanales').select('semana_inicio,articulos,kg_total').order('semana_inicio');
+  if(error) throw error;
+  historicoVentasSemanales=(data||[]).map(r=>({weekStart:String(r.semana_inicio||''),articulos:r.articulos&&typeof r.articulos==='object'?r.articulos:{},kgTotal:Number(r.kg_total||0)}));
+  if(typeof updateInicioKilosSemana==='function')updateInicioKilosSemana();
+}
 async function sbLoadRecords(){
   if(!sbReady && !sb) return;
   try{
@@ -2182,6 +2210,7 @@ async function sbStart(){
     if(test.error) throw new Error('Lectura de artículos: '+test.error.message+' [HTTP '+(test.error.status||'?')+']');
 
     await timeout(sbLoadMasters(),15000,'Carga de maestros');
+    await timeout(sbLoadHistoricoVentas(),10000,'Carga del histórico semanal de ventas');
 
     if(!sbReady) throw new Error('La carga de maestros terminó sin confirmar datos.');
 
