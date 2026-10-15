@@ -163,6 +163,10 @@ table{width:100%;border-collapse:collapse}th{background:#eef3f6;text-align:left;
 .kilosDesaladosKpi small{font-size:11px;color:#64748b;margin-top:5px;line-height:1.35}
 .kilosDesaladosKpi.total{border:2px solid #174d76;background:#f0f6fb}
 .kilosDesaladosKpi.total b{color:#0b3557}
+.kilosDesaladosHistorico{margin-top:0}
+.kilosDesaladosHistorico .kilosDesaladosKpi{background:#fff;border:1px solid #d5e0e7}
+.kilosDesaladosHistorico .kilosDesaladosKpi b{min-height:40px}
+
 @media(max-width:650px){.kilosDesaladosPanel{grid-template-columns:1fr;gap:8px}.kilosDesaladosKpi{min-height:90px}}
 
 /* Disponibilidad futura de cubas en Inicio */
@@ -288,8 +292,13 @@ table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrollin
 <h2>Inicio</h2><div class="subtitle">Situación general de la producción de desalado.</div>
 <div class="kpis kilosDesaladosPanel">
 <div class="card kpi kilosDesaladosKpi"><span>Kilos ya desalados esta semana</span><b id="kpiKgDesalados">0 kg</b><small>Producciones finalizadas según su hora teórica</small></div>
-<div class="card kpi kilosDesaladosKpi"><span>Kilos previstos para esta semana</span><b id="kpiKgPrevistos">0 kg</b><small>Producciones activas con final teórico esta semana</small></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos pendientes de terminar</span><b id="kpiKgPrevistos">0 kg</b><small>Producciones activas con final teórico esta semana</small></div>
 <div class="card kpi kilosDesaladosKpi total"><span>Total desalado de la semana</span><b id="kpiKgTotalSemana">0 kg</b><small>Ya desalados + previsión pendiente</small></div>
+</div>
+<div class="kpis kilosDesaladosPanel kilosDesaladosHistorico">
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana pasada</span><b id="kpiKgSemanaPasada"></b></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados misma semana del año pasado</span><b id="kpiKgMismaSemanaAnioPasado"></b></div>
+<div class="card kpi kilosDesaladosKpi"><span>Kilos desalados semana siguiente del año pasado</span><b id="kpiKgSemanaSiguienteAnioPasado"></b></div>
 </div>
 <div class="card inicioDisponibilidad">
   <div class="panelHead" style="margin-bottom:12px"><div><h3 style="margin:0">Disponibilidad de cubas</h3><div class="meta">Previsión de cubas libres en los próximos 3 días a las 08:00 y 20:00. Si un proceso termina a esa hora, esa cuba se considera libre.</div></div></div>
